@@ -4,7 +4,7 @@ from web import APP
 
 
 @APP.route('/func/company')
-@login_required
+# @login_required
 def html_func_company():
     """厂商页面"""
     return render_template('company.html')
