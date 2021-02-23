@@ -22,9 +22,9 @@
         </div>
     </div>
     <div class="layui-form-item">
-        <label class="layui-form-label required">厂商主页</label>
+        <label class="layui-form-label required">联系方式</label>
         <div class="layui-input-block">
-            <input type="text" name="company_contact" lay-verify="required" lay-reqtext="厂商主页不能为空" placeholder="请输入厂商主页"
+            <input type="text" name="company_contact" lay-verify="required" lay-reqtext="联系方式不能为空" placeholder="请输入联系方式"
                    class="layui-input">
         </div>
     </div>
@@ -50,7 +50,7 @@
                 dataType: 'json',
                 type: 'put',
                 success: function (result) {
-                    if (result.status_code == 200) {
+                    if (result.status_code === 200) {
                         var index = layer.alert('新增厂商成功!', {
                             title: '提示',
                             icon: 1
