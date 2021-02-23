@@ -73,20 +73,7 @@ class FuncCompanyAPI(Resource):
                 # data1['company_time'] = i.cus_time
                 # data1['cus_number'] = len(i.src_assets)
                 # data1['cus_number_port'] = len(i.src_ports)
-                num = 0
-                if len(i.src_task) > 0:
-                    for j in i.src_task:
-                        if not j.task_flag:
-                            num += 1
-                data1['cus_number_task'] = num
-                num = 0
-                if len(i.src_assets) > 0:
-                    for j in i.src_assets:
-                        if not j.asset_xray_flag:
-                            num += 1
-                data1['cus_number_vul'] = num
                 data.append(data1)
-                index += 1
             jsondata.update({'data': data})
             return jsondata
         else:
