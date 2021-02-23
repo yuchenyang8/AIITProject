@@ -6,7 +6,7 @@ from web import DB, APP
 
 
 class UserLogin(Resource):
-    """user login类"""
+    """用户登录类"""
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
