@@ -15,4 +15,13 @@ def html_system_login():
 @login_required
 def html_system_index():
     """框架首页"""
-    return render_template('index.html', username=session['username'])
+    return render_template('dashboard.html', username=session['username'])
+
+
+@APP.route('/api/user/logout')
+# @login_required
+def api_user_logout():
+    '''用户注销'''
+    session.pop('status')
+    session.pop('username')
+    return redirect(url_for('html_system_login'), 302)
