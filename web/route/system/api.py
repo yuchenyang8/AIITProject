@@ -18,14 +18,13 @@ class UserLogin(Resource):
         args = self.parser.parse_args()
         key_username = args.username
         key_password = args.password
-
         user_query = DB.db.user.find_one({'uname': key_username})
+
         if not user_query:  # 若不存在此用户
             return {'status_code': 201, 'msg': '用户名或密码错误'}
         if user_query['upassword'] == key_password:  # 进行密码核对
             session['status'] = True  # 登录成功设置session
             session['username'] = key_username
-
             return {'status_code': 200}
         else:
             return {'status_code': 201, 'msg': '用户名或密码错误'}

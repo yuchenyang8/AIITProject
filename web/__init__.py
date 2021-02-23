@@ -9,9 +9,8 @@ APP.config.from_object(Config)
 DB = PyMongo(APP)
 API = Api(APP)
 
-
-from web.route import html
-from web.route.api import UserLogin
+from web.route.system import html
+from web.route.system.api import UserLogin
 
 
 API.add_resource(UserLogin, '/api/user/login', endpoint='api_user_login')
