@@ -5,46 +5,137 @@
     <title>COMPANY</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.5.5/css/layui.css') }}" media="all">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}" media="all">
+
+
+    <!-- Here is bootstrap link -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Dashboard Template for Bootstrap</title>
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link href="dashboard.css" rel="stylesheet">
+
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+
+    <!-- bootstrap.bundle.min.js 用于弹窗、提示、下拉菜单，包含了 popper.min.js -->
+    <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+
+    <!-- 最新的 Bootstrap4 核心 JavaScript 文件 -->
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+
 </head>
 <body>
-<div class="layuimini-container">
-    <div class="layuimini-main">
 
-        <fieldset class="table-search-fieldset">
-            <legend>搜索信息</legend>
-            <div style="margin: 10px 10px 10px 10px">
-                <form class="layui-form layui-form-pane" action="">
-                    <div class="layui-form-item">
-                        <div class="layui-inline">
-                            <label class="layui-form-label">厂商名</label>
-                            <div class="layui-input-inline">
-                                <input type="text" name="company_name" autocomplete="off" class="layui-input">
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Security Evaluation Platform</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            {#          <ul class="nav navbar-nav navbar-right">#}
+            {#            <li><a href="#">Dashboard</a></li>#}
+            {#            <li><a href="#">Settings</a></li>#}
+            {#            <li><a href="#">Profile</a></li>#}
+            {#            <li><a href="#">Help</a></li>#}
+            {#          </ul>#}
+            <ul class="nav navbar-nav navbar-right">
+                {% if username %}
+                    <li><a href="#">Welcome {{ username }}</a></li>
+                    {#              <li><a href="#">退出登录</a></li>#}
+                    <li><a href="{{ url_for('api_user_logout') }}">退出登录</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('system_login') }}">登录</a></li>
+                {% endif %}
+            </ul>
+
+            <form class="navbar-form navbar-right">
+                <input type="text" class="form-control" placeholder="Search...">
+            </form>
+        </div>
+    </div>
+</nav>
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+            <ul class="nav nav-sidebar">
+                <br>
+                <br>
+                <br>
+                <li><a href="#">信息展示</a></li>
+                {#            <li><a href="#">任务管理</a></li>#}
+                <li class="dropdown">
+                    <a href="#" data-toggle="dropdown">任务管理&nbsp;<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ url_for('html_func_company') }}">厂商管理</a></li>
+                        <li><a href="#">添加任务</a></li>
+                        <li><a href="#">任务列表</a></li>
+                        <li><a href="#">资产管理</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">...</a></li>
+
+            </ul>
+        </div>
+
+        <div class="layuimini-container col-sm-9 col-md-10 main">
+            <div class="layuimini-main">
+                <fieldset class="table-search-fieldset">
+                    <legend>搜索信息</legend>
+                    <div style="margin: 10px 10px 10px 10px">
+                        <form class="layui-form layui-form-pane" action="">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">厂商名</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" name="company_name" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <button type="submit" class="layui-btn layui-btn-primary" lay-submit
+                                            lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="layui-inline">
-                            <button type="submit" class="layui-btn layui-btn-primary" lay-submit
-                                    lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索
-                            </button>
-                        </div>
+                        </form>
                     </div>
-                </form>
+                </fieldset>
+
+                <script type="text/html" id="toolbarDemo">
+                    <div class="layui-btn-container">
+                        <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加厂商
+                        </button>
+                    </div>
+                </script>
+
+                <table class="layui-hide" id="currentTable_customer" lay-filter="currentTableFilter"></table>
+
+                <script type="text/html" id="currentTableBar">
+                    <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+                </script>
+
             </div>
-        </fieldset>
-
-        <script type="text/html" id="toolbarDemo">
-            <div class="layui-btn-container">
-                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加厂商</button>
-            </div>
-        </script>
-
-        <table class="layui-hide" id="currentTable_customer" lay-filter="currentTableFilter"></table>
-
-        <script type="text/html" id="currentTableBar">
-            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
-        </script>
+        </div>
 
     </div>
 </div>
+
+
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
 <script>
     layui.use(['form', 'table'], function () {
