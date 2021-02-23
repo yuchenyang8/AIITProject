@@ -34,7 +34,7 @@ class FuncCompanyAPI(Resource):
 
     def get(self):
         if not session.get('status'):
-            return redirect(url_for('html_system_login'), 302)
+            return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
         company_name = args.company_name
         key_page = args.page
