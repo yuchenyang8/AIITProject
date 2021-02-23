@@ -44,7 +44,7 @@
         //监听提交
         form.on('submit(user_customer)', function (data) {
             $.ajax({
-                url: "{{ url_for('api_src_customer') }}",
+                url: "{{ url_for('api_func_customer') }}",
                 data: JSON.stringify(data.field),
                 contentType: 'application/json;charset=UTF-8',
                 dataType: 'json',
