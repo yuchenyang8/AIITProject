@@ -5,7 +5,7 @@ from flask import session
 
 
 @APP.route('/func/company')
-# @login_required
+@login_required
 def html_func_company():
     """厂商页面"""
     return render_template('company.html')
@@ -17,9 +17,5 @@ def html_func_company_add():
     """厂商添加页面"""
     return render_template('company_add.html')
 
-
-# @APP.route('/dashboard')
-# def dashboard():
-#     return render_template('dashboard.html')
 
 

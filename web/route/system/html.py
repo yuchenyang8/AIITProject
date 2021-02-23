@@ -19,7 +19,6 @@ def html_system_index():
 
 
 @APP.route('/api/user/logout')
-# @login_required
 def api_user_logout():
     '''用户注销'''
     session.pop('status')

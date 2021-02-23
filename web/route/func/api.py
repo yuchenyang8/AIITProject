@@ -64,12 +64,11 @@ class FuncCompanyAPI(Resource):
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
         data = []
         if paginate:
-            index = (key_page - 1) * key_limit + 1
             for i in paginate:
                 data1 = {}
                 # data1['id'] = index
-                data1['company_name'] = i.company_name
-                data1['company_contact'] = i.company_contact
+                data1['company_name'] = i['ename']
+                data1['company_contact'] = i['econtact']
                 # data1['company_time'] = i.cus_time
                 # data1['cus_number'] = len(i.src_assets)
                 # data1['cus_number_port'] = len(i.src_ports)
