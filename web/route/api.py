@@ -18,21 +18,14 @@ class UserLogin(Resource):
         args = self.parser.parse_args()
         key_username = args.username
         key_password = args.password
-        key_remember = args.rememberme
 
-        user_query = DB.db.users.find({}, {'username': key_username})
+        user_query = DB.db.user.find_one({'uname': key_username})
         if not user_query:  # 若不存在此用户
             return {'status_code': 201, 'msg': '用户名或密码错误'}
-        if check_password_hash(user_query.password, key_password):  # 进行密码核对
+        if user_query['upassword'] == key_password:  # 进行密码核对
             session['status'] = True  # 登录成功设置session
             session['username'] = key_username
-            try:
-                DB.session.commit()
-            except Exception as e:
-                DB.session.rollback()
-            if key_remember:  # 若选择了记住密码选项
-                session.permanent = True
-                APP.permanent_session_lifetime = datetime.timedelta(weeks=7)  # 设置session到期时间7天
+
             return {'status_code': 200}
         else:
             return {'status_code': 201, 'msg': '用户名或密码错误'}
