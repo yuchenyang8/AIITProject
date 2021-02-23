@@ -5,6 +5,88 @@
     <title>LOGIN</title>
 </head>
 <body>
+<div class="layui-container">
+    <div class="admin-login-background">
+        <div class="layui-form login-form">
+            <form class="layui-form" action="">
+                <div class="layui-form-item logo-title">
+                    <h1>用户登录</h1>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-icon layui-icon-username" for="username"></label>
+                    <input type="text" name="username" lay-verify="username" placeholder="用户名" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-icon layui-icon-password" for="password"></label>
+                    <input type="password" id="password" name="password" lay-verify="password" placeholder="密码" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-item">
+                    <input type="checkbox" name="rememberme" value="true" lay-skin="primary" title="记住密码">
+                </div>
+                <div class="layui-form-item">
+                    <button class="layui-btn layui-btn layui-btn-normal layui-btn-fluid" lay-submit="" lay-filter="login">登 入</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='lib/jquery-3.4.1/jquery-3.4.1.min.js') }}" charset="utf-8"></script>
+<script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
+<script src="{{ url_for('static', filename='lib/jq-module/jquery.particleground.min.js') }}" charset="utf-8"></script>
+<script>
+    layui.use(['form'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+			$ = layui.jquery;
 
+        // 登录过期的时候，跳出ifram框架
+        if (top.location != self.location) top.location = self.location;
+
+        // 粒子线条背景
+        $(document).ready(function(){
+            $('.layui-container').particleground({
+                dotColor:'#7ec7fd',
+                lineColor:'#7ec7fd'
+            });
+        });
+
+		//自定义验证规则
+		form.verify({
+		    username: [
+		        /^[a-zA-Z]{4,20}$/, '用户名必须为4-20个字母'
+		    ],
+		    password: [
+		        /^[\S]{8,20}$/, '密码必须为8到20位，且不能出现空格'
+		    ],
+		    content: function (value) {
+		        layedit.sync(editIndex);
+		    }
+		});
+
+        // 进行登录操作
+        form.on('submit(login)', function (data) {
+			$.ajax({
+				url: "{{ url_for('api_user_login') }}",
+				data: JSON.stringify(data.field),
+				contentType: 'application/json;charset=UTF-8',
+				dataType: 'json',
+				type: 'post',
+				success: function (result) {
+					if (result.status_code == 200) {
+						window.location.href = "{{ url_for('html_system_index') }}";
+					} else {
+                        layer.alert(result.msg, {title: '提示', icon: 2})
+                        $('#password').val("").focus();
+                    }
+				},
+				error: function (e) {
+				    layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
+				}
+			})
+			return false;
+        });
+
+    });
+</script>
 </body>
 </html>
