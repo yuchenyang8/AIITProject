@@ -8,6 +8,6 @@ def login_required(func):
     def inner(*args, **kwargs):
         user = session.get('status')
         if not user:
-            return redirect(url_for('html_system_login'), 302)
+            return redirect(url_for('system_login'), 302)
         return func(*args, **kwargs)
     return inner
