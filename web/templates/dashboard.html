@@ -14,6 +14,15 @@
     <!-- Custom styles for this template -->
     <link href="dashboard.css" rel="stylesheet">
 
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+
+    <!-- bootstrap.bundle.min.js 用于弹窗、提示、下拉菜单，包含了 popper.min.js -->
+    <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+
+    <!-- 最新的 Bootstrap4 核心 JavaScript 文件 -->
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
   </head>
 
   <body>
@@ -42,7 +51,7 @@
 {#              <li><a href="#">退出登录</a></li>#}
               <li><a href="{{ url_for('api_user_logout') }}">退出登录</a></li>
             {% else %}
-              <li><a href="{{ url_for('html_system_login') }}">登录</a></li>
+              <li><a href="{{ url_for('system_login') }}">登录</a></li>
             {% endif %}
           </ul>
 
@@ -61,8 +70,18 @@
               <br>
               <br>
             <li><a href="#">信息展示</a></li>
-            <li><a href="#">任务管理</a></li>
+{#            <li><a href="#">任务管理</a></li>#}
+            <li class="dropdown">
+            <a href="#" data-toggle="dropdown">任务管理&nbsp;<span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="#">厂商管理</a></li>
+                    <li><a href="#">添加任务</a></li>
+                    <li><a href="#">任务列表</a></li>
+                    <li><a href="#">资产管理</a></li>
+                </ul>
+        </li>
             <li><a href="#">...</a></li>
+
           </ul>
         </div>
 

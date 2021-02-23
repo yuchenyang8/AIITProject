@@ -90,7 +90,7 @@
 				type: 'post',
 				success: function (result) {
 					if (result.status_code === 200) {
-						window.location.href = "{{ url_for('html_system_index') }}";
+						window.location.href = "{{ url_for('system_index') }}";
 					} else {
                         layer.alert(result.msg, {title: '提示', icon: 2})
                         $('#password').val("").focus();

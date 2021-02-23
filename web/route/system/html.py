@@ -4,16 +4,16 @@ from web import APP
 
 
 @APP.route('/')
-def html_system_login():
+def system_login():
     """用户登录页面"""
     if 'status' in session:
-        return redirect(url_for('html_system_index'), 302)
+        return redirect(url_for('system_index'), 302)
     return render_template('login.html')
 
 
 @APP.route('/system/index')
 @login_required
-def html_system_index():
+def system_index():
     """框架首页"""
     return render_template('dashboard.html', username=session['username'])
 
@@ -23,4 +23,4 @@ def api_user_logout():
     '''用户注销'''
     session.pop('status')
     session.pop('username')
-    return redirect(url_for('html_system_login'), 302)
+    return redirect(url_for('system_login'), 302)
