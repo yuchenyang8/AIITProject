@@ -46,13 +46,7 @@
 {#            <li><a href="#">Help</a></li>#}
 {#          </ul>#}
           <ul class="nav navbar-nav navbar-right">
-            {% if username %}
-              <li><a href="#">Welcome {{ username }}</a></li>
-{#              <li><a href="#">退出登录</a></li>#}
               <li><a href="{{ url_for('api_user_logout') }}">退出登录</a></li>
-            {% else %}
-              <li><a href="{{ url_for('system_login') }}">登录</a></li>
-            {% endif %}
           </ul>
 
           <form class="navbar-form navbar-right">

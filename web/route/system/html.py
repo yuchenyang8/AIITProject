@@ -15,7 +15,7 @@ def system_login():
 @login_required
 def system_index():
     """框架首页"""
-    return render_template('dashboard.html', username=session['username'])
+    return render_template('dashboard.html')
 
 
 @APP.route('/api/user/logout')
