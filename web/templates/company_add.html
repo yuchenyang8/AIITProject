@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ADD CUSTOMER</title>
+    <title>ADD COMPANY</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.5.5/css/layui.css') }}" media="all">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}" media="all">
     <style>
@@ -16,7 +16,7 @@
     <div class="layui-form-item">
         <label class="layui-form-label required">厂商名</label>
         <div class="layui-input-block">
-            <input type="text" name="cus_name" lay-verify="required" lay-reqtext="厂商名不能为空" placeholder="请输入厂商名"
+            <input type="text" name="company_name" lay-verify="required" lay-reqtext="厂商名不能为空" placeholder="请输入厂商名"
                    class="layui-input">
             <tip>添加重复厂商名会失败</tip>
         </div>
@@ -24,7 +24,7 @@
     <div class="layui-form-item">
         <label class="layui-form-label required">厂商主页</label>
         <div class="layui-input-block">
-            <input type="text" name="cus_home" lay-verify="required" lay-reqtext="厂商主页不能为空" placeholder="请输入厂商主页"
+            <input type="text" name="company_contact" lay-verify="required" lay-reqtext="厂商主页不能为空" placeholder="请输入厂商主页"
                    class="layui-input">
         </div>
     </div>
@@ -44,7 +44,7 @@
         //监听提交
         form.on('submit(user_customer)', function (data) {
             $.ajax({
-                url: "{{ url_for('api_func_customer') }}",
+                url: "{{ url_for('api_func_company') }}",
                 data: JSON.stringify(data.field),
                 contentType: 'application/json;charset=UTF-8',
                 dataType: 'json',
