@@ -20,7 +20,7 @@ def html_func_company_add():
 
 @APP.route('/func/task')
 @login_required
-def html_src_task():
+def html_func_task():
     """资产任务页面"""
     return render_template('task.html')
 
