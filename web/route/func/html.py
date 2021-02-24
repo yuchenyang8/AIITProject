@@ -19,7 +19,7 @@ def html_func_company_add():
 
 
 @APP.route('/func/task_add')
-# @login_required
+@login_required
 def html_func_task_add():
     """任务添加页面"""
     company = []

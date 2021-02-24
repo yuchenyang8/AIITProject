@@ -107,8 +107,8 @@ class FuncTaskAPI(Resource):
 
     def put(self):
         """添加任务资产"""
-        # if not session.get('status'):
-        #     return redirect(url_for('html_system_login'), 302)
+        if not session.get('status'):
+            return redirect(url_for('html_system_login'), 302)
         args = self.parser.parse_args()
         task_company = args.task_company
         task_type = args.task_type
@@ -118,18 +118,19 @@ class FuncTaskAPI(Resource):
         if not company_query:
             return {'status_code': 201, 'msg': f'不存在[{task_company}]厂商名，请检查'}
         eid = company_query['_id']
-        # uname = session['username']
-        new_task = {
-            'tname': '',
-            'ttype': task_type,
-            'tcycle': task_cycle,
-            'eid': eid,
-            'tstatus': 2,   # 1完成/2未完成
-            # 'uname': uname,
-        }
+        uname = session['username']
         if task_type == 1 or task_type == 2:    # WEB任务/主机任务
             message_list = list(set(task_message.split()))  # 过滤重复内容
             for m in message_list:
+                new_task = {
+                    'tname': '',
+                    'ttype': task_type,
+                    'tcycle': task_cycle,
+                    'eid': eid,
+                    'tstatus': 2,  # 1完成/2未完成
+                    'uname': uname,
+                    'tdate': datetime.datetime.now(),
+                }
                 message = m.strip()
                 if message:
                     task_sql = DB.db.task.find_one({'tname': message})   # 过滤已有重复任务
