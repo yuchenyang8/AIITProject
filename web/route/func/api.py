@@ -90,3 +90,52 @@ class FuncCompanyAPI(Resource):
             return {'status_code': 500, 'msg': '删除厂商失败，无此厂商'}
         DB.db.company.delete_one(searchdict)
         return {'status_code': 200, 'msg': '删除厂商成功'}
+
+
+class FuncTaskAPI(Resource):
+    """src 资产任务管理"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("task_company", type=str, location='json')
+        self.parser.add_argument("task_type", type=int, location='json')
+        self.parser.add_argument("task_cycle", type=int, location='json')
+        self.parser.add_argument("task_message", type=str, location='json')
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+        self.parser.add_argument("searchParams", type=str)
+
+    def put(self):
+        """添加任务资产"""
+        # if not session.get('status'):
+        #     return redirect(url_for('html_system_login'), 302)
+        args = self.parser.parse_args()
+        task_company = args.task_company
+        task_type = args.task_type
+        task_cycle = args.task_cycle
+        task_message = args.task_message
+        company_query = DB.db.company.find_one({'ename': task_company})
+        if not company_query:
+            return {'status_code': 201, 'msg': f'不存在[{task_company}]厂商名，请检查'}
+        eid = company_query['_id']
+        # uname = session['username']
+        new_task = {
+            'tname': '',
+            'ttype': task_type,
+            'tcycle': task_cycle,
+            'eid': eid,
+            'tstatus': 2,   # 1完成/2未完成
+            # 'uname': uname,
+        }
+        if task_type == 1 or task_type == 2:    # WEB任务/主机任务
+            message_list = list(set(task_message.split()))  # 过滤重复内容
+            for m in message_list:
+                message = m.strip()
+                if message:
+                    task_sql = DB.db.task.find_one({'tname': message})   # 过滤已有重复任务
+                    if task_sql:
+                        continue
+                    new_task['tname'] = message
+                    DB.db.task.insert_one(new_task)
+
+        return {'status_code': 200, 'msg': '添加任务成功'}

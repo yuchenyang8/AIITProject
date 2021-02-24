@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TASK ADD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.5.5/css/layui.css') }}" media="all">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form">
+    <div class="layui-form-item">
+        <label class="layui-form-label required">所属厂商</label>
+        <div class="layui-input-block">
+            <select name="task_company" lay-verify="required" lay-search>
+                <option value="">直接选择厂商或搜索选择</option>
+                {% for company_name in companylist %}
+                    <option value="{{ company_name }}">{{ company_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">所属类型</label>
+        <div class="layui-input-block">
+            <select name="task_type" lay-verify="required" lay-search>
+                <option value="">选择类型</option>
+                <option value=1>WEB</option>
+                <option value=2>主机</option>
+                <option value=3>APP</option>
+                <option value=4>固件</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">循环周期</label>
+        <div class="layui-input-block">
+            <select name="task_cycle" lay-verify="required" lay-search>
+                <option value="">选择周期</option>
+                <option value=1>仅扫描一次</option>
+                <option value=2>一周一次</option>
+                <option value=3>两周一次</option>
+                <option value=4>一月一次</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">资产列表</label>
+        <div class="layui-input-block">
+            <textarea placeholder="输入格式:
+			*.example.com  需要探测所有子域名(*号是关键)
+			xxx.example.com  直接给出子域名
+			8.8.8.8  扫描某个IP
+            8.8.8.0/24  扫描C段
+            " rows="8" required lay-verify="required" class="layui-textarea" name="task_message"></textarea>
+            <tip>输入格式：</tip>
+            <br/>
+            <tip>*.example.com 需要探测所有子域名(*号是关键)</tip>
+            <br/>
+            <tip>xxx.example.com 直接给出子域名</tip>
+            <br/>
+            <tip>8.8.8.0/24 扫描C段</tip>
+            <br/>
+            <tip>8.8.8.8 扫描某个IP</tip>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="taskadd">确认添加</button>
+        </div>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
+<script>
+    layui.use(['form'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+
+        //监听提交
+        form.on('submit(taskadd)', function (data) {
+            $.ajax({
+                url: "{{ url_for('api_func_task') }}",
+                data: JSON.stringify(data.field),
+                contentType: 'application/json;charset=UTF-8',
+                dataType: 'json',
+                type: 'put',
+                success: function (result) {
+                    if (result.status_code === 200) {
+                        var index = layer.alert('新增任务成功!', {
+                            title: '提示',
+                            icon: 1
+                        }, function () {
+                            parent.layui.table.reload("currentTable_task");
+                            layer.close(index);
+                            var iframeIndex = parent.layer.getFrameIndex(window.name);
+                            parent.layer.close(iframeIndex);
+                        })
+                    } else {
+                        layer.alert(result.msg, {
+                            title: '提示',
+                            icon: 2
+                        })
+                    }
+                },
+                error: function (e) {
+                    layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
+                }
+            })
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

@@ -11,7 +11,8 @@ API = Api(APP)
 from web.route.system import html
 from web.route.func import html
 from web.route.system.api import UserLogin
-from web.route.func.api import FuncCompanyAPI
+from web.route.func.api import FuncCompanyAPI, FuncTaskAPI
 
 API.add_resource(UserLogin, '/api/user/login', endpoint='api_user_login')
 API.add_resource(FuncCompanyAPI, '/api/func/company', endpoint='api_func_company')
+API.add_resource(FuncTaskAPI, '/api/func/task', endpoint='api_func_task')
