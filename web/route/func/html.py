@@ -18,6 +18,13 @@ def html_func_company_add():
     return render_template('company_add.html')
 
 
+@APP.route('/func/task')
+@login_required
+def html_src_task():
+    """资产任务页面"""
+    return render_template('task.html')
+
+
 @APP.route('/func/task_add')
 @login_required
 def html_func_task_add():
