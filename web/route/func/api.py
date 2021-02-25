@@ -3,6 +3,7 @@ from flask import session, request, json, redirect, url_for
 import datetime
 from web import DB
 import re
+from extensions.OneForAll.oneforall import OneForAll
 
 
 class FuncCompanyAPI(Resource):
@@ -231,3 +232,33 @@ class FuncTaskAPI(Resource):
             return {'status_code': 500, 'msg': '删除资产任务失败，此任务不存在'}
         DB.db.task.delete_one(searchdict)
         return {'status_code': 200, 'msg': '删除资产任务成功'}
+
+
+
+class Recon(Resource):
+    """渗透阶段信息收集工具"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("target", type=str, location='json')
+
+
+    def get(self):
+        args = self.parser.parse_args()
+        target = args.target
+        oneforall_result = call_onforall(target)
+
+
+
+
+
+# 调用oneforall
+def call_onforall(target):
+    task = OneForAll(target)
+    task.dns = True
+    task.brute = True
+    task.req = True
+    task.takeover = True
+    task.run()
+
+    return task.datas
