@@ -1,5 +1,5 @@
 from flask_restful import reqparse, Resource
-from flask import session, request, json, redirect, url_for
+from flask import session, json, redirect, url_for
 import datetime
 from web import DB
 import re
@@ -232,6 +232,8 @@ class FuncTaskAPI(Resource):
             return {'status_code': 500, 'msg': '删除资产任务失败，此任务不存在'}
         DB.db.task.delete_one(searchdict)
         return {'status_code': 200, 'msg': '删除资产任务成功'}
+
+
 
 
 
