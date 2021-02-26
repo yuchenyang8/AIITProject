@@ -17,8 +17,8 @@ class Collect(object):
         """
         if settings.enable_all_module:
             # The crawl module has some problems
-            modules = ['certificates', 'check', 'datasets',
-                       'dnsquery', 'intelligence', 'search']
+            modules = ['extensions.OneForAll.modules.certificates', 'extensions.OneForAll.modules.check', 'extensions.OneForAll.modules.datasets',
+                       'extensions.OneForAll.modules.dnsquery', 'extensions.OneForAll.modules.intelligence', 'extensions.OneForAll.modules.search']
             for module in modules:
                 module_path = settings.module_dir.joinpath(module)
                 for path in module_path.rglob('*.py'):
