@@ -122,7 +122,7 @@ class FuncTaskAPI(Resource):
         ename = company_query['ename']
         uname = session['username']
         task_success = False
-        if task_type == 1 or task_type == 2:    # WEB任务/主机任务
+        if task_type == 1 or task_type == 2:  # WEB任务/主机任务
             message_list = list(set(task_message.split()))  # 过滤重复内容
             for m in message_list:
                 new_task = {
@@ -136,7 +136,7 @@ class FuncTaskAPI(Resource):
                 }
                 message = m.strip()
                 if message:
-                    task_sql = DB.db.task.find_one({'tname': message})   # 过滤已有重复任务
+                    task_sql = DB.db.task.find_one({'tname': message})  # 过滤已有重复任务
                     if task_sql:
                         continue
                     new_task['tname'] = message
@@ -184,7 +184,7 @@ class FuncTaskAPI(Resource):
                     paginate1 = DB.db.task.find({
                         'ename': re.compile(search_dict['task_company']),
                         'tname': re.compile(search_dict['task_name']),
-                                                 })
+                    })
                     paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
         data = []
@@ -234,15 +234,12 @@ class FuncTaskAPI(Resource):
         return {'status_code': 200, 'msg': '删除资产任务成功'}
 
 
-
-
 class ReconAPI(Resource):
     """渗透阶段信息收集工具"""
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("target", type=str, location='json')
-
 
     def post(self):
         args = self.parser.parse_args()
@@ -252,7 +249,6 @@ class ReconAPI(Resource):
         oneforall_result = self.call_onforall(target)
 
         return {'status_code': 200}
-
 
     # 调用oneforall
     def call_onforall(self, target):
