@@ -10,9 +10,9 @@ OneForAll export from database module
 
 import fire
 
-from common import utils
-from common.database import Database
-from config.log import logger
+from extensions.OneForAll.common import utils
+from extensions.OneForAll.common.database import Database
+from extensions.OneForAll.config.log import logger
 
 
 def export_data(target, db=None, alive=False, limit=None, path=None, fmt='csv', show=False):

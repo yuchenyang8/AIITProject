@@ -12,7 +12,7 @@ import fire
 from datetime import datetime
 
 
-import export
+import extensions.OneForAll.export
 from extensions.OneForAll.brute import Brute
 from extensions.OneForAll.common import utils, resolve, request
 from extensions.OneForAll.modules.collect import Collect
