@@ -14,8 +14,10 @@ from distutils.version import LooseVersion
 from pathlib import Path
 from stat import S_IXUSR
 
+
 import requests
 import tenacity
+import pathlib
 from dns.resolver import Resolver
 
 from extensions.OneForAll.common.database import Database
@@ -586,12 +588,21 @@ def call_massdns(massdns_path, dict_path, ns_path, output_path, log_path,
     status_format = settings.brute_status_format
     socket_num = settings.brute_socket_num
     resolve_num = settings.brute_resolve_num
+
+    # cmd = f'{massdns_path} {quiet} --status-format {status_format} ' \
+    #       f'--processes {process_num} --socket-count {socket_num} ' \
+    #       f'--hashmap-size {concurrent_num} --resolvers {ns_path} ' \
+    #       f'--resolve-count {resolve_num} --type {query_type} ' \
+    #       f'--flush --output J --outfile {output_path} ' \
+    #       f'--root --error-log {log_path} {dict_path} --filter OK ' \
+    #       f'--sndbuf 0 --rcvbuf 0'
+    # Mac用户请使用以下cmd
     cmd = f'{massdns_path} {quiet} --status-format {status_format} ' \
           f'--processes {process_num} --socket-count {socket_num} ' \
           f'--hashmap-size {concurrent_num} --resolvers {ns_path} ' \
           f'--resolve-count {resolve_num} --type {query_type} ' \
           f'--flush --output J --outfile {output_path} ' \
-          f'--root --error-log {log_path} {dict_path} --filter OK ' \
+          f'--root --error-log {log_path} {dict_path} ' \
           f'--sndbuf 0 --rcvbuf 0'
     logger.log('DEBUG', f'Run command {cmd}')
     subprocess.run(args=cmd, shell=True)
