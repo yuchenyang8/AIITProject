@@ -18,7 +18,7 @@ import tenacity
 from dns.exception import Timeout
 from dns.resolver import NXDOMAIN, YXDOMAIN, NoAnswer, NoNameservers
 
-import export
+from extensions.OneForAll import export
 from extensions.OneForAll.common import utils
 from extensions.OneForAll.config import settings
 from extensions.OneForAll.common.module import Module
