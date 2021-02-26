@@ -1,10 +1,10 @@
 import json
 import ipaddress
 
-from config import settings
-from common import utils
-from common.database import Database
-from config.log import logger
+from extensions.OneForAll.config import settings
+from extensions.OneForAll.common import utils
+from extensions.OneForAll.common.database import Database
+from extensions.OneForAll.config.log import logger
 
 data_dir = settings.data_storage_dir
 

@@ -3,8 +3,8 @@ Collect subdomains from ContentSecurityPolicy
 """
 import requests
 
-from config.log import logger
-from common.check import Check
+from extensions.OneForAll.config.log import logger
+from extensions.OneForAll.common.check import Check
 
 
 class CSP(Check):

@@ -4,10 +4,10 @@ import tenacity
 from dns.exception import Timeout
 from dns.resolver import NXDOMAIN, YXDOMAIN, NoAnswer, NoNameservers
 
-from common import utils
-from config import settings
-from common import similarity
-from config.log import logger
+from extensions.OneForAll.common import utils
+from extensions.OneForAll.config import settings
+from extensions.OneForAll.common import similarity
+from extensions.OneForAll.config.log import logger
 
 
 def gen_random_subdomains(domain, count):

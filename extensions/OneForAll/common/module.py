@@ -7,10 +7,10 @@ import threading
 import time
 
 import requests
-from config.log import logger
-from config import settings
-from common import utils
-from common.database import Database
+from extensions.OneForAll.config.log import logger
+from extensions.OneForAll.config import settings
+from extensions.OneForAll.common import utils
+from extensions.OneForAll.common.database import Database
 
 lock = threading.Lock()
 

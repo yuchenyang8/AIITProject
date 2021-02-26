@@ -1,6 +1,6 @@
-from config import settings
-from common.query import Query
-from config.log import logger
+from extensions.OneForAll.config import settings
+from extensions.OneForAll.common.query import Query
+from extensions.OneForAll.config.log import logger
 
 
 class CensysAPI(Query):

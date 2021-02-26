@@ -1,4 +1,4 @@
-from common.query import Query
+from extensions.OneForAll.common.query import Query
 
 '''
 最多查询100条

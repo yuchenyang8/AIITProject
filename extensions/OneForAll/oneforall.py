@@ -13,17 +13,17 @@ from datetime import datetime
 
 
 import export
-from brute import Brute
-from common import utils, resolve, request
-from modules.collect import Collect
-from modules.srv import BruteSRV
-from modules.finder import Finder
-from modules.altdns import Altdns
-from modules.enrich import Enrich
-from modules import wildcard
-from config import settings
-from config.log import logger
-from takeover import Takeover
+from extensions.OneForAll.brute import Brute
+from extensions.OneForAll.common import utils, resolve, request
+from extensions.OneForAll.modules.collect import Collect
+from extensions.OneForAll.modules.srv import BruteSRV
+from extensions.OneForAll.modules.finder import Finder
+from extensions.OneForAll.modules.altdns import Altdns
+from extensions.OneForAll.modules.enrich import Enrich
+from extensions.OneForAll.modules import wildcard
+from extensions.OneForAll.config import settings
+from extensions.OneForAll.config.log import logger
+from extensions.OneForAll.takeover import Takeover
 
 yellow = '\033[01;33m'
 white = '\033[01;37m'

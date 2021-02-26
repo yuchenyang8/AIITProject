@@ -1,6 +1,6 @@
 import time
-from config.log import logger
-from common.query import Query
+from extensions.OneForAll.config.log import logger
+from extensions.OneForAll.common.query import Query
 
 
 class WZPCQuery(Query):

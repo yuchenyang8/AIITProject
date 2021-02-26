@@ -8,7 +8,7 @@ github自动接管
 import json
 import base64
 import requests
-from config import settings
+from extensions.OneForAll.config import settings
 
 HEADERS = {
     "Accept": "application/json, text/javascript, */*; q=0.01",

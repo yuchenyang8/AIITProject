@@ -5,7 +5,7 @@
 Example
 """
 
-from oneforall import OneForAll
+from extensions.OneForAll.oneforall import OneForAll
 
 
 def oneforall(domain):

@@ -1,7 +1,7 @@
 """
 检查内容安全策略收集子域名收集子域名
 """
-from common.check import Check
+from extensions.OneForAll.common.check import Check
 
 
 class Robots(Check):

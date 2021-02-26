@@ -34,3 +34,8 @@ def html_func_task_add():
     for c in company_search:
         company.append(c['ename'])
     return render_template('task_add.html', companylist=company)
+
+
+@APP.route('/test')
+def test():
+    return render_template('test.html')

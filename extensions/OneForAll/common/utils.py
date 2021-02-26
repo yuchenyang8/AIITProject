@@ -18,11 +18,11 @@ import requests
 import tenacity
 from dns.resolver import Resolver
 
-from common.database import Database
-from common.domain import Domain
-from common.records import Record, RecordCollection
-from config import settings
-from config.log import logger
+from extensions.OneForAll.common.database import Database
+from extensions.OneForAll.common.domain import Domain
+from extensions.OneForAll.common.records import Record, RecordCollection
+from extensions.OneForAll.config import settings
+from extensions.OneForAll.config.log import logger
 
 user_agents = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '

@@ -1,6 +1,6 @@
 import cdx_toolkit
-from common.crawl import Crawl
-from config.log import logger
+from extensions.OneForAll.common.crawl import Crawl
+from extensions.OneForAll.config.log import logger
 
 
 class ArchiveCrawl(Crawl):

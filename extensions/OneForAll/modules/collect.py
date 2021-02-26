@@ -1,8 +1,8 @@
 import threading
 import importlib
 
-from config.log import logger
-from config import settings
+from extensions.OneForAll.config.log import logger
+from extensions.OneForAll.config import settings
 
 
 class Collect(object):

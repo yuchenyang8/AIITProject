@@ -1,8 +1,8 @@
 import zipfile
 
-from common.utils import ip_to_int
-from config.setting import data_storage_dir
-from common.database import Database
+from extensions.OneForAll.common.utils import ip_to_int
+from extensions.OneForAll.config.setting import data_storage_dir
+from extensions.OneForAll.common.database import Database
 
 
 def get_db_path():

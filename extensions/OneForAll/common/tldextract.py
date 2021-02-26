@@ -2,7 +2,7 @@
 """`tldextract` accurately separates the gTLD or ccTLD (generic or country code
 top-level domain) from the registered domain and subdomains of a URL.
 
-    >>> import tldextract
+    >>> import extensions.OneForAll.common.tldextract
 
     >>> tldextract.extract('http://forums.news.cnn.com/')
     ExtractResult(subdomain='forums.news', domain='cnn', suffix='com')
@@ -56,7 +56,7 @@ from functools import wraps
 
 import idna
 
-from common import utils
+from extensions.OneForAll.common import utils
 
 IP_RE = re.compile(r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$')  # pylint: disable=line-too-long
 

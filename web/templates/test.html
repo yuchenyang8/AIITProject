@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+</head>
+<body>
+
+<form id="form1" method="POST">
+    <input name="target" type="text"/>
+</form>
+<button id="submit">click</button>
+
+
+<script>
+    $("button").on("click", function () {
+        var fields = $("#form1").serializeArray()
+        data = {}
+        $.each(fields, function (index, field) {
+            data[field.name] = field.value; //通过变量，将属性值，属性一起放到对象中
+        })
+        $.ajax({
+            type: "POST", //发送是以POST还是GET
+            url: "{{ url_for('api_func_recon') }}", //发送的地址
+            dataType: "json", //传输数据的格式
+            contentType: "application/json;charset=utf-8",
+            data: JSON.stringify(data), //传输的数据
+            success: function (msg) {
+                console.log(msg)
+            },
+            //失败的回调函数
+            error: function () {
+                console.log("error")
+            }
+        })
+
+    });
+</script>
+
+</body>
+</html>

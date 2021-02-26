@@ -9,7 +9,7 @@ import sys
 import socket
 import struct
 
-from config import settings
+from extensions.OneForAll.config import settings
 
 
 class IpRegInfo(object):

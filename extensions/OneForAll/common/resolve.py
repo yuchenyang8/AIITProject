@@ -1,9 +1,9 @@
 import gc
 import json
 
-from config.log import logger
-from config import settings
-from common import utils
+from extensions.OneForAll.config.log import logger
+from extensions.OneForAll.config import settings
+from extensions.OneForAll.common import utils
 
 
 def filter_subdomain(data):

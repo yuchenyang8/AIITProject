@@ -1,7 +1,7 @@
 """
 检查crossdomain.xml文件收集子域名
 """
-from common.check import Check
+from extensions.OneForAll.common.check import Check
 
 
 class CrossDomain(Check):

@@ -1,4 +1,4 @@
-from common.module import Module
+from extensions.OneForAll.common.module import Module
 
 
 class Crawl(Module):

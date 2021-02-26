@@ -1,6 +1,6 @@
-from common.module import Module
-from common import utils
-from config.log import logger
+from extensions.OneForAll.common.module import Module
+from extensions.OneForAll.common import utils
+from extensions.OneForAll.config.log import logger
 
 
 class Lookup(Module):

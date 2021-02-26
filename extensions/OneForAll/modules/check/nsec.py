@@ -1,8 +1,8 @@
 # https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-20-zh
 # https://appsecco.com/books/subdomain-enumeration/active_techniques/zone_walking.html
 
-from common import utils
-from common.check import Check
+from extensions.OneForAll.common import utils
+from extensions.OneForAll.common.check import Check
 
 
 class NSEC(Check):

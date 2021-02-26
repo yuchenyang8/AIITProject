@@ -3,13 +3,13 @@ import time
 from urllib import parse
 from requests import Response
 
-from common import utils
-from common import resolve
-from common import request
-from common.module import Module
-from common.database import Database
-from config import settings
-from config.log import logger
+from extensions.OneForAll.common import utils
+from extensions.OneForAll.common import resolve
+from extensions.OneForAll.common import request
+from extensions.OneForAll.common.module import Module
+from extensions.OneForAll.common.database import Database
+from extensions.OneForAll.config import settings
+from extensions.OneForAll.config.log import logger
 
 
 class Finder(Module):

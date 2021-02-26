@@ -5,15 +5,15 @@ import re
 import time
 import itertools
 
-from config import settings
+from extensions.OneForAll.config import settings
 
-from modules import wildcard
-from common import utils
-from common import resolve
-from common import request
-from common.domain import Domain
-from common.module import Module
-from config.log import logger
+from extensions.OneForAll.modules import wildcard
+from extensions.OneForAll.common import utils
+from extensions.OneForAll.common import resolve
+from extensions.OneForAll.common import request
+from extensions.OneForAll.common.domain import Domain
+from extensions.OneForAll.common.module import Module
+from extensions.OneForAll.config.log import logger
 
 
 def split_domain(domain):

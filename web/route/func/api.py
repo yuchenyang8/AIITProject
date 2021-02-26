@@ -236,8 +236,7 @@ class FuncTaskAPI(Resource):
 
 
 
-
-class Recon(Resource):
+class ReconAPI(Resource):
     """渗透阶段信息收集工具"""
 
     def __init__(self):
@@ -245,22 +244,24 @@ class Recon(Resource):
         self.parser.add_argument("target", type=str, location='json')
 
 
-    def get(self):
+    def post(self):
         args = self.parser.parse_args()
+        print('####', args)
         target = args.target
-        oneforall_result = call_onforall(target)
+        print('###########', target)
+        oneforall_result = self.call_onforall(target)
+
+        return {'status_code': 200}
 
 
+    # 调用oneforall
+    def call_onforall(self, target):
+        task = OneForAll(target)
+        task.dns = True
+        task.brute = True
+        task.req = True
+        task.takeover = True
+        task.run()
+        print('###########', task.datas)
 
-
-
-# 调用oneforall
-def call_onforall(target):
-    task = OneForAll(target)
-    task.dns = True
-    task.brute = True
-    task.req = True
-    task.takeover = True
-    task.run()
-
-    return task.datas
+        return task.datas

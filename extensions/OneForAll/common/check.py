@@ -1,6 +1,6 @@
 import requests
-from config.log import logger
-from common.module import Module
+from extensions.OneForAll.config.log import logger
+from extensions.OneForAll.common.module import Module
 
 
 class Check(Module):

@@ -3,7 +3,7 @@ import re
 import time
 from urllib import parse
 
-from common.query import Query
+from extensions.OneForAll.common.query import Query
 
 
 class NetCraft(Query):

@@ -1,5 +1,5 @@
 
-from common.query import Query
+from extensions.OneForAll.common.query import Query
 
 
 class SiteDossier(Query):

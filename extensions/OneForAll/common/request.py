@@ -6,10 +6,10 @@ import tqdm
 import requests
 from bs4 import BeautifulSoup
 
-from common import utils
-from config.log import logger
-from common.database import Database
-from config import settings
+from extensions.OneForAll.common import utils
+from extensions.OneForAll.config.log import logger
+from extensions.OneForAll.common.database import Database
+from extensions.OneForAll.config import settings
 
 
 def req_thread_count():

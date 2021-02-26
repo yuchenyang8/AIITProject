@@ -2,11 +2,11 @@
 SQLite database initialization and operation
 """
 
-from common import records
+from extensions.OneForAll.common import records
 
-from common.records import Connection
-from config.log import logger
-from config import settings
+from extensions.OneForAll.common.records import Connection
+from extensions.OneForAll.config.log import logger
+from extensions.OneForAll.config import settings
 
 
 class Database(object):
