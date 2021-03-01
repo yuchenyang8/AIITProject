@@ -11,7 +11,7 @@ def system_login():
     return render_template('login.html')
 
 
-@APP.route('/system/index')
+@APP.route('/index')
 @login_required
 def system_index():
     """框架首页"""

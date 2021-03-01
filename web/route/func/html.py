@@ -1,7 +1,6 @@
 from flask import render_template, redirect, url_for
 from web.utils.auxiliary import login_required
 from web import APP, DB
-from flask import session
 
 
 @APP.route('/func/company')

@@ -234,7 +234,7 @@ class FuncTaskAPI(Resource):
         return {'status_code': 200, 'msg': '删除资产任务成功'}
 
 
-class ReconAPI(Resource):
+class FuncReconAPI(Resource):
     """渗透阶段信息收集工具"""
 
     def __init__(self):
@@ -251,7 +251,7 @@ class ReconAPI(Resource):
         return {'status_code': 200}
 
     # 调用oneforall
-    def call_onforall(self, target):
+    def call_onforall(target):
         task = OneForAll(target)
         task.dns = True
         task.brute = True
