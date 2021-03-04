@@ -282,6 +282,7 @@ class ReconAPI(Resource):
 
         command_str = f'{whatweb_dir} ' + domain
         command = command_str.split(' ')
+
         p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         p.wait()
         out = p.stdout.read().decode()

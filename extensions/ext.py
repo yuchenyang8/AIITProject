@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import requests
+import re
 import nmap
 
 
@@ -56,7 +58,41 @@ class NmapExt(object):
         # nm.scan_result['scan'][ip]['tcp'] = scan_result
         return scan_result
 
+    def c_segment(self):
+        """C段扫描"""
+        nm = nmap.PortScanner()
+        hosts = self.hosts + '/24'
+        ports = '80'
+        arguments = '-Pn -sS -T4'
+        nm.scan(hosts=hosts, ports=ports, arguments=arguments)
+        # 'nmap -Pn -sS -p80 -T4 aiit.org.cn/24 -oG result.txt'
+        open_ip = []
+        filtered_ip = []
+        for ip in nm.scan_result['scan']:
+            if nm.scan_result['scan'][ip]['tcp'][80]['state'] == 'open':
+                open_ip.append(ip)
+            if nm.scan_result['scan'][ip]['tcp'][80]['state'] == 'filtered':
+                filtered_ip.append(ip)
+        ip_title = []
+        for ip in open_ip:
+            url = 'http://' + ip + ':' + ports
+            headers = {'Accept-Language': 'zh-CN,zh;q=0.9'}
+            try:
+                r = requests.get(url=url, headers=headers, timeout=5)
+            except requests.exceptions.RequestException as e:
+                pass
+            charset = re.findall(r'charset=.*?(.+?)"', r.text)
+            r.encoding = charset[0] if charset else 'utf-8'
+            result = re.findall(r"<title.*?>(.+?)</title>", r.text)
+            title = result[0] if result else 'None'
+            ip_title.append(title)
+        c_result = dict(zip(open_ip, ip_title))
+        # filtered_result = dict.fromkeys(filtered_ip, 'FILTERED')
+        # c_result.update(filtered_result)
+        return c_result
 
+# n = NmapExt(hosts='aiit.org.cn', ports='1-65535')
+# n.c_segment()
 # n = NmapExt(hosts='aiit.org.cn/24', ports='1-100')
 # result = n.host_discovery()
 #
@@ -64,3 +100,24 @@ class NmapExt(object):
 # result = n.port_scan()
 # print(result)
 
+# import requests
+# import json
+#
+# url = "http://finger.tidesec.com"
+# header = {
+#     "Host": "finger.tidesec.com",
+#     "Content-Length": "17",
+#     "Accept": "*/*",
+#     "X-Requested-With": "XMLHttpRequest",
+#     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36",
+#     "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+#     "Origin": "http://finger.tidesec.com",
+#     "Referer": "http://finger.tidesec.com/",
+#     "Accept-Encoding": "gzip, deflate",
+#     "Accept-Language": "zh-CN,zh;q=0.9",
+#     "Connection": "close"
+# }
+# cookie = {'PHPSESSID': 'bmp5rpm38h6n7k9pdnjgt2prb4'}
+# data = {'target': 'aiit.org.cn'}
+# r = requests.post(url=url, headers=header, cookies=cookie, data=data)
+# print(r.text)
