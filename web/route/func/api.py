@@ -4,6 +4,11 @@ import datetime
 from web import DB
 import re
 from extensions.OneForAll.oneforall import OneForAll
+import requests
+import socket
+from web.route.func.auxiliary import get_user_agent
+import os
+import subprocess
 
 
 class FuncCompanyAPI(Resource):
@@ -234,30 +239,76 @@ class FuncTaskAPI(Resource):
         return {'status_code': 200, 'msg': '删除资产任务成功'}
 
 
-class FuncReconAPI(Resource):
+class ReconAPI(Resource):
     """渗透阶段信息收集工具"""
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("target", type=str, location='json')
 
+        self.ip = []
+
     def post(self):
         args = self.parser.parse_args()
-        print('####', args)
+        print('####args: ', args)
         target = args.target
-        print('###########', target)
-        oneforall_result = self.call_onforall(target)
+        print('####target: ', target)
+        # oneforall_result = self.call_onforall(target)
+
+
+        self.call_whatweb(target)
+        self.call_webscan()
+
 
         return {'status_code': 200}
 
-    # 调用oneforall
-    def call_onforall(target):
-        task = OneForAll(target)
+
+    # 调用oneforall，进行子域探测。
+    def call_onforall(self, domain):
+        task = OneForAll(domain)
         task.dns = True
         task.brute = True
         task.req = True
         task.takeover = True
         task.run()
-        print('###########', task.datas)
-
+        # print('###########', task.datas)
         return task.datas
+
+
+    # 调用WhatWeb，进行web指纹搜集
+    def call_whatweb(self, domain):
+        current_dir = os.getcwd()
+        whatweb_dir = current_dir + '/extensions/WhatWeb/whatweb'
+
+        command_str = f'{whatweb_dir} ' + domain
+        command = command_str.split(' ')
+        p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        p.wait()
+        out = p.stdout.read().decode()
+        # print('!!out: ', out)
+        # print('!!out: ', type(out))
+        ip_re = r'IP\x1b\[0m\[\x1b\[0m\x1b\[22m(.*?)\x1b\[0m\]'
+        ip = re.findall(ip_re, out, re.S)
+        self.ip = list(set(ip))
+        print('^^^^self.ip: ', self.ip)
+
+
+    # 调用webscan，进行旁站探测
+    def call_webscan(self):
+        url = "https://api.webscan.cc/?action=query&ip="
+        domains = {}
+        for i in self.ip:
+            search_url = url + i
+            response = requests.get(search_url, headers=get_user_agent(), verify=False).text
+            domain_re = r'\"domain\": \"(.*?)\"'
+            domains[i] = re.findall(domain_re, response, re.S)
+        print('!!!', domains)
+
+
+
+
+
+
+# if __name__ == '__main__':
+#     recon = ReconAPI()
+#     recon.call_webscan("baidu.com")
