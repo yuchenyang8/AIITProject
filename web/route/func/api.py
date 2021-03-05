@@ -257,7 +257,7 @@ class ReconAPI(Resource):
 
 
         self.call_whatweb(target)
-        self.call_webscan()
+        # self.call_webscan()
 
 
         return {'status_code': 200}
@@ -286,13 +286,30 @@ class ReconAPI(Resource):
         p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         p.wait()
         out = p.stdout.read().decode()
-        # print('!!out: ', out)
-        # print('!!out: ', type(out))
-        ip_re = r'IP\x1b\[0m\[\x1b\[0m\x1b\[22m(.*?)\x1b\[0m\]'
-        ip = re.findall(ip_re, out, re.S)
-        self.ip = list(set(ip))
-        print('^^^^self.ip: ', self.ip)
+        items = out.split('\n')
+        items.remove('')
+        print(len(items))
+        print(items)
+        print('!!out: ', out)
 
+        ip_re = r'IP\x1b\[0m\[\x1b\[0m\x1b\[22m(.*?)\x1b\[0m\]'
+        domain_re = r'\x1b\[1m\x1b\[34m(.*?)\x1b\[0m \[200'
+        country_re = r'Country\x1b\[0m\[\x1b\[0m\x1b\[22m(.*?)\x1b\[0m\]'
+        httpserver_re = r'HTTPServer\x1b\[0m\[\x1b\[1m\x1b\[36m(.*?)\x1b\[0m\]'
+
+        for item in items:
+            ip = re.findall(ip_re, item, re.S)
+            domain = re.findall(domain_re, item, re.S)
+            country = re.findall(country_re, item, re.S)
+            httpserver = re.findall(httpserver_re, item, re.S)
+
+            print(item)
+            print('^^^^ip: ', ip)
+            print('^^^^domain: ', domain)
+            print('^^^^country: ', country)
+            print('^^^^httpserver: ', httpserver)
+
+        # self.ip = list(set(ip))
 
     # 调用webscan，进行旁站探测
     def call_webscan(self):
@@ -304,6 +321,8 @@ class ReconAPI(Resource):
             domain_re = r'\"domain\": \"(.*?)\"'
             domains[i] = re.findall(domain_re, response, re.S)
         print('!!!', domains)
+
+
 
 
 
