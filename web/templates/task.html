@@ -206,7 +206,6 @@
                         success: function (result) {
                             if (result.status_code === 200) {
                                 layer.alert('信息搜集开始!', {title: '提示', icon: 1})
-                                obj.del();
                                 layer.close(index);
                             } else {
                                 layer.alert(result.msg, {title: '提示', icon: 2})

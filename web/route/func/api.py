@@ -9,6 +9,7 @@ import socket
 from web.route.func.auxiliary import get_user_agent
 import os
 import subprocess
+from extensions.ext import NmapExt
 
 
 class FuncCompanyAPI(Resource):
@@ -235,24 +236,27 @@ class ReconAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument("target", type=str, location='json')
-
-        self.ip = []
+        self.parser.add_argument("task_name", type=str, location='json')
+        self.parser.add_argument("task_type", type=str, location='json')
 
     def post(self):
         args = self.parser.parse_args()
-        print('####args: ', args)
-        target = args.target
-        print('####target: ', target)
-        # oneforall_result = self.call_onforall(target)
-
-
-        self.call_whatweb(target)
-        # self.call_webscan()
-
+        task_type = args.task_type
+        task_name = args.task_name
+        ports = '1-100'
+        # 主机探测
+        uphost = NmapExt(hosts=task_name, ports=ports).host_discovery()
+        # 端口扫描
+        for host in uphost:
+            portsinfo = NmapExt(hosts=host, ports=ports).port_scan()
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'ports': portsinfo}})
+        if task_type == 'WEB':
+            pass
+            # oneforall_result = self.call_onforall(task_name)
+            # self.call_whatweb(task_name)
+            # self.call_webscan()
 
         return {'status_code': 200}
-
 
     # 调用oneforall，进行子域探测。
     def call_onforall(self, domain):
@@ -264,7 +268,6 @@ class ReconAPI(Resource):
         task.run()
         # print('###########', task.datas)
         return task.datas
-
 
     # 调用WhatWeb，进行web指纹搜集
     def call_whatweb(self, domain):
@@ -312,13 +315,6 @@ class ReconAPI(Resource):
             domain_re = r'\"domain\": \"(.*?)\"'
             domains[i] = re.findall(domain_re, response, re.S)
         print('!!!', domains)
-
-
-
-
-
-
-
 
 # if __name__ == '__main__':
 #     recon = ReconAPI()

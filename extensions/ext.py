@@ -93,31 +93,13 @@ class NmapExt(object):
 
 # n = NmapExt(hosts='aiit.org.cn', ports='1-65535')
 # n.c_segment()
-# n = NmapExt(hosts='aiit.org.cn/24', ports='1-100')
+# n = NmapExt(hosts='aiit.org.cn', ports='1-100')
 # result = n.host_discovery()
+# for ip in result:
+#     n = NmapExt(hosts=ip, ports='1-100')
+#     r = n.port_scan()
+#     print(r)
 #
 # n = NmapExt(hosts='aiit.org.cn', ports='1-100')
 # result = n.port_scan()
 # print(result)
-
-# import requests
-# import json
-#
-# url = "http://finger.tidesec.com"
-# header = {
-#     "Host": "finger.tidesec.com",
-#     "Content-Length": "17",
-#     "Accept": "*/*",
-#     "X-Requested-With": "XMLHttpRequest",
-#     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36",
-#     "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-#     "Origin": "http://finger.tidesec.com",
-#     "Referer": "http://finger.tidesec.com/",
-#     "Accept-Encoding": "gzip, deflate",
-#     "Accept-Language": "zh-CN,zh;q=0.9",
-#     "Connection": "close"
-# }
-# cookie = {'PHPSESSID': 'bmp5rpm38h6n7k9pdnjgt2prb4'}
-# data = {'target': 'aiit.org.cn'}
-# r = requests.post(url=url, headers=header, cookies=cookie, data=data)
-# print(r.text)
