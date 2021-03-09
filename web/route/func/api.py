@@ -104,7 +104,7 @@ class FuncTaskAPI(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("task_company", type=str, location='json')
-        self.parser.add_argument("task_type", type=int, location='json')
+        self.parser.add_argument("task_type", type=str, location='json')
         self.parser.add_argument("task_cycle", type=int, location='json')
         self.parser.add_argument("task_message", type=str, location='json')
         self.parser.add_argument("task_name", type=str, location='json')
@@ -127,7 +127,7 @@ class FuncTaskAPI(Resource):
         ename = company_query['ename']
         uname = session['username']
         task_success = False
-        if task_type == 1 or task_type == 2:  # WEB任务/主机任务
+        if task_type == 'WEB' or task_type == '主机':  # WEB任务/主机任务
             message_list = list(set(task_message.split()))  # 过滤重复内容
             for m in message_list:
                 new_task = {
@@ -199,16 +199,7 @@ class FuncTaskAPI(Resource):
                 data1 = {}
                 data1['id'] = index
                 data1['task_name'] = i['tname']
-
-                if i['ttype'] == 1:
-                    data1['task_type'] = 'WEB'
-                elif i['ttype'] == 2:
-                    data1['task_type'] = '主机'
-                elif i['ttype'] == 3:
-                    data1['task_type'] = 'APP'
-                elif i['ttype'] == 4:
-                    data1['task_type'] = '固件'
-
+                data1['task_type'] = i['ttype']
                 data1['task_company'] = i['ename']
 
                 if i['tstatus'] == 1:
