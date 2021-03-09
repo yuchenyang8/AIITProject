@@ -197,25 +197,16 @@
             var data = obj.data;
             if (obj.event === 'start') {
                 layer.confirm('确定开始该资产任务吗?', function (index) {
-                    $.ajax({
-                        url: "{{ url_for('api_func_recon') }}",
-                        data: JSON.stringify(data),
-                        contentType: 'application/json;charset=UTF-8',
-                        dataType: 'json',
-                        type: 'post',
-                        success: function (result) {
-                            if (result.status_code === 200) {
-                                layer.alert('信息搜集开始!', {title: '提示', icon: 1})
-                                layer.close(index);
-                            } else {
-                                layer.alert(result.msg, {title: '提示', icon: 2})
-                            }
-                        },
-                        error: function (e) {
-                            layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
-                        }
-                    })
+                    layer.alert('信息搜集开始!', {title: '提示', icon: 1})
+                    layer.close(index);
                 });
+                $.ajax({
+                    url: "{{ url_for('api_func_recon') }}",
+                    data: JSON.stringify(data),
+                    contentType: 'application/json;charset=UTF-8',
+                    dataType: 'json',
+                    type: 'post',
+                })
             }
             if (obj.event === 'delete') {
                 layer.confirm('确定删除该资产任务吗?', function (index) {

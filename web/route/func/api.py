@@ -244,14 +244,33 @@ class ReconAPI(Resource):
         task_type = args.task_type
         task_name = args.task_name
         ports = '1-100'
-        # 主机探测
-        uphost = NmapExt(hosts=task_name, ports=ports).host_discovery()
-        # 端口扫描
-        for host in uphost:
-            portsinfo = NmapExt(hosts=host, ports=ports).port_scan()
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'ports': portsinfo}})
+        if task_type == '主机':
+            # 主机探测
+            uphost = NmapExt(hosts=task_name, ports=ports).host_discovery()
+            # 端口扫描
+            for host in uphost:
+                portsinfo = NmapExt(hosts=host, ports=ports).port_scan()
+                DB.db.task.update_one({'tname': task_name}, {'$set': {'ports': portsinfo}})
+                DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': 1}})
         if task_type == 'WEB':
-            pass
+            # IP检测
+            ip = NmapExt(hosts=task_name, ports=ports).host_discovery()[0]
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'ip': ip}})
+            if not DB.db.task.find_one({'tname': ip}):
+                # 创建主机任务
+                portsinfo = NmapExt(hosts=ip, ports=ports).port_scan()
+                new_task = {
+                    'tname': ip,
+                    'ttype': '主机',
+                    'tcycle': 1,
+                    'ename': DB.db.task.find_one({'tname': task_name})['ename'],
+                    'tstatus': 1,  # 1完成/2未完成
+                    'uname': session['username'],
+                    'tdate': datetime.datetime.now(),
+                    'ports': portsinfo,
+                }
+                DB.db.task.insert_one(new_task)
+
             # oneforall_result = self.call_onforall(task_name)
             # self.call_whatweb(task_name)
             # self.call_webscan()
