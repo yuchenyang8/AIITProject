@@ -3,14 +3,13 @@ from flask import session, json, redirect, url_for
 import datetime
 from web import DB
 import re
-from extensions.OneForAll.oneforall import OneForAll
 import requests
 import socket
 from web.route.func.auxiliary import get_user_agent
 import os
 import subprocess
 from extensions.ext import NmapExt
-
+from extensions.ext import oneforallExt, whatwebExt
 
 class FuncCompanyAPI(Resource):
     """厂商管理类"""
@@ -270,59 +269,24 @@ class ReconAPI(Resource):
                     'ports': portsinfo,
                 }
                 DB.db.task.insert_one(new_task)
+        self.parser.add_argument("target", type=str, location='json')
 
-            # oneforall_result = self.call_onforall(task_name)
-            # self.call_whatweb(task_name)
-            # self.call_webscan()
+
+    def post(self):
+        args = self.parser.parse_args()
+        target = args.target
+
+        print('####args: ', args)
+        print('####target: ', target)
+
+        # oneforall_scan = oneforallExt(target)
+        # oneforall_result = oneforall_scan.subdomain_discovery()
+
+        whatweb_scan = whatwebExt(target)
+        whatweb_result = whatweb_scan.web_fingerprint()
 
         return {'status_code': 200}
 
-    # 调用oneforall，进行子域探测。
-    def call_onforall(self, domain):
-        task = OneForAll(domain)
-        task.dns = True
-        task.brute = True
-        task.req = True
-        task.takeover = True
-        task.run()
-        # print('###########', task.datas)
-        return task.datas
-
-    # 调用WhatWeb，进行web指纹搜集
-    def call_whatweb(self, domain):
-        current_dir = os.getcwd()
-        whatweb_dir = current_dir + '/extensions/WhatWeb/whatweb'
-
-        command_str = f'{whatweb_dir} ' + domain
-        command = command_str.split(' ')
-
-        p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        p.wait()
-        out = p.stdout.read().decode()
-        items = out.split('\n')
-        items.remove('')
-        print(len(items))
-        print(items)
-        print('!!out: ', out)
-
-        ip_re = r'IP\x1b\[0m\[\x1b\[0m\x1b\[22m(.*?)\x1b\[0m\]'
-        domain_re = r'\x1b\[1m\x1b\[34m(.*?)\x1b\[0m \[200'
-        country_re = r'Country\x1b\[0m\[\x1b\[0m\x1b\[22m(.*?)\x1b\[0m\]'
-        httpserver_re = r'HTTPServer\x1b\[0m\[\x1b\[1m\x1b\[36m(.*?)\x1b\[0m\]'
-
-        for item in items:
-            ip = re.findall(ip_re, item, re.S)
-            domain = re.findall(domain_re, item, re.S)
-            country = re.findall(country_re, item, re.S)
-            httpserver = re.findall(httpserver_re, item, re.S)
-
-            print(item)
-            print('^^^^ip: ', ip)
-            print('^^^^domain: ', domain)
-            print('^^^^country: ', country)
-            print('^^^^httpserver: ', httpserver)
-
-        # self.ip = list(set(ip))
 
     # 调用webscan，进行旁站探测
     def call_webscan(self):
@@ -335,6 +299,3 @@ class ReconAPI(Resource):
             domains[i] = re.findall(domain_re, response, re.S)
         print('!!!', domains)
 
-# if __name__ == '__main__':
-#     recon = ReconAPI()
-#     recon.call_webscan("baidu.com")

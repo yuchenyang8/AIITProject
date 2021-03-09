@@ -2,6 +2,9 @@
 import requests
 import re
 import nmap
+import subprocess
+import os
+from extensions.OneForAll.oneforall import OneForAll
 
 
 class NmapExt(object):
@@ -103,3 +106,113 @@ class NmapExt(object):
 # n = NmapExt(hosts='aiit.org.cn', ports='1-100')
 # result = n.port_scan()
 # print(result)
+
+
+# import requests
+# import json
+#
+# url = "http://finger.tidesec.com"
+# header = {
+#     "Host": "finger.tidesec.com",
+#     "Content-Length": "17",
+#     "Accept": "*/*",
+#     "X-Requested-With": "XMLHttpRequest",
+#     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36",
+#     "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+#     "Origin": "http://finger.tidesec.com",
+#     "Referer": "http://finger.tidesec.com/",
+#     "Accept-Encoding": "gzip, deflate",
+#     "Accept-Language": "zh-CN,zh;q=0.9",
+#     "Connection": "close"
+# }
+# cookie = {'PHPSESSID': 'bmp5rpm38h6n7k9pdnjgt2prb4'}
+# data = {'target': 'aiit.org.cn'}
+# r = requests.post(url=url, headers=header, cookies=cookie, data=data)
+# print(r.text)
+
+
+# -----------------------------------
+# 子域扫描模块
+# -----------------------------------
+class oneforallExt(object):
+    """Nmap插件类"""
+
+    def __init__(self, domain):
+        self.domain = domain
+
+    def subdomain_discovery(self):
+        task = OneForAll(self.domain)
+        task.dns = True
+        task.brute = True
+        task.req = True
+        task.takeover = True
+        task.run()
+        return task.datas
+
+# -----------------------------------
+# web指纹模块
+# -----------------------------------
+class whatwebExt(object):
+    """whatweb插件类"""
+
+    def __init__(self, domain):
+        self.domain = domain
+
+    def web_fingerprint(self):
+        project_root_dir = os.getcwd()
+        whatweb_dir = project_root_dir + '/extensions/WhatWeb/whatweb'
+
+        # command_str = f'{whatweb_dir} ' + ' -v ' + self.domain
+        command_str = f'{whatweb_dir} ' + ' --colour=never ' + self.domain
+        command = command_str.split(' ')
+
+        p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        p.wait()
+        out = p.stdout.read().decode()
+        items = out.split('\n')
+        items.remove('')
+        # print(len(items))
+        # print(items)
+        # print('out: ', out)
+
+        ip_re = r'IP\[(.*?)\]'
+        domain_re = r'(.*?) \[200'
+        country_re = r'Country\[(.*?)\]'
+        httpserver_re = r'HTTPServer\[(.*?)\]'
+        metagenerator_re = r'MetaGenerator\[(.*?)\]'
+        xpoweredby_re = r'X-Powered-By\[(.*?)\]'
+
+        result = {}
+
+        for item in items:
+            ip = re.findall(ip_re, item, re.S)
+            print('###', type(ip))
+            print('###', ip)
+            domain = re.findall(domain_re, item, re.S)
+            print('###', type(domain))
+            country = re.findall(country_re, item, re.S)
+            httpserver = re.findall(httpserver_re, item, re.S)
+            metagenerator = re.findall(metagenerator_re, item, re.S)
+            xpoweredby = re.findall(xpoweredby_re, item, re.S)
+
+            temp = {}
+            temp['ip'] = ip[0]
+            temp['domain'] = domain[0]
+            temp['country'] = country[0]
+            temp['httpserver'] = httpserver[0]
+            temp['metagenerator'] = metagenerator[0]
+            temp['xpoweredby'] = xpoweredby[0]
+
+            result[ip[0]] = temp
+
+            # print(item)
+            # print('^^^^ip: ', ip)
+            # print('^^^^domain: ', domain)
+            # print('^^^^country: ', country)
+            # print('^^^^httpserver: ', httpserver)
+            # print('^^^^metagenerator: ', metagenerator)
+            # print('^^^^xpoweredby: ', xpoweredby)
+
+        print(result)
+        return result
+

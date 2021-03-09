@@ -24,10 +24,11 @@ def html_func_task():
     return render_template('task.html')
 
 
-@APP.route('/func/task_add')
+@APP.route('/func/task_add/')
 @login_required
 def html_func_task_add():
     """任务添加页面"""
+
     company = []
     company_search = DB.db.company.find()
     for c in company_search:
