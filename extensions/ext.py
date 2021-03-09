@@ -41,8 +41,10 @@ class NmapExt(object):
         hosts = self.hosts
         ports = self.ports
         arguments = '-Pn -T4 -sV --version-all'
+        print('1: ',dir(nm))
         nm.scan(hosts=hosts, ports=ports, arguments=arguments)
-        # print(nm.scan_result)
+        print(dir(nm))
+        print(nm._scan_result)
         # {'nmap': {'command_line': 'nmap -oX - -p 1-65535 -Pn -T4 -sV --version-all --min-parallelism 1024 aiit.org.cn', 'scaninfo': {'error': ["Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.\r\nWarning: Your --min-parallelism option is pretty high!  This can hurt reliability.\r\n"], 'warning': ['Warning: Your --min-parallelism option is pretty high!  This can hurt reliability.\r\n'], 'tcp': {'method': 'syn', 'services': '1-65535'}}, 'scanstats': {'timestr': 'Tue Mar 02 17:02:39 2021', 'elapsed': '196.52', 'uphosts': '1', 'downhosts': '0', 'totalhosts': '1'}}, 'scan': {'47.98.147.82': {'hostnames': [{'name': 'aiit.org.cn', 'type': 'user'}], 'addresses': {'ipv4': '47.98.147.82'}, 'vendor': {}, 'status': {'state': 'up', 'reason': 'user-set'}, 'tcp': {22: {'state': 'open', 'reason': 'syn-ack', 'name': 'ssh', 'product': 'OpenSSH', 'version': '6.6.1', 'extrainfo': 'protocol 2.0', 'conf': '10', 'cpe': 'cpe:/a:openbsd:openssh:6.6.1'}, 80: {'state': 'open', 'reason': 'syn-ack', 'name': 'http', 'product': 'nginx', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/a:igor_sysoev:nginx'}, 3389: {'state': 'closed', 'reason': 'reset', 'name': 'ms-wbt-server', 'product': '', 'version': '', 'extrainfo': '', 'conf': '3', 'cpe': ''}}}}}
         #
         # nm.scan(hosts=hosts, ports=ports, arguments='-sF -T4')
@@ -196,14 +198,15 @@ class whatwebExt(object):
             xpoweredby = re.findall(xpoweredby_re, item, re.S)
 
             temp = {}
-            temp['ip'] = ip[0]
-            temp['domain'] = domain[0]
-            temp['country'] = country[0]
-            temp['httpserver'] = httpserver[0]
-            temp['metagenerator'] = metagenerator[0]
-            temp['xpoweredby'] = xpoweredby[0]
 
-            result[ip[0]] = temp
+            temp['ip'] = ip[0] if ip else ''
+            temp['domain'] = domain[0] if domain else ''
+            temp['country'] = country[0] if country else ''
+            temp['httpserver'] = httpserver[0] if httpserver else ''
+            temp['metagenerator'] = metagenerator[0] if metagenerator else ''
+            temp['xpoweredby'] = xpoweredby[0] if xpoweredby else ''
+
+            result[domain[0]] = temp
 
             # print(item)
             # print('^^^^ip: ', ip)

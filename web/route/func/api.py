@@ -242,6 +242,7 @@ class ReconAPI(Resource):
         args = self.parser.parse_args()
         task_type = args.task_type
         task_name = args.task_name
+        print('args: ', args)
         ports = '1-100'
         if task_type == '主机':
             # 主机探测
@@ -271,14 +272,15 @@ class ReconAPI(Resource):
                 DB.db.task.insert_one(new_task)
 
 
-            oneforall_scan = oneforallExt(task_name)
-            oneforall_result = oneforall_scan.subdomain_discovery()
-            print('oneforall_result: ', oneforall_result)
+            # oneforall_scan = oneforallExt(task_name)
+            # oneforall_result = oneforall_scan.subdomain_discovery()
+            # print('oneforall_result: ', oneforall_result)
 
 
             whatweb_scan = whatwebExt(task_name)
             whatweb_result = whatweb_scan.web_fingerprint()
             print('whatweb_result: ', whatweb_result)
+
 
         return {'status_code': 200}
 
