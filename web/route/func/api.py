@@ -269,21 +269,16 @@ class ReconAPI(Resource):
                     'ports': portsinfo,
                 }
                 DB.db.task.insert_one(new_task)
-        self.parser.add_argument("target", type=str, location='json')
 
 
-    def post(self):
-        args = self.parser.parse_args()
-        target = args.target
+            oneforall_scan = oneforallExt(task_name)
+            oneforall_result = oneforall_scan.subdomain_discovery()
+            print('oneforall_result: ', oneforall_result)
 
-        print('####args: ', args)
-        print('####target: ', target)
 
-        # oneforall_scan = oneforallExt(target)
-        # oneforall_result = oneforall_scan.subdomain_discovery()
-
-        whatweb_scan = whatwebExt(target)
-        whatweb_result = whatweb_scan.web_fingerprint()
+            whatweb_scan = whatwebExt(task_name)
+            whatweb_result = whatweb_scan.web_fingerprint()
+            print('whatweb_result: ', whatweb_result)
 
         return {'status_code': 200}
 
