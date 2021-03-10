@@ -5,7 +5,9 @@ import nmap
 import subprocess
 import os
 from extensions.OneForAll.oneforall import OneForAll
+import platform
 
+SYSTEM = platform.system()
 
 class NmapExt(object):
     """Nmap插件类"""
@@ -164,8 +166,13 @@ class whatwebExt(object):
         project_root_dir = os.getcwd()
         whatweb_dir = project_root_dir + '/extensions/WhatWeb/whatweb'
 
+        print('!!!!!', SYSTEM)
         # command_str = f'{whatweb_dir} ' + ' -v ' + self.domain
-        command_str = f'{whatweb_dir} ' + ' --colour=never ' + self.domain
+
+        if SYSTEM == "Darwin":
+            command_str = f'{whatweb_dir} ' + ' --colour=never ' + self.domain
+        else:
+            command_str = 'ruby ' + f'{whatweb_dir} ' + ' --colour=never ' + self.domain
         command = command_str.split(' ')
 
         p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -218,4 +225,3 @@ class whatwebExt(object):
 
         print(result)
         return result
-
