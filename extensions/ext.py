@@ -165,14 +165,11 @@ class whatwebExt(object):
     def web_fingerprint(self):
         project_root_dir = os.getcwd()
         whatweb_dir = project_root_dir + '/extensions/WhatWeb/whatweb'
-
         print('!!!!!', SYSTEM)
-        # command_str = f'{whatweb_dir} ' + ' -v ' + self.domain
-
-        if SYSTEM == "Darwin":
-            command_str = f'{whatweb_dir} ' + ' --colour=never ' + self.domain
-        else:
+        if SYSTEM == "Windows":
             command_str = 'ruby ' + f'{whatweb_dir} ' + ' --colour=never ' + self.domain
+        else:
+            command_str = f'{whatweb_dir} ' + ' --colour=never ' + self.domain
         command = command_str.split(' ')
 
         p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
