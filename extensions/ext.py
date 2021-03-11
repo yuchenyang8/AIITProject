@@ -6,6 +6,7 @@ import subprocess
 import os
 from extensions.OneForAll.oneforall import OneForAll
 import platform
+import json
 
 SYSTEM = platform.system()
 
@@ -187,4 +188,29 @@ class WhatwebExt(object):
         return result
 
 
-w = WhatwebExt('aiit.org.cn').web_fingerprint()
+class DirExt(object):
+    """Dirsearch插件类"""
+
+    def __init__(self, url):
+        self.url = url
+        self.TOOL_DIR = r'D:\UY\dirsearch\dirsearch.py'
+        self.RESULT_DIR = r'D:\UY\dirsearch\result.json'
+
+    def dirscan(self):
+        command = 'python {} -e * -x 403,404,405,500,501,502,503 -u {} --json-report {}'.format(self.TOOL_DIR, self.url, self.RESULT_DIR)
+        os.popen(command).read()
+        with open(self.RESULT_DIR, 'r+', encoding='utf-8') as f:
+            data = json.load(f)
+        result = []
+        for d in data:
+            if d == 'time':
+                continue
+            for i in data[d]:
+                if i['status'] == 200:
+                    result.append(d[:-1] + i['path'])
+                # elif i['status'] == 301:
+                #     result.append(i['redirect'])
+        result = list(set(result))
+        f.close()
+        return result
+
