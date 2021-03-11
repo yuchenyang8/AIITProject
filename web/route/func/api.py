@@ -3,13 +3,8 @@ from flask import session, json, redirect, url_for
 import datetime
 from web import DB
 import re
-import requests
-import socket
-from web.route.func.auxiliary import get_user_agent
-import os
-import subprocess
-from extensions.ext import NmapExt
-from extensions.ext import oneforallExt, whatwebExt
+from extensions.ext import NmapExt, OneForAllExt, WhatwebExt, DirExt
+
 
 class FuncCompanyAPI(Resource):
     """厂商管理类"""
@@ -45,20 +40,20 @@ class FuncCompanyAPI(Resource):
         company_name = args.company_name
         key_page = args.page
         key_limit = args.limit
-        key_searchParams = args.searchParams
+        key_searchparams = args.searchParams
         count = DB.db.company.find().count()
         jsondata = {'code': 0, 'msg': '', 'count': count}
         if count == 0:  # 若没有数据返回空列表
             jsondata.update({'data': []})
             return jsondata
-        if not key_searchParams:  # 若没有查询参数
+        if not key_searchparams:  # 若没有查询参数
             if not key_page or not key_limit:  # 判断是否有分页查询参数
                 paginate = DB.db.company.find().limit(20).skip(0)
             else:
                 paginate = DB.db.company.find().limit(key_limit).skip((key_page - 1) * key_limit)
         else:
             try:
-                search_dict = json.loads(key_searchParams)  # 解析查询参数
+                search_dict = json.loads(key_searchparams)  # 解析查询参数
             except:
                 paginate = DB.db.company.find().limit(20).skip(0)
             else:
@@ -237,13 +232,13 @@ class ReconAPI(Resource):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("task_name", type=str, location='json')
         self.parser.add_argument("task_type", type=str, location='json')
+        self.ports = '1-100'
 
     def post(self):
         args = self.parser.parse_args()
         task_type = args.task_type
         task_name = args.task_name
-        print('args: ', args)
-        ports = '1-100'
+        ports = self.ports
         if task_type == '主机':
             # 主机探测
             uphost = NmapExt(hosts=task_name, ports=ports).host_discovery()
@@ -253,9 +248,37 @@ class ReconAPI(Resource):
                 DB.db.task.update_one({'tname': task_name}, {'$set': {'ports': portsinfo}})
                 DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': 1}})
         if task_type == 'WEB':
-            # IP检测
-            ip = NmapExt(hosts=task_name, ports=ports).host_discovery()[0]
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'ip': ip}})
+            self.ip_detect(task_name)
+            webfinger = WhatwebExt(task_name).web_fingerprint()
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'finger': webfinger}})
+            subdomain_list = OneForAllExt(task_name).subdomain_discovery()
+            for subdomain in subdomain_list:
+                if not DB.db.task.find_one({'tname': subdomain}):
+                    # 创建WEB任务
+                    new_task = {
+                        'tname': subdomain,
+                        'ttype': 'WEB',
+                        'tcycle': 1,
+                        'ename': DB.db.task.find_one({'tname': task_name})['ename'],
+                        'tstatus': 2,
+                        'uname': session['username'],
+                        'tdate': datetime.datetime.now(),
+                    }
+                    DB.db.task.insert_one(new_task)
+                self.ip_detect(subdomain)
+                subdomain_webfinger = WhatwebExt(subdomain).web_fingerprint()
+                DB.db.task.update_one({'tname': subdomain}, {'$set': {'finger': subdomain_webfinger}})
+                DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': 1}})
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': 1}})
+        return {'status_code': 200}
+
+    def ip_detect(self, target):
+        # IP检测
+        ports = self.ports
+        i = NmapExt(hosts=target, ports=ports).host_discovery()
+        if i:
+            ip = i[0]
+            DB.db.task.update_one({'tname': target}, {'$set': {'ip': ip}})
             if not DB.db.task.find_one({'tname': ip}):
                 # 创建主机任务
                 portsinfo = NmapExt(hosts=ip, ports=ports).port_scan()
@@ -263,36 +286,13 @@ class ReconAPI(Resource):
                     'tname': ip,
                     'ttype': '主机',
                     'tcycle': 1,
-                    'ename': DB.db.task.find_one({'tname': task_name})['ename'],
-                    'tstatus': 1,  # 1完成/2未完成
+                    'ename': DB.db.task.find_one({'tname': target})['ename'],
+                    'tstatus': 1,
                     'uname': session['username'],
                     'tdate': datetime.datetime.now(),
                     'ports': portsinfo,
                 }
                 DB.db.task.insert_one(new_task)
-
-
-            # oneforall_scan = oneforallExt(task_name)
-            # oneforall_result = oneforall_scan.subdomain_discovery()
-            # print('oneforall_result: ', oneforall_result)
-
-
-            whatweb_scan = whatwebExt(task_name)
-            whatweb_result = whatweb_scan.web_fingerprint()
-            print('whatweb_result: ', whatweb_result)
-
-
-        return {'status_code': 200}
-
-
-    # 调用webscan，进行旁站探测
-    def call_webscan(self):
-        url = "https://api.webscan.cc/?action=query&ip="
-        domains = {}
-        for i in self.ip:
-            search_url = url + i
-            response = requests.get(search_url, headers=get_user_agent(), verify=False).text
-            domain_re = r'\"domain\": \"(.*?)\"'
-            domains[i] = re.findall(domain_re, response, re.S)
-        print('!!!', domains)
+        else:
+            DB.db.task.update_one({'tname': target}, {'$set': {'ip': 'None'}})
 

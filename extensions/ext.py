@@ -45,10 +45,7 @@ class NmapExt(object):
         hosts = self.hosts
         ports = self.ports
         arguments = '-Pn -T4 -sV --version-all'
-        print('1: ', dir(nm))
         nm.scan(hosts=hosts, ports=ports, arguments=arguments)
-        print(dir(nm))
-        print(nm._scan_result)
         # {'nmap': {'command_line': 'nmap -oX - -p 1-65535 -Pn -T4 -sV --version-all --min-parallelism 1024 aiit.org.cn', 'scaninfo': {'error': ["Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.\r\nWarning: Your --min-parallelism option is pretty high!  This can hurt reliability.\r\n"], 'warning': ['Warning: Your --min-parallelism option is pretty high!  This can hurt reliability.\r\n'], 'tcp': {'method': 'syn', 'services': '1-65535'}}, 'scanstats': {'timestr': 'Tue Mar 02 17:02:39 2021', 'elapsed': '196.52', 'uphosts': '1', 'downhosts': '0', 'totalhosts': '1'}}, 'scan': {'47.98.147.82': {'hostnames': [{'name': 'aiit.org.cn', 'type': 'user'}], 'addresses': {'ipv4': '47.98.147.82'}, 'vendor': {}, 'status': {'state': 'up', 'reason': 'user-set'}, 'tcp': {22: {'state': 'open', 'reason': 'syn-ack', 'name': 'ssh', 'product': 'OpenSSH', 'version': '6.6.1', 'extrainfo': 'protocol 2.0', 'conf': '10', 'cpe': 'cpe:/a:openbsd:openssh:6.6.1'}, 80: {'state': 'open', 'reason': 'syn-ack', 'name': 'http', 'product': 'nginx', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/a:igor_sysoev:nginx'}, 3389: {'state': 'closed', 'reason': 'reset', 'name': 'ms-wbt-server', 'product': '', 'version': '', 'extrainfo': '', 'conf': '3', 'cpe': ''}}}}}
         #
         # nm.scan(hosts=hosts, ports=ports, arguments='-sF -T4')
@@ -100,7 +97,8 @@ class NmapExt(object):
         # c_result.update(filtered_result)
         return c_result
 
-
+nm = NmapExt('nextcloud.nsfocus.net', '1-100').host_discovery()
+print(nm)
 # -----------------------------------
 # 子域扫描模块
 # -----------------------------------
@@ -121,6 +119,7 @@ class OneForAllExt(object):
         for d in task.datas:
             result.append(d['subdomain'])
         result = list(set(result))
+
         return result
 
 
@@ -132,12 +131,11 @@ class WhatwebExt(object):
 
     def __init__(self, domain):
         self.domain = domain
+        self.TOOL_DIR = r'D:\UY\AIITProject\extensions\WhatWeb\whatweb'
 
     def web_fingerprint(self):
-        project_root_dir = os.getcwd()
-        print(project_root_dir)
-        whatweb_dir = project_root_dir + '/WhatWeb/whatweb'
-        print('!!!!!', SYSTEM)
+        whatweb_dir = self.TOOL_DIR
+        # print('!!!!!', SYSTEM)
         if SYSTEM == "Windows":
             command_str = 'ruby ' + f'{whatweb_dir} ' + ' --colour=never ' + self.domain
         else:
@@ -149,13 +147,10 @@ class WhatwebExt(object):
         out = p.stdout.read().decode()
         items = out.split('\n')
         items.remove('')
-        # print(len(items))
-        # print(items)
-        # print('out: ', out)
 
-        ip_re = r'IP\[(.*?)\]'
-        domain_re = r'(.*?) \[200'
-        country_re = r'Country\[(.*?)\]'
+        # ip_re = r'IP\[(.*?)\]'
+        # domain_re = r'(.*?) \[200'
+        # country_re = r'Country\[(.*?)\]'
         httpserver_re = r'HTTPServer\[(.*?)\]'
         metagenerator_re = r'MetaGenerator\[(.*?)\]'
         xpoweredby_re = r'X-Powered-By\[(.*?)\]'
@@ -163,28 +158,20 @@ class WhatwebExt(object):
         result = {}
 
         for item in items:
-            ip = re.findall(ip_re, item, re.S)
-            print('###', type(ip))
-            print('###', ip)
-            domain = re.findall(domain_re, item, re.S)
-            print('###', type(domain))
-            country = re.findall(country_re, item, re.S)
+            # ip = re.findall(ip_re, item, re.S)
+            # domain = re.findall(domain_re, item, re.S)
+            # country = re.findall(country_re, item, re.S)
             httpserver = re.findall(httpserver_re, item, re.S)
             metagenerator = re.findall(metagenerator_re, item, re.S)
             xpoweredby = re.findall(xpoweredby_re, item, re.S)
 
-            temp = {}
+            # temp['ip'] = ip[0] if ip else ''
+            # temp['domain'] = domain[0] if domain else ''
+            # temp['country'] = country[0] if country else ''
+            result['httpserver'] = httpserver[0] if httpserver else ''
+            result['metagenerator'] = metagenerator[0] if metagenerator else ''
+            result['xpoweredby'] = xpoweredby[0] if xpoweredby else ''
 
-            temp['ip'] = ip[0] if ip else ''
-            temp['domain'] = domain[0] if domain else ''
-            temp['country'] = country[0] if country else ''
-            temp['httpserver'] = httpserver[0] if httpserver else ''
-            temp['metagenerator'] = metagenerator[0] if metagenerator else ''
-            temp['xpoweredby'] = xpoweredby[0] if xpoweredby else ''
-
-            result[domain[0]] = temp
-
-        print(result)
         return result
 
 
@@ -197,7 +184,8 @@ class DirExt(object):
         self.RESULT_DIR = r'D:\UY\dirsearch\result.json'
 
     def dirscan(self):
-        command = 'python {} -e * -x 403,404,405,500,501,502,503 -u {} --json-report {}'.format(self.TOOL_DIR, self.url, self.RESULT_DIR)
+        command = 'python {} -e * -x 403,404,405,500,501,502,503 -u {} --json-report {}'.format(self.TOOL_DIR, self.url,
+                                                                                                self.RESULT_DIR)
         os.popen(command).read()
         with open(self.RESULT_DIR, 'r+', encoding='utf-8') as f:
             data = json.load(f)
@@ -213,4 +201,3 @@ class DirExt(object):
         result = list(set(result))
         f.close()
         return result
-
