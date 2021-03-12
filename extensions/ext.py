@@ -97,8 +97,7 @@ class NmapExt(object):
         # c_result.update(filtered_result)
         return c_result
 
-nm = NmapExt('nextcloud.nsfocus.net', '1-100').host_discovery()
-print(nm)
+
 # -----------------------------------
 # 子域扫描模块
 # -----------------------------------
@@ -200,4 +199,6 @@ class DirExt(object):
                 #     result.append(i['redirect'])
         result = list(set(result))
         f.close()
+        print(result)
         return result
+

@@ -251,6 +251,8 @@ class ReconAPI(Resource):
             self.ip_detect(task_name)
             webfinger = WhatwebExt(task_name).web_fingerprint()
             DB.db.task.update_one({'tname': task_name}, {'$set': {'finger': webfinger}})
+            dir_list = DirExt(task_name).dirscan()
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'dir': dir_list}})
             subdomain_list = OneForAllExt(task_name).subdomain_discovery()
             for subdomain in subdomain_list:
                 if not DB.db.task.find_one({'tname': subdomain}):
@@ -268,6 +270,8 @@ class ReconAPI(Resource):
                 self.ip_detect(subdomain)
                 subdomain_webfinger = WhatwebExt(subdomain).web_fingerprint()
                 DB.db.task.update_one({'tname': subdomain}, {'$set': {'finger': subdomain_webfinger}})
+                subdomain_dir_list = DirExt(subdomain).dirscan()
+                DB.db.task.update_one({'tname': task_name}, {'$set': {'dir': subdomain_dir_list}})
                 DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': 1}})
             DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': 1}})
         return {'status_code': 200}
@@ -295,4 +299,5 @@ class ReconAPI(Resource):
                 DB.db.task.insert_one(new_task)
         else:
             DB.db.task.update_one({'tname': target}, {'$set': {'ip': 'None'}})
+
 
