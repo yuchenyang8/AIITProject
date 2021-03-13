@@ -12,3 +12,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+/AIITProject.iml
+/misc.xml
+/modules.xml
+/vcs.xml

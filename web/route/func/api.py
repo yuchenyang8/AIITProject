@@ -272,9 +272,9 @@ class ReconAPI(Resource):
                 DB.db.task.insert_one(new_task)
 
 
-            oneforall_scan = oneforallExt(task_name)
-            oneforall_result = oneforall_scan.subdomain_discovery()
-            print('oneforall_result: ', oneforall_result)
+            # oneforall_scan = oneforallExt(task_name)
+            # oneforall_result = oneforall_scan.subdomain_discovery()
+            # print('oneforall_result: ', oneforall_result)
 
 
             whatweb_scan = whatwebExt(task_name)

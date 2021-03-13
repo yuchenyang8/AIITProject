@@ -143,8 +143,6 @@ class oneforallExt(object):
 
     def __init__(self, domain):
         self.domain = domain
-        self.data = []
-        self.subdomains = []
 
     def subdomain_discovery(self):
         task = OneForAll(self.domain)
@@ -153,15 +151,7 @@ class oneforallExt(object):
         task.req = True
         task.takeover = True
         task.run()
-        self.data = task.datas
-        self.extract_subdomain()
-        return self.subdomains
-
-    def extract_subdomain(self):
-        for i in self.data:
-            self.subdomains.append(i['subdomain'])
-        self.subdomains = list(set(self.subdomains))
-
+        return task.datas
 
 # -----------------------------------
 # web指纹模块
