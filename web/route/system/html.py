@@ -20,7 +20,7 @@ def system_index():
 
 @APP.route('/api/user/logout')
 def api_user_logout():
-    '''用户注销'''
+    """用户注销"""
     session.pop('status')
     session.pop('username')
     return redirect(url_for('system_login'), 302)

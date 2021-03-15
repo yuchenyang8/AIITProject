@@ -28,7 +28,6 @@ def html_func_task():
 @login_required
 def html_func_task_add():
     """任务添加页面"""
-
     company = []
     company_search = DB.db.company.find()
     for c in company_search:
@@ -39,3 +38,9 @@ def html_func_task_add():
 @APP.route('/test')
 def test():
     return render_template('test.html')
+
+
+@APP.route('/func/asset')
+def html_func_asset():
+    """资产信息页面"""
+    return render_template('asset.html')

@@ -2,6 +2,7 @@ from functools import wraps
 from flask import session, redirect, url_for, current_app
 import random
 
+
 def login_required(func):
     """登录验证装饰器"""
 
