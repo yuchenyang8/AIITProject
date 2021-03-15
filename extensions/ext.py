@@ -122,9 +122,6 @@ class OneForAllExt(object):
         return result
 
 
-
-
-
 # -----------------------------------
 # web指纹模块
 # -----------------------------------
@@ -185,7 +182,7 @@ class DirExt(object):
         self.TOOL_DIR = r'D:\UY\dirsearch\dirsearch.py'
         self.RESULT_DIR = r'D:\UY\dirsearch\result.json'
 
-    def dirscan(self):
+    def dir_scan(self):
         command = 'python {} -e * -x 403,404,405,500,501,502,503 -u {} --json-report {}'.format(self.TOOL_DIR, self.url,
                                                                                                 self.RESULT_DIR)
         os.popen(command).read()
@@ -203,5 +200,23 @@ class DirExt(object):
         result = list(set(result))
         f.close()
         print(result)
+        return result
+
+
+class WafExt(object):
+    """Wafw00f插件类"""
+
+    def __init__(self, url):
+        self.url = url
+        self.TOOL_DIR = r'D:\UY\AIITProject\extensions\wafw00f\wafw00f\main.py'
+        self.RESULT_DIR = r'D:\UY\AIITProject\extensions\wafw00f\result.json'
+
+    def waf_detect(self):
+        command = 'python {} -v -o {} {}'.format(self.TOOL_DIR, self.RESULT_DIR, self.url)
+        os.popen(command).read()
+        with open(self.RESULT_DIR, 'r+', encoding='utf-8') as f:
+            data = json.load(f)
+        result = {'waf': data[0]['firewall']} if data else {'waf': 'None'}
+        f.close()
         return result
 

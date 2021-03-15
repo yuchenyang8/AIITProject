@@ -3,7 +3,7 @@ from flask import session, json, redirect, url_for
 import datetime
 from web import DB
 import re
-from extensions.ext import NmapExt, OneForAllExt, WhatwebExt, DirExt
+from extensions.ext import NmapExt, OneForAllExt, WhatwebExt, DirExt, WafExt
 
 
 class FuncCompanyAPI(Resource):
@@ -251,8 +251,10 @@ class ReconAPI(Resource):
             self.ip_detect(task_name)
             webfinger = WhatwebExt(task_name).web_fingerprint()
             DB.db.task.update_one({'tname': task_name}, {'$set': {'finger': webfinger}})
-            dir_list = DirExt(task_name).dirscan()
+            dir_list = DirExt(task_name).dir_scan()
             DB.db.task.update_one({'tname': task_name}, {'$set': {'dir': dir_list}})
+            waf = WafExt(task_name).waf_detect()
+            DB.db.task.update_one({'tname': task_name}, {'$set': waf})
             subdomain_list = OneForAllExt(task_name).subdomain_discovery()
             for subdomain in subdomain_list:
                 if not DB.db.task.find_one({'tname': subdomain}):
@@ -270,7 +272,9 @@ class ReconAPI(Resource):
                 self.ip_detect(subdomain)
                 subdomain_webfinger = WhatwebExt(subdomain).web_fingerprint()
                 DB.db.task.update_one({'tname': subdomain}, {'$set': {'finger': subdomain_webfinger}})
-                subdomain_dir_list = DirExt(subdomain).dirscan()
+                waf = WafExt(task_name).waf_detect()
+                DB.db.task.update_one({'tname': subdomain}, {'$set': waf})
+                subdomain_dir_list = DirExt(subdomain).dir_scan()
                 DB.db.task.update_one({'tname': subdomain}, {'$set': {'dir': subdomain_dir_list}})
                 DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': 1}})
             DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': 1}})
