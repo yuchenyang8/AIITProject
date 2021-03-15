@@ -271,7 +271,7 @@ class ReconAPI(Resource):
                 subdomain_webfinger = WhatwebExt(subdomain).web_fingerprint()
                 DB.db.task.update_one({'tname': subdomain}, {'$set': {'finger': subdomain_webfinger}})
                 subdomain_dir_list = DirExt(subdomain).dirscan()
-                DB.db.task.update_one({'tname': task_name}, {'$set': {'dir': subdomain_dir_list}})
+                DB.db.task.update_one({'tname': subdomain}, {'$set': {'dir': subdomain_dir_list}})
                 DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': 1}})
             DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': 1}})
         return {'status_code': 200}
