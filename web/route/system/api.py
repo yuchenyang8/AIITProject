@@ -28,3 +28,31 @@ class UserLogin(Resource):
             return {'status_code': 200}
         else:
             return {'status_code': 201, 'msg': '用户名或密码错误'}
+
+
+class Dashboard_API(Resource):
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+
+    def get(self):
+        company_collection = list(DB.db.company.find())
+        company_name = []
+        for i in company_collection:
+            company_name.append(i['ename'])
+
+        num_task = len(list(DB.db.task.find()))
+
+        num_webscan = 0
+        num_hostscan = 0
+        task_collection = list(DB.db.task.find())
+        for i in task_collection:
+            if i['ttype'] == 'WEB':
+                num_webscan += 1
+            elif i['ttype'] == '主机':
+                num_hostscan += 1
+
+        return {'company_name': company_name,
+                'num_task': num_task,
+                'num_webscan': num_webscan,
+                'num_hostscan':num_hostscan,
+                }

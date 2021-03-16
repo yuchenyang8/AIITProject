@@ -1,6 +1,6 @@
 from flask import session, redirect, url_for, render_template, jsonify, request
 from web.utils.auxiliary import login_required
-from web import APP
+from web import APP, DB
 
 
 @APP.route('/')
@@ -15,6 +15,8 @@ def system_login():
 @login_required
 def system_index():
     """框架首页"""
+
+
     return render_template('nav.html')
 
 

@@ -44,3 +44,8 @@ def test():
 def html_func_asset():
     """资产信息页面"""
     return render_template('asset.html')
+
+## for debug or show temporary html file
+@APP.route('/temp')
+def temp():
+    return render_template('temp.html')
