@@ -9,8 +9,6 @@
     <link rel="stylesheet" href="../static/lib/layui-v2.5.5/css/layui.css" media="all">
     <link rel="stylesheet" href="../static/lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
     <link rel="stylesheet" href="../static/css/public.css" media="all">
-
-    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
 </head>
 <style>
     .layui-top-box {padding:40px 20px 20px 20px;color:#fff}
@@ -42,14 +40,14 @@
                                                 厂商列表：
                                                 <select name="company" lay-verify="required">
                                                     <option value="">请选择厂商</option>
-                                                    {% for name in company_name %}
-                                                        <option value="1">{{ name }}</option>
-                                                    {% endfor %}
+                                                    <option value="1">厂商1</option>
+                                                    <option value="2">厂商2</option>
+                                                    <option value="3">厂商3</option>
                                                 </select>
                                         </div>
                                     </div>
                                 </form>
-                                <h3>任务总数：<span id="num_task"></span></h3>
+                                <h3>任务总数：1234</h3>
                             </div>
                         </div>
                     </div>
@@ -65,9 +63,9 @@
                                 <h1>资产概要</h1>
                             </div>
                             <div class="panel-content">
-                                <h3 class="no-margins ">主机扫描数：<span id="num_hostscan"></span></h3>
+                                <h3 class="no-margins ">主机扫描数：1234</h3>
                                 <h3>&nbsp;</h3>
-                                <h3 class="no-margins ">域名扫描数：<span id="num_webscan"></span></h3>
+                                <h3 class="no-margins ">域名扫描数：1234</h3>
                             </div>
                         </div>
                     </div>
@@ -160,25 +158,9 @@
 <script src="../static/lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
 <!-- 加载form模块，要不要下拉框调不出来 -->
 <script type="text/javascript">
-    $(document).ready(function () {
-        console.log('###')
-        $.ajax({
-        type: "GET",
-        url: "{{ url_for('dashboard_info') }}",
-        data: { },
-        dataType: "JSON",
-        success: function(result) {
-            $("#num_task").text(result['num_task']);
-            $("#num_hostscan").text(result['num_hostscan']);
-            $("#num_webscan").text(result['num_webscan']);
-
-            console.log(result)
-        },
-        error: function (result) {
-                console.log("error")
-            }
-      });
-    })
+    layui.use(['form'], function(args){
+      var form = layui.form;
+    });
 </script>
 </body>
 </html>
