@@ -130,7 +130,7 @@ class FuncTaskAPI(Resource):
                     'ttype': task_type,
                     'tcycle': task_cycle,
                     'ename': ename,
-                    'tstatus': 2,  # 1完成/2未完成
+                    'tstatus': '未探测',
                     'uname': uname,
                     'tdate': datetime.datetime.now(),
                 }
@@ -191,18 +191,14 @@ class FuncTaskAPI(Resource):
         if paginate:
             index = (key_page - 1) * key_limit + 1
             for i in paginate:
-                data1 = {}
-                data1['id'] = index
-                data1['task_name'] = i['tname']
-                data1['task_type'] = i['ttype']
-                data1['task_company'] = i['ename']
-
-                if i['tstatus'] == 1:
-                    data1['task_status'] = '已探测'
-                else:
-                    data1['task_status'] = '未探测'
-
-                data1['task_time'] = i['tdate'].strftime("%Y-%m-%d %H:%M:%S")
+                data1 = {
+                    'id': index,
+                    'task_name': i['tname'],
+                    'task_type': i['ttype'],
+                    'task_company': i['ename'],
+                    'task_status': i['tstatus'],
+                    'task_time': i['tdate'].strftime("%Y-%m-%d %H:%M:%S")
+                }
                 data.append(data1)
                 index += 1
             jsondata.update({'data': data})
@@ -232,53 +228,65 @@ class ReconAPI(Resource):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("task_name", type=str, location='json')
         self.parser.add_argument("task_type", type=str, location='json')
+        self.parser.add_argument("task_company", type=str, location='json')
         self.ports = '1-100'
 
     def post(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
         task_type = args.task_type
         task_name = args.task_name
+        company_name = args.task_company
         ports = self.ports
         if task_type == '主机':
             # 主机探测
             uphost = NmapExt(hosts=task_name, ports=ports).host_discovery()
             # 端口扫描
             for host in uphost:
+                self.create_task(tname=host, ttype='主机', ename=company_name)
+                DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测中(端口扫描)'}})
                 portsinfo = NmapExt(hosts=host, ports=ports).port_scan()
-                DB.db.task.update_one({'tname': task_name}, {'$set': {'ports': portsinfo}})
-                DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': 1}})
+                DB.db.task.update_one({'tname': task_name}, {'$set': {'ports': portsinfo, 'tstatus': '探测完成'}})
         if task_type == 'WEB':
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测中(IP检测)'}})
             self.ip_detect(task_name)
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测中(指纹识别)'}})
             webfinger = WhatwebExt(task_name).web_fingerprint()
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'finger': webfinger}})
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'finger': webfinger, 'tstatus': '探测中(目录扫描)'}})
             dir_list = DirExt(task_name).dir_scan()
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'dir': dir_list}})
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'dir': dir_list, 'tstatus': '探测中(WAF检测)'}})
             waf = WafExt(task_name).waf_detect()
-            DB.db.task.update_one({'tname': task_name}, {'$set': waf})
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'waf': waf, 'tstatus': '探测中(子域探测)'}})
             subdomain_list = OneForAllExt(task_name).subdomain_discovery()
             for subdomain in subdomain_list:
                 if not DB.db.task.find_one({'tname': subdomain}):
                     # 创建WEB任务
-                    new_task = {
-                        'tname': subdomain,
-                        'ttype': 'WEB',
-                        'tcycle': 1,
-                        'ename': DB.db.task.find_one({'tname': task_name})['ename'],
-                        'tstatus': 2,
-                        'uname': session['username'],
-                        'tdate': datetime.datetime.now(),
-                    }
-                    DB.db.task.insert_one(new_task)
+                    self.create_task(tname=subdomain, ttype='WEB', ename=company_name)
+                DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': '探测中(IP检测)'}})
                 self.ip_detect(subdomain)
+                DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': '探测中(指纹识别)'}})
                 subdomain_webfinger = WhatwebExt(subdomain).web_fingerprint()
-                DB.db.task.update_one({'tname': subdomain}, {'$set': {'finger': subdomain_webfinger}})
+                DB.db.task.update_one({'tname': subdomain}, {'$set': {'finger': subdomain_webfinger, 'tstatus': '探测中(WAF检测)'}})
                 waf = WafExt(task_name).waf_detect()
-                DB.db.task.update_one({'tname': subdomain}, {'$set': waf})
+                DB.db.task.update_one({'tname': subdomain}, {'$set': waf, 'tstatus': '探测中(目录扫描)'})
                 subdomain_dir_list = DirExt(subdomain).dir_scan()
                 DB.db.task.update_one({'tname': subdomain}, {'$set': {'dir': subdomain_dir_list}})
-                DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': 1}})
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': 1}})
+                DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': '探测完成'}})
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测完成'}})
         return {'status_code': 200}
+
+    def create_task(self, tname, ttype, ename):
+        new_task = {
+            'tname': tname,
+            'ttype': ttype,
+            'tcycle': 1,
+            'ename': ename,
+            'tstatus': '未探测',
+            'uname': session['username'],
+            'tdate': datetime.datetime.now(),
+        }
+        DB.db.task.insert_one(new_task)
 
     def ip_detect(self, target):
         # IP检测
@@ -289,19 +297,10 @@ class ReconAPI(Resource):
             DB.db.task.update_one({'tname': target}, {'$set': {'ip': ip}})
             if not DB.db.task.find_one({'tname': ip}):
                 # 创建主机任务
+                self.create_task(tname=ip, ttype='主机', ename=DB.db.task.find_one({'tname': target})['ename'])
+                DB.db.task.update_one({'tname': ip}, {'$set': {'tstatus': '探测中(端口扫描)'}})
                 portsinfo = NmapExt(hosts=ip, ports=ports).port_scan()
-                new_task = {
-                    'tname': ip,
-                    'ttype': '主机',
-                    'tcycle': 1,
-                    'ename': DB.db.task.find_one({'tname': target})['ename'],
-                    'tstatus': 1,
-                    'uname': session['username'],
-                    'tdate': datetime.datetime.now(),
-                    'ports': portsinfo,
-                }
-                DB.db.task.insert_one(new_task)
+                DB.db.task.update_one({'tname': ip}, {'$set': {'ports': portsinfo, 'tstatus': '探测完成'}})
         else:
             DB.db.task.update_one({'tname': target}, {'$set': {'ip': 'None'}})
-
 

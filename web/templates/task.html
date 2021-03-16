@@ -162,10 +162,12 @@
 </script>
 <script type="text/html" id="task_flag_tpl">
     {% raw %}
-    {{#  if(d.task_status === '未探测'){ }}
+    {{# if(d.task_status === '未探测'){ }}
     <span style="color: #334CFF;">{{ d.task_status }}</span>
-    {{#  } else { }}
+    {{#  } else if(d.task_status === '探测完成'){ }}
     <span style="color: #33FF5E;">{{ d.task_status }}</span>
+    {{#  } else { }}
+    <span style="color: #ff3333;">{{ d.task_status }}</span>
     {{#  } }}
     {% endraw %}
 </script>

@@ -7,6 +7,10 @@ import os
 from extensions.OneForAll.oneforall import OneForAll
 import platform
 import json
+import queue
+import simplejson
+import threading
+import datetime
 
 SYSTEM = platform.system()
 
@@ -216,7 +220,144 @@ class WafExt(object):
         os.popen(command).read()
         with open(self.RESULT_DIR, 'r+', encoding='utf-8') as f:
             data = json.load(f)
-        result = {'waf': data[0]['firewall']} if data else {'waf': 'None'}
+        result = data[0]['firewall'] if data else 'None'
         f.close()
         return result
 
+
+class HydraExt(object):
+    """Hydra插件类"""
+
+    def __init__(self, host):
+        self.host = host
+        self.thread = 16
+        self.TOOL_DIR = r'D:\HYDRA'
+        # self.RESULT_DIR = r'D:\HYDRA\result.txt'
+
+    def crack(self, service):
+        username = r'D:\HYDRA\username.txt'
+        password = r'D:\HYDRA\password.txt'
+        thread = self.thread
+        host = self.host
+        command = r'{}\hydra -L {} -P {} -t {} -f {} {}'.format(self.TOOL_DIR, username, password, thread,
+                                                                host, service)
+        result = os.popen(command).readlines()
+        resultdict = {'host': host}
+        pattern_username = 'login:\s(.+?)\s+password:'
+        pattern_password = 'password:\s(.+?)$'
+        flag = False
+        for res in result:
+            print(res)
+            if not res.find('[' + service + ']'):
+                continue
+            if re.findall(pattern_username, res):
+                resultdict['username'] = re.findall(pattern_username, res)[0]
+            if re.findall(pattern_password, res):
+                resultdict['password'] = re.findall(pattern_password, res)[0]
+                flag = True
+                break
+        if flag:
+            return resultdict
+        else:
+            return flag
+
+
+class XrayExt(object):
+    """Xray插件类"""
+
+    def __init__(self):
+        self.XRAY_DIR = r'D:\Xray'
+        self.CRAWLERGO_DIR = r'D:\UY\crawlergo_x_XRAY'
+        self.CHROME_DIR = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
+        self.urls_queue = queue.Queue()
+        self.tclose = 0
+        # self.start_xray()
+
+    def start_xray(self):
+        print('***xray')
+        result_dir = r'D:\Xray\{}.json'.format(datetime.datetime.now().strftime("%Y_%m%d_%H%M%S"))
+        print(result_dir)
+        command = r'{}\xray webscan --listen 127.0.0.1:7777 --json-output {}'.format(self.XRAY_DIR, result_dir)
+        rsp = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, error = rsp.communicate()
+        print(output)
+
+    def scan_all(self):
+        file = open(self.CRAWLERGO_DIR + r"\targets.txt")
+        t = threading.Thread(target=self.request0)
+        t.start()
+        for text in file.readlines():
+            url = text.strip('\n')
+            self.scan_one(url)
+        self.tclose = 1
+
+    def scan_one(self, url):
+        print('***scan')
+        # cmd = ["./crawlergo", "-c", "C:\Program Files\Google\Chrome\Application\chrome.exe", "-t", "20", "-f", "smart",
+        #        "--fuzz-path", "--output-mode", "json", url]
+        command = r'{}/crawlergo -c {} -t 10 -f smart --fuzz-path --output-mode json {}'.format(self.CRAWLERGO_DIR,
+                                                                                                self.CHROME_DIR, url)
+        rsp = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, error = rsp.communicate()
+        try:
+            result = simplejson.loads(output.decode().split("--[Mission Complete]--")[1])
+        except:
+            return
+        req_list = result["req_list"]
+        sub_domain = result["sub_domain_list"]
+        print(url)
+        print("[crawl ok]")
+        try:
+            for subd in sub_domain:
+                self.opt2file2(subd)
+        except:
+            pass
+        try:
+            for req in req_list:
+                self.urls_queue.put(req)
+        except:
+            return
+        print("[scanning]")
+
+    def opt2file(self, paths):
+        try:
+            f = open(self.CRAWLERGO_DIR + r'\crawl_result.txt', 'a')
+            f.write(paths + '\n')
+        finally:
+            f.close()
+
+    def opt2file2(self, subdomains):
+        try:
+            f = open(self.CRAWLERGO_DIR + r'\sub_domains.txt', 'a')
+            f.write(subdomains + '\n')
+        finally:
+            f.close()
+
+    def request0(self):
+        while self.tclose == 0 or self.urls_queue.empty() == False:
+            if self.urls_queue.qsize() == 0:
+                continue
+            print(self.urls_queue.qsize())
+            req = self.urls_queue.get()
+            proxies = {
+                'http': 'http://127.0.0.1:7777',
+                'https': 'http://127.0.0.1:7777',
+            }
+            urls0 = req['url']
+            headers0 = req['headers']
+            method0 = req['method']
+            data0 = req['data']
+            try:
+                if method0 == 'GET':
+                    a = requests.get(urls0, headers=headers0, proxies=proxies, timeout=30, verify=False)
+                    self.opt2file(urls0)
+                elif method0 == 'POST':
+                    a = requests.post(urls0, headers=headers0, data=data0, proxies=proxies, timeout=30, verify=False)
+                    self.opt2file(urls0)
+            except:
+                continue
+        return
+
+
+x = XrayExt()
+x.scan_one('http://testphp.vulnweb.com')
