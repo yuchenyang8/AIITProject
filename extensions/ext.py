@@ -359,5 +359,5 @@ class XrayExt(object):
         return
 
 
-x = XrayExt()
-x.scan_one('http://testphp.vulnweb.com')
+# x = XrayExt()
+# x.scan_one('http://testphp.vulnweb.com')
