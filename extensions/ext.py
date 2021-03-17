@@ -9,7 +9,7 @@ import platform
 import json
 import simplejson
 import datetime
-from web.utils.auxiliary import get_user_agent
+from web.utils.auxiliary import get_user_agent, kill_process
 import warnings
 
 warnings.filterwarnings(action='ignore')
@@ -275,9 +275,10 @@ class XrayExt(object):
 
     def start_xray(self):
         print('***xray')
-        result_dir = r'D:\Xray\{}.json'.format(datetime.datetime.now().strftime("%Y_%m%d_%H%M%S"))
-        print(result_dir)
-        command = r'{}\xray webscan --listen 127.0.0.1:7777 --json-output {}'.format(self.XRAY_DIR, result_dir)
+        # result_dir = r'D:\Xray\{}.json'.format(datetime.datetime.now().strftime("%Y_%m%d_%H%M%S"))
+        # print(result_dir)
+        webhook = 'http://127.0.0.1:5000/func/webhook'
+        command = r'{}\xray webscan --listen 127.0.0.1:7777 --webhook-output {}'.format(self.XRAY_DIR, webhook)
         subprocess.Popen(command, shell=True)
 
     def scan_all(self):
@@ -306,4 +307,7 @@ class XrayExt(object):
 
 
 if __name__ == '__main__':
+
+    kill_process('xray.exe')
     XrayExt().scan_one('http://testphp.vulnweb.com')
+
