@@ -18,7 +18,8 @@
     .panel-body {padding:15px;height:102px;}
     .panel-title {margin-top:0;margin-bottom:0;font-size:14px;color:inherit}
     .label {display:inline;padding:.2em .6em .3em;font-size:75%;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:baseline;border-radius:.25em;margin-top: .3em;}
-    .layui-red {color:red}
+    .layui-red {color: #ff0000
+    }
     .main_btn > p {height:40px;}
     .select-label {font-size:17px;}
 </style>
@@ -40,11 +41,8 @@
                                     <div class="layui-form-item">
                                         <div class="select-label">
                                                 厂商列表：
-                                                <select name="company" lay-verify="required">
+                                                <select name="company" id="company_list" lay-verify="required">
                                                     <option value="">请选择厂商</option>
-                                                    {% for name in company_name %}
-                                                        <option value="1">{{ name }}</option>
-                                                    {% endfor %}
                                                 </select>
                                         </div>
                                     </div>
@@ -83,15 +81,8 @@
                                 <h1>Web指纹</h1>
                             </div>
                             <div class="panel-content">
-                                <div class="layui-col-md12" style="line-height:34px;">
-                                    <span class="label layui-bg-orange">Discuz</span>
-                                    <span class="label layui-bg-black layui-col-md-offset1">PHPWEB</span>
-                                    <span class="label layui-bg-gray layui-col-md-offset1">PHPWind</span>
-                                </div>
-                                <div class="layui-col-md12" style="line-height:34px;">
-                                    <span class="label layui-bg-red">PHPCMS</span>
-                                    <span class="label layui-bg-green layui-col-md-offset1">ECShop</span>
-                                    <span class="label layui-bg-cyan layui-col-md-offset1">Dvbbs</span>
+                                <div class="panel-content" id="web_fingerprint">
+                                    <!-- js动态添加指纹信息 -->
                                 </div>
                             </div>
                         </div>
@@ -197,6 +188,18 @@
             $("#num_task").text(result['num_task']);
             $("#num_hostscan").text(result['num_hostscan']);
             $("#num_webscan").text(result['num_webscan']);
+
+            for (var i = 1; i < result['company_name'].length+1; i++) {
+                var a="opt"+i;
+                $("#company_list").append("<option id='"+a+"' value='"+ i +"'>"+result['company_name'][i-1]+"</option>");
+            }
+
+            for (var i = 1; i < 4; i++) {
+                console.log('$$$')
+                $("#web_fingerprint").append("<h3 class=\"no-margins \">"+result['finger_types_sorted'][i-1]+"</h3>");
+            }
+
+
 
             console.log(result)
         },
