@@ -221,7 +221,7 @@ class FuncTaskAPI(Resource):
         return {'status_code': 200, 'msg': '删除资产任务成功'}
 
 
-class ReconAPI(Resource):
+class InfoAPI(Resource):
     """渗透阶段信息收集工具"""
 
     def __init__(self):
@@ -259,6 +259,7 @@ class ReconAPI(Resource):
             waf = WafExt(task_name).waf_detect()
             DB.db.task.update_one({'tname': task_name}, {'$set': {'waf': waf, 'tstatus': '探测中(子域探测)'}})
             subdomain_list = OneForAllExt(task_name).subdomain_discovery()
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测完成'}})
             for subdomain in subdomain_list:
                 if not DB.db.task.find_one({'tname': subdomain}):
                     # 创建WEB任务
@@ -267,13 +268,12 @@ class ReconAPI(Resource):
                 self.ip_detect(subdomain)
                 DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': '探测中(指纹识别)'}})
                 subdomain_webfinger = WhatwebExt(subdomain).web_fingerprint()
-                DB.db.task.update_one({'tname': subdomain}, {'$set': {'finger': subdomain_webfinger, 'tstatus': '探测中(WAF检测)'}})
-                waf = WafExt(task_name).waf_detect()
-                DB.db.task.update_one({'tname': subdomain}, {'$set': waf, 'tstatus': '探测中(目录扫描)'})
+                DB.db.task.update_one({'tname': subdomain},
+                                      {'$set': {'finger': subdomain_webfinger, 'tstatus': '探测中(WAF检测)'}})
+                waf = WafExt(subdomain).waf_detect()
+                DB.db.task.update_one({'tname': subdomain}, {'$set': {'waf': waf, 'tstatus': '探测中(目录扫描)'}})
                 subdomain_dir_list = DirExt(subdomain).dir_scan()
-                DB.db.task.update_one({'tname': subdomain}, {'$set': {'dir': subdomain_dir_list}})
-                DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': '探测完成'}})
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测完成'}})
+                DB.db.task.update_one({'tname': subdomain}, {'$set': {'dir': subdomain_dir_list, 'tstatus': '探测完成'}})
         return {'status_code': 200}
 
     def create_task(self, tname, ttype, ename):
@@ -303,4 +303,3 @@ class ReconAPI(Resource):
                 DB.db.task.update_one({'tname': ip}, {'$set': {'ports': portsinfo, 'tstatus': '探测完成'}})
         else:
             DB.db.task.update_one({'tname': target}, {'$set': {'ip': 'None'}})
-

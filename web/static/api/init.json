@@ -1,7 +1,7 @@
 {
   "homeInfo": {
     "title": "欢迎",
-    "href": "fetch/dashboard"
+    "href": "dashboard"
   },
   "logoInfo": {
     "title": "安全评估平台",
@@ -17,6 +17,7 @@
       "child": [
         {
           "title": "信息展示",
+          "href": "dashboard",
           "icon": "fa fa-home",
           "target": "_self"
         },
@@ -28,20 +29,40 @@
           "child": [
             {
               "title": "厂商管理",
-              "href": "fetch/company",
+              "href": "func/company",
               "icon": "fa fa-industry",
               "target": "_self"
             },
             {
               "title": "任务管理",
-              "href": "fetch/task",
+              "href": "func/task",
               "icon": "fa fa-tasks",
               "target": "_self"
             },
             {
               "title": "资产管理",
-              "href": "page/welcome-3.html",
+              "href": "func/asset",
               "icon": "fa fa-money",
+              "target": "_self"
+            }
+          ]
+        },
+        {
+          "title": "漏洞管理",
+          "href": "",
+          "icon": "fa fa-tasks",
+          "target": "_self",
+          "child": [
+            {
+              "title": "主机漏洞",
+              "href": "func/task",
+              "icon": "fa fa-industry",
+              "target": "_self"
+            },
+            {
+              "title": "WEB漏洞",
+              "href": "",
+              "icon": "fa fa-tasks",
               "target": "_self"
             }
           ]

@@ -4,6 +4,7 @@ from web import APP, DB
 import datetime
 import logging
 from web.utils.auxiliary import push_dingding_group
+import re
 
 
 @APP.route('/func/company')
@@ -53,8 +54,16 @@ def html_func_asset():
 def xray_webhook():
     vuln = request.json
     if 'create_time' in vuln['data']:
-        print('YES')
-        print(vuln['data'])
+        url = re.findall(r'//(.+?)/', vuln['data']["target"]["url"])[0]
+        ename = DB.db.task.find_one({'tname': url})['ename']
+        DB.db.vuln.insert_one({
+            'vname': url,
+            'vtype': vuln['data']["plugin"],
+            'vdate': str(datetime.datetime.fromtimestamp(vuln['data']["create_time"] / 1000)),
+            'vdetail': vuln['data']['detail'],
+            'vstatus': '未修复',
+            'ename': ename,
+        })
         content = """
                     ## xray 发现了新漏洞
                     url: {url}
@@ -64,7 +73,7 @@ def xray_webhook():
                     发现时间: {create_time}
 
                     请及时查看和处理
-                    """.format(url=vuln['data']["target"]["url"], plugin=vuln['data']["plugin"],
+                    """.format(url=url, plugin=vuln['data']["plugin"],
                                create_time=str(datetime.datetime.fromtimestamp(vuln['data']["create_time"] / 1000)))
         try:
             push_dingding_group(content)

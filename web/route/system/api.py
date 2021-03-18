@@ -5,7 +5,7 @@ import datetime
 from web import DB, APP
 
 
-class UserLogin(Resource):
+class UserLoginAPI(Resource):
     """用户登录类"""
 
     def __init__(self):
@@ -30,7 +30,9 @@ class UserLogin(Resource):
             return {'status_code': 201, 'msg': '用户名或密码错误'}
 
 
-class Dashboard_API(Resource):
+class DashBoardAPI(Resource):
+    """展示面板类"""
+
     def __init__(self):
         self.parser = reqparse.RequestParser()
 
@@ -58,7 +60,7 @@ class Dashboard_API(Resource):
         for i in task_collection:
             try:
                 finger = i['finger']
-                for k,v in finger.items():
+                for k, v in finger.items():
                     if v not in finger_types:
                         finger_types[v] = 1
                     else:
@@ -66,7 +68,7 @@ class Dashboard_API(Resource):
                 print(finger_types)
             except:
                 print('No finger info!')
-        finger_types_sorted = sorted(finger_types,key=finger_types.__getitem__)[0:3]
+        finger_types_sorted = sorted(finger_types, key=finger_types.__getitem__)[0:3]
 
         return {'company_name': company_name,
                 'num_task': num_task,

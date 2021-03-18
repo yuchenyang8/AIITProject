@@ -15,8 +15,6 @@ def system_login():
 @login_required
 def system_index():
     """框架首页"""
-
-
     return render_template('nav.html')
 
 
@@ -28,16 +26,7 @@ def api_user_logout():
     return redirect(url_for('system_login'), 302)
 
 
-@APP.route('/fetch/dashboard')
+@APP.route('/dashboard')
 def fetch_dashboard_page():
     return render_template('dashboard.html')
 
-
-@APP.route('/fetch/company')
-def fetch_company_page():
-    return render_template('company.html')
-
-
-@APP.route('/fetch/task')
-def fetch_task_page():
-    return render_template('task.html')

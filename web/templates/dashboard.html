@@ -181,7 +181,7 @@
         console.log('###')
         $.ajax({
         type: "GET",
-        url: "{{ url_for('dashboard_info') }}",
+        url: "{{ url_for('api_dashboard') }}",
         data: { },
         dataType: "JSON",
         success: function(result) {
@@ -198,9 +198,6 @@
                 console.log('$$$')
                 $("#web_fingerprint").append("<h3 class=\"no-margins \">"+result['finger_types_sorted'][i-1]+"</h3>");
             }
-
-
-
             console.log(result)
         },
         error: function (result) {

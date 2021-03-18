@@ -125,7 +125,7 @@
                     layer.close(index);
                 });
                 $.ajax({
-                    url: "{{ url_for('api_func_recon') }}",
+                    url: "{{ url_for('api_func_info') }}",
                     data: JSON.stringify(data),
                     contentType: 'application/json;charset=UTF-8',
                     dataType: 'json',

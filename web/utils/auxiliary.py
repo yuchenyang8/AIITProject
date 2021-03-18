@@ -71,7 +71,6 @@ def push_dingding_group(content):
     # 消息类型和数据格式参照钉钉开发文档
     data = {"msgtype": "markdown", "markdown": {"title": "xray 发现了新漏洞"}}
     data['markdown']['text'] = content
-    print(data)
     r = requests.post(
         "https://oapi.dingtalk.com/robot/send?access_token=add36dd6ed87b89f7ae4de8db77f9810df57aced7fc466a68fcda06dc9aa4cde",
         data=json.dumps(data),
