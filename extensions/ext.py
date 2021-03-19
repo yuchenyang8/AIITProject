@@ -9,7 +9,7 @@ import platform
 import json
 import simplejson
 import datetime
-from web.utils.auxiliary import get_user_agent, kill_process
+from web.utils.auxiliary import get_user_agent, exit_process
 import warnings
 
 warnings.filterwarnings(action='ignore')
@@ -271,15 +271,18 @@ class XrayExt(object):
         self.XRAY_DIR = r'D:\Xray'
         self.CRAWLERGO_DIR = r'D:\UY\crawlergo_x_XRAY'
         self.CHROME_DIR = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
-        self.start_xray()
+        if __name__ == '__main__':
+            if __name__ == '__main__':
+                self.start_xray()
 
     def start_xray(self):
         print('***xray')
         # result_dir = r'D:\Xray\{}.json'.format(datetime.datetime.now().strftime("%Y_%m%d_%H%M%S"))
         # print(result_dir)
-        webhook = 'http://127.0.0.1:5000/func/webhook'
-        command = r'{}\xray webscan --listen 127.0.0.1:7777 --webhook-output {}'.format(self.XRAY_DIR, webhook)
-        subprocess.Popen(command, shell=True)
+        if not exit_process('xray.exe'):
+            webhook = 'http://127.0.0.1:5000/func/webhook'
+            command = r'{}\xray webscan --listen 127.0.0.1:7777 --webhook-output {}'.format(self.XRAY_DIR, webhook)
+            subprocess.Popen(command, shell=True)
 
     def scan_all(self):
         file = open(self.CRAWLERGO_DIR + r"\targets.txt")
@@ -306,8 +309,8 @@ class XrayExt(object):
         print("[scanning]")
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    kill_process('xray.exe')
-    XrayExt().scan_one('http://testphp.vulnweb.com')
+    # kill_process('xray.exe')
+    # r = HydraExt('192.168.31.13').crack('ssh')
 

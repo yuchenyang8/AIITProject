@@ -54,16 +54,19 @@ def get_user_agent():
     return random.choice(user_agent_list)
 
 
-def kill_process(name):
+def exit_process(name):
     pids = psutil.pids()
     for pid in pids:
         p = psutil.Process(pid)
         if p.name() == name:
-            print(pid, name)
-            # Windows
-            cmd = r'taskkill /F /IM ' + name
-            os.system(cmd)
-            break
+            return True
+    return False
+
+
+def kill_process(name):
+    # Windows
+    cmd = r'taskkill /F /IM ' + name
+    os.system(cmd)
 
 
 def push_dingding_group(content):
