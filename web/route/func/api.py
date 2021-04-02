@@ -3,7 +3,7 @@ from flask import session, json, redirect, url_for
 import datetime
 from web import DB
 import re
-from extensions.ext import NmapExt, HydraExt, XrayExt, WafExt, DirExt, WhatwebExt, OneForAllExt
+from extensions.ext import NmapExt, HydraExt, XrayExt, WafExt, DirExt, WhatwebExt, OneForAllExt, WappExt
 
 
 class FuncCompanyAPI(Resource):
@@ -233,46 +233,6 @@ class FuncAssetAPI(Resource):
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
 
-    # def put(self):
-    #     """添加任务资产"""
-    #     if not session.get('status'):
-    #         return redirect(url_for('system_login'), 302)
-    #     args = self.parser.parse_args()
-    #     task_company = args.task_company
-    #     task_type = args.task_type
-    #     task_cycle = args.task_cycle
-    #     task_message = args.task_message
-    #     company_query = DB.db.company.find_one({'ename': task_company})
-    #     if not company_query:
-    #         return {'status_code': 201, 'msg': f'不存在[{task_company}]厂商名，请检查'}
-    #     ename = company_query['ename']
-    #     uname = session['username']
-    #     task_success = False
-    #     if task_type == 'WEB' or task_type == '主机':  # WEB任务/主机任务
-    #         message_list = list(set(task_message.split()))  # 过滤重复内容
-    #         for m in message_list:
-    #             new_task = {
-    #                 'tname': '',
-    #                 'ttype': task_type,
-    #                 'tcycle': task_cycle,
-    #                 'ename': ename,
-    #                 'tstatus': '未探测',
-    #                 'uname': uname,
-    #                 'tdate': datetime.datetime.now(),
-    #             }
-    #             message = m.strip()
-    #             if message:
-    #                 task_sql = DB.db.task.find_one({'tname': message})  # 过滤已有重复任务
-    #                 if task_sql:
-    #                     continue
-    #                 new_task['tname'] = message
-    #                 DB.db.task.insert_one(new_task)
-    #                 task_success = True
-    #     if task_success:
-    #         return {'status_code': 200, 'msg': '添加任务成功'}
-    #     else:
-    #         return {'status_code': 500, 'msg': '添加资产任务失败'}
-
     def get(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
@@ -384,7 +344,7 @@ class InfoAPI(Resource):
             DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测中(IP检测)'}})
             self.ip_detect(task_name)
             DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测中(指纹识别)'}})
-            webfinger = WhatwebExt(task_name).web_fingerprint()
+            webfinger = WappExt().detect(task_name)
             DB.db.task.update_one({'tname': task_name}, {'$set': {'finger': webfinger, 'tstatus': '探测中(目录扫描)'}})
             dir_list = DirExt(task_name).dir_scan()
             DB.db.task.update_one({'tname': task_name}, {'$set': {'dir': dir_list, 'tstatus': '探测中(WAF检测)'}})
@@ -399,7 +359,7 @@ class InfoAPI(Resource):
                 DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': '探测中(IP检测)'}})
                 self.ip_detect(subdomain)
                 DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': '探测中(指纹识别)'}})
-                subdomain_webfinger = WhatwebExt(subdomain).web_fingerprint()
+                subdomain_webfinger = WappExt().detect(subdomain)
                 DB.db.task.update_one({'tname': subdomain},
                                       {'$set': {'finger': subdomain_webfinger, 'tstatus': '探测中(WAF检测)'}})
                 waf = WafExt(subdomain).waf_detect()

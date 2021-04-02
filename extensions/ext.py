@@ -9,7 +9,8 @@ import platform
 import json
 import simplejson
 import datetime
-from web.utils.auxiliary import get_user_agent, exit_process
+from web.utils.auxiliary import get_user_agent, exit_process, kill_process
+from extensions.Wappalyzer import Wappalyzer, WebPage
 import warnings
 
 warnings.filterwarnings(action='ignore')
@@ -104,9 +105,6 @@ class NmapExt(object):
         return c_result
 
 
-# -----------------------------------
-# 子域扫描模块
-# -----------------------------------
 class OneForAllExt(object):
     """OneForAll插件类"""
 
@@ -128,9 +126,6 @@ class OneForAllExt(object):
         return result
 
 
-# -----------------------------------
-# web指纹模块
-# -----------------------------------
 class WhatwebExt(object):
     """whatweb插件类"""
 
@@ -161,7 +156,7 @@ class WhatwebExt(object):
         xpoweredby_re = r'X-Powered-By\[(.*?)\]'
 
         result = {}
-
+        print(items)
         for item in items:
             # ip = re.findall(ip_re, item, re.S)
             # domain = re.findall(domain_re, item, re.S)
@@ -271,9 +266,7 @@ class XrayExt(object):
         self.XRAY_DIR = r'D:\Xray'
         self.CRAWLERGO_DIR = r'D:\UY\crawlergo_x_XRAY'
         self.CHROME_DIR = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
-        if __name__ == '__main__':
-            if __name__ == '__main__':
-                self.start_xray()
+        self.start_xray()
 
     def start_xray(self):
         print('***xray')
@@ -309,8 +302,30 @@ class XrayExt(object):
         print("[scanning]")
 
 
-# if __name__ == '__main__':
+class WappExt(object):
+    """Wappalyzer插件类"""
 
+    # def __init__(self):
+
+    def detect(self, url):
+        webpage = WebPage.new_from_url(url)
+        wappalyzer = Wappalyzer.latest()
+        result = wappalyzer.analyze_with_versions_and_categories(webpage)
+        return result
+
+
+class NessusExt(object):
+    """Nessus插件类"""
+
+    def __init__(self):
+        pass
+
+    def scan(self, url):
+        pass
+
+
+if __name__ == '__main__':
     # kill_process('xray.exe')
     # r = HydraExt('192.168.31.13').crack('ssh')
+    pass
 
