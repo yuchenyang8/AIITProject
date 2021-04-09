@@ -17,13 +17,13 @@
                         <div class="layui-inline">
                             <label class="layui-form-label">厂商</label>
                             <div class="layui-input-inline">
-                                <input type="text" name="task_company" autocomplete="off" class="layui-input">
+                                <input type="text" name="asset_company" autocomplete="off" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-inline">
                             <label class="layui-form-label">资产</label>
                             <div class="layui-input-inline">
-                                <input type="text" name="task_name" autocomplete="off" class="layui-input">
+                                <input type="text" name="asset_name" autocomplete="off" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-inline">
@@ -69,9 +69,9 @@
             }],
             cols: [[
                 {field: 'id', width: 80, title: 'ID', sort: true},
-                {field: 'task_company', width: 250, title: '所属厂商', align: "center", sort: true},
-                {field: 'task_name', width: 350, title: '资产名称', align: "center", sort: true},
-                {field: 'task_type', width: 130, title: '资产类型', align: "center"},
+                {field: 'asset_company', width: 250, title: '所属厂商', align: "center", sort: true},
+                {field: 'asset_name', width: 350, title: '资产名称', align: "center", sort: true},
+                {field: 'asset_type', width: 130, title: '资产类型', align: "center"},
                 {field: 'vuln_status', width: 200, title: '扫描状态', templet: '#vuln_flag_tpl', align: "center"},
                 {field: 'vuln_time', width: 300, title: '上次扫描日期', align: "center", sort: true},
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}

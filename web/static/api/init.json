@@ -55,7 +55,7 @@
           "child": [
             {
               "title": "主机漏洞",
-              "href": "func/task",
+              "href": "",
               "icon": "fa fa-industry",
               "target": "_self"
             },
@@ -66,6 +66,38 @@
               "target": "_self"
             }
           ]
+        },
+        {
+          "title": "内容管理",
+          "href": "",
+          "icon": "fa fa-tasks",
+          "target": "_self",
+          "child": [
+            {
+              "title": "POC管理",
+              "href": "",
+              "icon": "fa fa-industry",
+              "target": "_self"
+            },
+            {
+              "title": "插件管理",
+              "href": "",
+              "icon": "fa fa-tasks",
+              "target": "_self"
+            },
+            {
+              "title": "检测用例管理",
+              "href": "",
+              "icon": "fa fa-tasks",
+              "target": "_self"
+            }
+          ]
+        },
+        {
+          "title": "用户管理",
+          "href": "",
+          "icon": "fa fa-tasks",
+          "target": "_self"
         }
       ]
     }

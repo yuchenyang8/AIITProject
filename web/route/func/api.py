@@ -11,8 +11,8 @@ class FuncCompanyAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument("company_name", type=str, location='json')
-        self.parser.add_argument("company_contact", type=str, location='json')
+        self.parser.add_argument("company_name", type=str, location='json')  # 名称
+        self.parser.add_argument("company_contact", type=str, location='json')  # 联系方式
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
@@ -98,20 +98,21 @@ class FuncTaskAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
+        self.parser.add_argument("task_name", type=str, location='json')
         self.parser.add_argument("task_company", type=str, location='json')
         self.parser.add_argument("task_type", type=str, location='json')
         self.parser.add_argument("task_cycle", type=int, location='json')
         self.parser.add_argument("task_message", type=str, location='json')
-        self.parser.add_argument("task_name", type=str, location='json')
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
 
     def put(self):
-        """添加任务资产"""
+        """添加任务"""
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
+        task_name = args.task_name
         task_company = args.task_company
         task_type = args.task_type
         task_cycle = args.task_cycle
@@ -122,30 +123,43 @@ class FuncTaskAPI(Resource):
         ename = company_query['ename']
         uname = session['username']
         task_success = False
+
         if task_type == 'WEB' or task_type == '主机':  # WEB任务/主机任务
             message_list = list(set(task_message.split()))  # 过滤重复内容
-            for m in message_list:
-                new_task = {
-                    'tname': '',
-                    'ttype': task_type,
-                    'tcycle': task_cycle,
-                    'ename': ename,
-                    'tstatus': '未探测',
-                    'uname': uname,
-                    'tdate': datetime.datetime.now(),
-                }
-                message = m.strip()
-                if message:
-                    task_sql = DB.db.task.find_one({'tname': message})  # 过滤已有重复任务
-                    if task_sql:
-                        continue
-                    new_task['tname'] = message
-                    DB.db.task.insert_one(new_task)
-                    task_success = True
+            new_task = {
+                'tname': task_name,
+                'type': task_type,
+                'infocycle': task_cycle,
+                'ename': ename,
+                'tstatus': '未开始',
+                'uname': uname,
+                'tinfo': message_list,
+                'tdate': datetime.datetime.now(),
+            }
+            DB.db.task.insert_one(new_task)
+            # task = DB.db.task.find_one({'tname': task_name})
+            # for m in message_list:
+            #     new_asset = {
+            #         'aname': '',
+            #         'type': task_type,
+            #         'ename': ename,
+            #         'infostatus': '未开始',
+            #         'uname': uname,
+            #         'createdate': datetime.datetime.now(),
+            #         'parentid': task['_id'],
+            #     }
+            #     message = m.strip()
+            #     if message:
+            #         asset_sql = DB.db.asset.find_one({'aname': message})  # 过滤已有重复任务
+            #         if asset_sql:
+            #             continue
+            #         new_asset['tname'] = message
+            #         DB.db.asset.insert_one(new_asset)
+            task_success = True
         if task_success:
             return {'status_code': 200, 'msg': '添加任务成功'}
         else:
-            return {'status_code': 500, 'msg': '添加资产任务失败'}
+            return {'status_code': 500, 'msg': '添加任务失败'}
 
     def get(self):
         if not session.get('status'):
@@ -194,7 +208,7 @@ class FuncTaskAPI(Resource):
                 data1 = {
                     'id': index,
                     'task_name': i['tname'],
-                    'task_type': i['ttype'],
+                    'task_type': i['type'],
                     'task_company': i['ename'],
                     'task_status': i['tstatus'],
                     'task_time': i['tdate'].strftime("%Y-%m-%d %H:%M:%S")
@@ -226,9 +240,9 @@ class FuncAssetAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument("task_company", type=str, location='json')
-        self.parser.add_argument("task_type", type=str, location='json')
-        self.parser.add_argument("task_name", type=str, location='json')
+        self.parser.add_argument("asset_company", type=str, location='json')
+        self.parser.add_argument("asset_type", type=str, location='json')
+        self.parser.add_argument("asset_name", type=str, location='json')
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
@@ -240,36 +254,37 @@ class FuncAssetAPI(Resource):
         key_page = args.page
         key_limit = args.limit
         key_searchparams = args.searchParams
-        count = DB.db.task.find({'tstatus': '探测完成'}).count()
+        count = DB.db.asset.find({'infostatus': '探测完成'}).count()
         jsondata = {'code': 0, 'msg': '', 'count': count}
         if count == 0:  # 若没有数据返回空列表
             jsondata.update({'data': []})
             return jsondata
         if not key_searchparams:  # 若没有查询参数
             if not key_page or not key_limit:  # 判断是否有分页查询参数
-                paginate = DB.db.task.find({'tstatus': '探测完成'}).limit(20).skip(0)
+                paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(20).skip(0)
             else:
-                paginate = DB.db.task.find({'tstatus': '探测完成'}).limit(key_limit).skip((key_page - 1) * key_limit)
+                paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(key_limit).skip((key_page - 1) * key_limit)
         else:
             try:
                 search_dict = json.loads(key_searchparams)  # 解析查询参数
             except:
-                paginate = DB.db.task.find({'tstatus': '探测完成'}).limit(20).skip(0)
+                paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(20).skip(0)
             else:
-                if 'task_name' not in search_dict or 'task_company' not in search_dict:  # 查询参数有误
-                    paginate = DB.db.task.find({'tstatus': '探测完成'}).limit(20).skip(0)
-                elif 'task_company' not in search_dict:
-                    paginate1 = DB.db.task.find({'tstatus': '探测完成', 'tname': re.compile(search_dict['task_name'])})
+                if 'asset_name' not in search_dict or 'asset_company' not in search_dict:  # 查询参数有误
+                    paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(20).skip(0)
+                elif 'asset_company' not in search_dict:
+                    paginate1 = DB.db.asset.find({'infostatus': '探测完成', 'aname': re.compile(search_dict['asset_name'])})
                     paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
-                elif 'task_name' not in search_dict:
-                    paginate1 = DB.db.task.find({'tstatus': '探测完成', 'ename': re.compile(search_dict['task_company'])})
+                elif 'asset_name' not in search_dict:
+                    paginate1 = DB.db.asset.find(
+                        {'infostatus': '探测完成', 'ename': re.compile(search_dict['asset_company'])})
                     paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
                 else:
-                    paginate1 = DB.db.task.find({
-                        'ename': re.compile(search_dict['task_company']),
-                        'tname': re.compile(search_dict['task_name']),
+                    paginate1 = DB.db.asset.find({
+                        'ename': re.compile(search_dict['asset_company']),
+                        'aname': re.compile(search_dict['asset_name']),
                     })
                     paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
@@ -283,10 +298,10 @@ class FuncAssetAPI(Resource):
                     vtime = 'None'
                 data1 = {
                     'id': index,
-                    'task_name': i['tname'],
-                    'task_type': i['ttype'],
-                    'task_company': i['ename'],
-                    'vuln_status': i['vstatus'],
+                    'asset_name': i['aname'],
+                    'asset_type': i['type'],
+                    'asset_company': i['ename'],
+                    'vuln_status': i['vulnstatus'],
                     'vuln_time': vtime
                 }
                 data.append(data1)
@@ -302,12 +317,12 @@ class FuncAssetAPI(Resource):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
-        task_name = args.task_name
-        searchdict = {'tname': task_name}
-        task_query = DB.db.task.find_one(searchdict)
-        if not task_query:  # 删除的资产不存在
+        asset_name = args.asset_name
+        searchdict = {'aname': asset_name}
+        asset_query = DB.db.asset.find_one(searchdict)
+        if not asset_query:  # 删除的资产不存在
             return {'status_code': 500, 'msg': '删除资产失败，此资产不存在'}
-        DB.db.task.delete_one(searchdict)
+        DB.db.asset.delete_one(searchdict)
         return {'status_code': 200, 'msg': '删除资产成功'}
 
 
@@ -325,78 +340,90 @@ class InfoAPI(Resource):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
-        task_type = args.task_type
-        task_name = args.task_name
-        company_name = args.task_company
         ports = self.ports
+        task_name = args.task_name
+        task_type = args.task_type
+        task_company = args.task_company
+        task_info = DB.db.task.find_one({'tname': task_name})['tinfo']
+        task_objid = DB.db.task.find_one({'tname': task_name})['_id']
+
         if task_type == '主机':
-            # 主机探测
-            uphost = NmapExt(hosts=task_name, ports=ports).host_discovery()
-            # 端口扫描
-            for host in uphost:
-                if not DB.db.task.find_one({'tname': host}):
-                    self.create_task(tname=host, ttype='主机', ename=company_name)
-                    DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测中(端口扫描)'}})
-                    portsinfo = NmapExt(hosts=host, ports=ports).port_scan()
-                    DB.db.task.update_one({'tname': task_name},
-                                          {'$set': {'ports': portsinfo, 'tstatus': '探测完成', 'vstatus': '未扫描'}})
+            for info in task_info:
+                # 主机探测
+                uphost = NmapExt(hosts=info, ports=ports).host_discovery()
+                # 端口扫描
+                for host in uphost:
+                    if not DB.db.asset.find_one({'aname': host}):
+                        self.create_asset(aname=host, asset_type='主机', ename=task_company, objid=task_objid)
+                        DB.db.asset.update_one({'aname': host}, {'$set': {'infostatus': '探测中(端口扫描)'}})
+                        portsinfo = NmapExt(hosts=host, ports=ports).port_scan()
+                        DB.db.asset.update_one({'aname': host},
+                                               {'$set': {'ports': portsinfo, 'infostatus': '探测完成',
+                                                         'vulnstatus': '未扫描'}})
         elif task_type == 'WEB':
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测中(IP检测)'}})
-            self.ip_detect(task_name)
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测中(指纹识别)'}})
-            webfinger = WappExt().detect(task_name)
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'finger': webfinger, 'tstatus': '探测中(目录扫描)'}})
-            dir_list = DirExt(task_name).dir_scan()
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'dir': dir_list, 'tstatus': '探测中(WAF检测)'}})
-            waf = WafExt(task_name).waf_detect()
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'waf': waf, 'tstatus': '探测中(子域探测)'}})
-            subdomain_list = OneForAllExt(task_name).subdomain_discovery()
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '探测完成', 'vstatus': '未扫描'}})
-            for subdomain in subdomain_list:
-                if not DB.db.task.find_one({'tname': subdomain}):
-                    # 创建WEB任务
-                    self.create_task(tname=subdomain, ttype='WEB', ename=company_name)
-                DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': '探测中(IP检测)'}})
-                self.ip_detect(subdomain)
-                DB.db.task.update_one({'tname': subdomain}, {'$set': {'tstatus': '探测中(指纹识别)'}})
-                subdomain_webfinger = WappExt().detect(subdomain)
-                DB.db.task.update_one({'tname': subdomain},
-                                      {'$set': {'finger': subdomain_webfinger, 'tstatus': '探测中(WAF检测)'}})
-                waf = WafExt(subdomain).waf_detect()
-                DB.db.task.update_one({'tname': subdomain}, {'$set': {'waf': waf, 'tstatus': '探测中(目录扫描)'}})
-                subdomain_dir_list = DirExt(subdomain).dir_scan()
-                DB.db.task.update_one({'tname': subdomain},
-                                      {'$set': {'dir': subdomain_dir_list, 'tstatus': '探测完成', 'vstatus': '未扫描'}})
+            for asset_name in task_info:
+                # WEB信息搜集
+                self.create_asset(aname=asset_name, asset_type='WEB', ename=task_company, objid=task_objid)
+                asset_objid = DB.db.asset.find_one({'aname': asset_name})['_id']
+                DB.db.asset.update_one({'aname': asset_name}, {'$set': {'infostatus': '探测中(IP检测)'}})
+                self.ip_detect(asset_name, asset_objid)
+                DB.db.asset.update_one({'aname': asset_name}, {'$set': {'infostatus': '探测中(指纹识别)'}})
+                webfinger = WappExt().detect(asset_name)
+                DB.db.asset.update_one({'aname': asset_name},
+                                       {'$set': {'finger': webfinger, 'infostatus': '探测中(目录扫描)'}})
+                dir_list = DirExt(asset_name).dir_scan()
+                DB.db.asset.update_one({'aname': asset_name}, {'$set': {'dir': dir_list, 'infostatus': '探测中(WAF检测)'}})
+                waf = WafExt(asset_name).waf_detect()
+                DB.db.asset.update_one({'aname': asset_name}, {'$set': {'waf': waf, 'infostatus': '探测中(子域探测)'}})
+                subdomain_list = OneForAllExt(asset_name).subdomain_discovery()
+                DB.db.asset.update_one({'aname': asset_name}, {'$set': {'infostatus': '探测完成', 'vulnstatus': '未扫描'}})
+                for subdomain in subdomain_list:
+                    if not DB.db.asset.find_one({'aname': subdomain}):
+                        # 创建WEB任务
+                        self.create_asset(aname=subdomain, asset_type='WEB', ename=task_company, objid=asset_objid)
+                    DB.db.asset.update_one({'aname': subdomain}, {'$set': {'infostatus': '探测中(IP检测)'}})
+                    self.ip_detect(subdomain, asset_objid)
+                    DB.db.asset.update_one({'aname': subdomain}, {'$set': {'infostatus': '探测中(指纹识别)'}})
+                    subdomain_webfinger = WappExt().detect(subdomain)
+                    DB.db.asset.update_one({'aname': subdomain},
+                                           {'$set': {'finger': subdomain_webfinger, 'infostatus': '探测中(WAF检测)'}})
+                    waf = WafExt(subdomain).waf_detect()
+                    DB.db.asset.update_one({'aname': subdomain}, {'$set': {'waf': waf, 'infostatus': '探测中(目录扫描)'}})
+                    subdomain_dir_list = DirExt(subdomain).dir_scan()
+                    DB.db.asset.update_one({'aname': subdomain},
+                                           {'$set': {'dir': subdomain_dir_list, 'infostatus': '探测完成',
+                                                     'vulnstatus': '未扫描'}})
         return {'status_code': 200}
 
-    def create_task(self, tname, ttype, ename):
-        new_task = {
-            'tname': tname,
-            'ttype': ttype,
-            'tcycle': 1,
+    def create_asset(self, aname, asset_type, ename, objid):
+        new_asset = {
+            'aname': aname,
+            'type': asset_type,
             'ename': ename,
-            'tstatus': '未探测',
+            'infostatus': '未探测',
             'uname': session['username'],
-            'tdate': datetime.datetime.now(),
+            'createdate': datetime.datetime.now(),
+            'parentid': objid,
         }
-        DB.db.task.insert_one(new_task)
+        DB.db.asset.insert_one(new_asset)
 
-    def ip_detect(self, target):
+    def ip_detect(self, target, objid):
         # IP检测
         ports = self.ports
         i = NmapExt(hosts=target, ports=ports).host_discovery()
         if i:
             ip = i[0]
-            DB.db.task.update_one({'tname': target}, {'$set': {'ip': ip}})
-            if not DB.db.task.find_one({'tname': ip}):
+            DB.db.asset.update_one({'aname': target}, {'$set': {'ip': ip}})
+            if not DB.db.asset.find_one({'aname': ip}):
                 # 创建主机任务
-                self.create_task(tname=ip, ttype='主机', ename=DB.db.task.find_one({'tname': target})['ename'])
-                DB.db.task.update_one({'tname': ip}, {'$set': {'tstatus': '探测中(端口扫描)'}})
+                self.create_asset(aname=ip, asset_type='主机', ename=DB.db.asset.find_one({'aname': target})['ename'],
+                                  objid=objid)
+                DB.db.asset.update_one({'aname': ip}, {'$set': {'infostatus': '探测中(端口扫描)'}})
                 portsinfo = NmapExt(hosts=ip, ports=ports).port_scan()
-                DB.db.task.update_one({'tname': ip},
-                                      {'$set': {'ports': portsinfo, 'tstatus': '探测完成', 'vstatus': '未扫描'}})
+                DB.db.asset.update_one({'aname': ip},
+                                       {'$set': {'ports': portsinfo, 'infostatus': '探测完成', 'vulnstatus': '未扫描'}})
         else:
-            DB.db.task.update_one({'tname': target}, {'$set': {'ip': 'None'}})
+            DB.db.asset.update_one({'aname': target}, {'$set': {'ip': 'None'}})
 
 
 class VulnAPI(Resource):

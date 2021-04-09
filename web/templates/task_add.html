@@ -14,6 +14,12 @@
 <body>
 <div class="layui-form layuimini-form">
     <div class="layui-form-item">
+        <label class="layui-form-label required">任务名称</label>
+        <div class="layui-input-block">
+            <textarea rows="1" required lay-verify="required" class="layui-textarea" name="task_name"></textarea>
+        </div>
+    </div>
+    <div class="layui-form-item">
         <label class="layui-form-label required">所属厂商</label>
         <div class="layui-input-block">
             <select name="task_company" lay-verify="required" lay-search>
@@ -42,20 +48,17 @@
             <select name="task_cycle" lay-verify="required" lay-search>
                 <option value="">选择周期</option>
                 <option value=1>仅扫描一次</option>
-                <option value=2>一周一次</option>
-                <option value=3>两周一次</option>
-                <option value=4>一月一次</option>
+                <option value=2>一天一次</option>
+                <option value=3>一周一次</option>
+                <option value=4>两周一次</option>
+                <option value=5>一月一次</option>
             </select>
         </div>
     </div>
     <div class="layui-form-item">
         <label class="layui-form-label required">任务信息</label>
         <div class="layui-input-block">
-            <textarea placeholder="输入格式:
-			xxx.example.com  直接给出域名
-			8.8.8.8  扫描某个IP
-            8.8.8.0/24  扫描C段
-            " rows="8" required lay-verify="required" class="layui-textarea" name="task_message"></textarea>
+            <textarea rows="8" required lay-verify="required" class="layui-textarea" name="task_message"></textarea>
             <tip>输入格式：</tip>
             <br/>
             <tip>xxx.example.com 直接给出子域名</tip>
