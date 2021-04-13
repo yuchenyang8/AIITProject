@@ -39,15 +39,22 @@ def html_func_task_add():
     return render_template('task_add.html', companylist=company)
 
 
-@APP.route('/test')
-def test():
-    return render_template('test.html')
-
-
 @APP.route('/func/asset')
 def html_func_asset():
     """资产信息页面"""
     return render_template('asset.html')
+
+
+@APP.route('/func/vulns')
+def html_func_vulns():
+    """漏洞信息页面"""
+    return render_template('vulns.html')
+
+
+@APP.route('/func/asset_info')
+def html_func_assetinfo():
+    """资产详情页面"""
+    return render_template('asset_detail.html')
 
 
 @APP.route('/func/webhook', methods=['POST'])
@@ -55,34 +62,29 @@ def xray_webhook():
     vuln = request.json
     if 'create_time' in vuln['data']:
         url = re.findall(r'//(.+?)/', vuln['data']["target"]["url"])[0]
-        ename = DB.db.task.find_one({'tname': url})['ename']
+        ename = DB.db.asset.find_one({'aname': url})['ename']
         DB.db.vuln.insert_one({
-            'vname': url,
+            'vasset': url,
             'vtype': vuln['data']["plugin"],
-            'vdate': str(datetime.datetime.fromtimestamp(vuln['data']["create_time"] / 1000)),
+            'vdate': str(datetime.datetime.fromtimestamp(vuln['data']["create_time"] / 1000)).split('.')[0],
             'vdetail': vuln['data']['detail'],
             'vstatus': '未修复',
             'ename': ename,
         })
-        content = """
-                    ## xray 发现了新漏洞
-                    url: {url}
-
-                    漏洞类型: {plugin}
-
-                    发现时间: {create_time}
-
-                    请及时查看和处理
-                    """.format(url=url, plugin=vuln['data']["plugin"],
-                               create_time=str(datetime.datetime.fromtimestamp(vuln['data']["create_time"] / 1000)))
-        try:
-            push_dingding_group(content)
-        except Exception as e:
-            logging.exception(e)
+        # 钉钉推送漏洞消息
+        # content = """
+        #             ## xray 发现了新漏洞
+        #             url: {url}
+        #
+        #             漏洞类型: {plugin}
+        #
+        #             发现时间: {create_time}
+        #
+        #             请及时查看和处理
+        #             """.format(url=url, plugin=vuln['data']["plugin"],
+        #                        create_time=str(datetime.datetime.fromtimestamp(vuln['data']["create_time"] / 1000)))
+        # try:
+        #     push_dingding_group(content)
+        # except Exception as e:
+        #     logging.exception(e)
     return 'ok'
-
-
-## for debug or show temporary html file
-@APP.route('/temp')
-def temp():
-    return render_template('temp.html')

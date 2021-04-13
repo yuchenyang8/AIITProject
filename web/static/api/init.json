@@ -22,7 +22,7 @@
           "target": "_self"
         },
         {
-          "title": "任务管理",
+          "title": "信息搜集",
           "href": "",
           "icon": "fa fa-tasks",
           "target": "_self",
@@ -61,7 +61,7 @@
             },
             {
               "title": "WEB漏洞",
-              "href": "",
+              "href": "func/vulns",
               "icon": "fa fa-tasks",
               "target": "_self"
             }

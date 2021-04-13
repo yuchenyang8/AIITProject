@@ -292,8 +292,8 @@ class FuncAssetAPI(Resource):
         if paginate:
             index = (key_page - 1) * key_limit + 1
             for i in paginate:
-                if 'vdate' in i.keys():
-                    vtime = i['vdate'].strftime("%Y-%m-%d %H:%M:%S")
+                if 'vulndate' in i.keys():
+                    vtime = i['vulndate'].strftime("%Y-%m-%d %H:%M:%S")
                 else:
                     vtime = 'None'
                 data1 = {
@@ -334,7 +334,7 @@ class InfoAPI(Resource):
         self.parser.add_argument("task_name", type=str, location='json')
         self.parser.add_argument("task_type", type=str, location='json')
         self.parser.add_argument("task_company", type=str, location='json')
-        self.ports = '1-100'
+        self.ports = '1-1000'
 
     def post(self):
         if not session.get('status'):
@@ -363,6 +363,8 @@ class InfoAPI(Resource):
         elif task_type == 'WEB':
             for asset_name in task_info:
                 # WEB信息搜集
+                if DB.db.asset.find_one({'aname': asset_name}):
+                    continue
                 self.create_asset(aname=asset_name, asset_type='WEB', ename=task_company, objid=task_objid)
                 asset_objid = DB.db.asset.find_one({'aname': asset_name})['_id']
                 DB.db.asset.update_one({'aname': asset_name}, {'$set': {'infostatus': '探测中(IP检测)'}})
@@ -371,8 +373,8 @@ class InfoAPI(Resource):
                 webfinger = WappExt().detect(asset_name)
                 DB.db.asset.update_one({'aname': asset_name},
                                        {'$set': {'finger': webfinger, 'infostatus': '探测中(目录扫描)'}})
-                dir_list = DirExt(asset_name).dir_scan()
-                DB.db.asset.update_one({'aname': asset_name}, {'$set': {'dir': dir_list, 'infostatus': '探测中(WAF检测)'}})
+                # dir_list = DirExt(asset_name).dir_scan()
+                # DB.db.asset.update_one({'aname': asset_name}, {'$set': {'dir': dir_list, 'infostatus': '探测中(WAF检测)'}})
                 waf = WafExt(asset_name).waf_detect()
                 DB.db.asset.update_one({'aname': asset_name}, {'$set': {'waf': waf, 'infostatus': '探测中(子域探测)'}})
                 subdomain_list = OneForAllExt(asset_name).subdomain_discovery()
@@ -389,10 +391,11 @@ class InfoAPI(Resource):
                                            {'$set': {'finger': subdomain_webfinger, 'infostatus': '探测中(WAF检测)'}})
                     waf = WafExt(subdomain).waf_detect()
                     DB.db.asset.update_one({'aname': subdomain}, {'$set': {'waf': waf, 'infostatus': '探测中(目录扫描)'}})
-                    subdomain_dir_list = DirExt(subdomain).dir_scan()
-                    DB.db.asset.update_one({'aname': subdomain},
-                                           {'$set': {'dir': subdomain_dir_list, 'infostatus': '探测完成',
-                                                     'vulnstatus': '未扫描'}})
+                    # subdomain_dir_list = DirExt(subdomain).dir_scan()
+                    # DB.db.asset.update_one({'aname': subdomain},
+                    #                        {'$set': {'dir': subdomain_dir_list, 'infostatus': '探测完成',
+                    #                                  'vulnstatus': '未扫描'}})
+                    DB.db.asset.update_one({'aname': subdomain}, {'$set': {'infostatus': '探测完成', 'vulnstatus': '未扫描'}})
         return {'status_code': 200}
 
     def create_asset(self, aname, asset_type, ename, objid):
@@ -431,20 +434,108 @@ class VulnAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument("task_name", type=str, location='json')
-        self.parser.add_argument("task_type", type=str, location='json')
-        self.parser.add_argument("task_company", type=str, location='json')
+        self.parser.add_argument("asset_name", type=str, location='json')
+        self.parser.add_argument("asset_type", type=str, location='json')
+        self.parser.add_argument("asset_company", type=str, location='json')
 
     def post(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
-        task_type = args.task_type
-        task_name = args.task_name
-        company_name = args.task_company
-        if task_type == 'WEB':
-            XrayExt().scan_one(url=task_name)
-            DB.db.task.update_one({'tname': task_name}, {'$set': {'vdate': datetime.datetime.now()}})
-        elif task_type == '主机':
-            ports = DB.db.task.find_one({'tname': task_name})['ports']
+        asset_type = args.asset_type
+        asset_name = args.asset_name
+        company_name = args.asset_company
+        if asset_type == 'WEB':
+            XrayExt().scan_one(url=asset_name)
+            DB.db.asset.update_one({'aname': asset_name},
+                                   {'$set': {'vulndate': datetime.datetime.now(), 'vulnstatus': '扫描完成'}})
+        elif asset_type == '主机':
+            ports = DB.db.task.find_one({'aname': asset_name})['ports']
             # 根据端口进行弱口令探测
+            pass
+
+
+class FuncVulnAPI(Resource):
+    """漏洞管理类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("vuln_company", type=str, location='json')
+        self.parser.add_argument("vuln_asset", type=str, location='json')
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+        self.parser.add_argument("searchParams", type=str)
+
+    def get(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        key_page = args.page
+        key_limit = args.limit
+        key_searchparams = args.searchParams
+        count = DB.db.vuln.find().count()
+        jsondata = {'code': 0, 'msg': '', 'count': count}
+        if count == 0:  # 若没有数据返回空列表
+            jsondata.update({'data': []})
+            return jsondata
+        if not key_searchparams:  # 若没有查询参数
+            if not key_page or not key_limit:  # 判断是否有分页查询参数
+                paginate = DB.db.vuln.find().limit(20).skip(0)
+            else:
+                paginate = DB.db.vuln.find().limit(key_limit).skip((key_page - 1) * key_limit)
+        else:
+            try:
+                search_dict = json.loads(key_searchparams)  # 解析查询参数
+            except:
+                paginate = DB.db.vuln.find().limit(20).skip(0)
+            else:
+                if 'vuln_asset' not in search_dict or 'vuln_company' not in search_dict:  # 查询参数有误
+                    paginate = DB.db.vuln.find().limit(20).skip(0)
+                elif 'vuln_company' not in search_dict:
+                    paginate1 = DB.db.vuln.find({'vasset': re.compile(search_dict['vuln_asset'])})
+                    paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
+                    jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
+                elif 'vuln_asset' not in search_dict:
+                    paginate1 = DB.db.vuln.find(
+                        {'ename': re.compile(search_dict['vuln_company'])})
+                    paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
+                    jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
+                else:
+                    paginate1 = DB.db.asset.find({
+                        'ename': re.compile(search_dict['vuln_company']),
+                        'vasset': re.compile(search_dict['vuln_asset']),
+                    })
+                    paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
+                    jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
+        data = []
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                data1 = {
+                    'id': index,
+                    'vuln_type': i['vtype'],
+                    'vuln_asset': i['vasset'],
+                    'vuln_company': i['ename'],
+                    'vuln_status': i['vstatus'],
+                    'vuln_time': i['vdate']
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
+
+    def delete(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        vuln_asset = args.vuln_asset
+        searchdict = {'vasset': vuln_asset}
+        asset_query = DB.db.vuln.find_one(searchdict)
+        if not asset_query:  # 删除的资产不存在
+            return {'status_code': 500, 'msg': '删除资产失败，此资产不存在'}
+        DB.db.asset.delete_one(searchdict)
+        return {'status_code': 200, 'msg': '删除资产成功'}

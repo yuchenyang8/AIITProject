@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>首页二</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        .layui-card {
+            border: 1px solid #f2f2f2;
+            border-radius: 5px;
+        }
+
+        .icon-green {
+            margin-right: 10px;
+            color: #1aa094;
+        }
+
+        .icon-black {
+            margin-right: 10px;
+            color: #130731;
+        }
+
+        .icon-blue {
+            margin-right: 10px;
+            color: #1e9fff;
+        }
+
+        .icon-yellow {
+            margin-right: 10px;
+            color: #a3702d;
+        }
+
+        .icon-red {
+            color: #ff5722;
+            margin-right: 10px;
+        }
+
+        .layuimini-qiuck-module {
+            text-align: center;
+            margin-top: 10px
+        }
+
+        .layuimini-qiuck-module a i {
+            display: inline-block;
+            width: 100%;
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+            border-radius: 2px;
+            font-size: 30px;
+            background-color: #F8F8F8;
+            color: #333;
+            transition: all .3s;
+            -webkit-transition: all .3s;
+        }
+
+        .layuimini-qiuck-module a cite {
+            position: relative;
+            top: 2px;
+            display: block;
+            color: #666;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .welcome-module {
+            width: 100%;
+            height: 210px;
+        }
+
+        .panel {
+            background-color: #fff;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+            box-shadow: 0 1px 1px rgba(0, 0, 0, .05)
+        }
+
+        .panel-body {
+            padding: 10px
+        }
+
+        .panel-title {
+            margin-top: 0;
+            margin-bottom: 0;
+            font-size: 12px;
+            color: inherit
+        }
+
+        .label {
+            display: inline;
+            padding: .2em .6em .3em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: .25em;
+            margin-top: .3em;
+        }
+
+        .layui-red {
+            color: red
+        }
+
+        .main_btn>p {
+            height: 40px;
+        }
+
+        .layui-bg-number {
+            background-color: #F8F8F8;
+        }
+
+        .layuimini-notice:hover {
+            background: #f6f6f6;
+        }
+
+        .layuimini-notice {
+            padding: 7px 16px;
+            clear: both;
+            font-size: 12px !important;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s ease-in-out;
+        }
+
+        .layuimini-notice-title,
+        .layuimini-notice-label {
+            padding-right: 70px !important;
+            text-overflow: ellipsis !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
+        }
+
+        .layuimini-notice-title {
+            line-height: 28px;
+            font-size: 14px;
+        }
+
+        .layuimini-notice-extra {
+            position: absolute;
+            top: 50%;
+            margin-top: -8px;
+            right: 16px;
+            display: inline-block;
+            height: 16px;
+            color: #999;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layuimini-container">
+        <div class="layuimini-main">
+            <fieldset class="layui-elem-field ">
+                <!-- TODO:domain -->
+                <legend>blog.nsfocus.net</legend>
+                <div class="layui-row layui-col-space15">
+                    <!--[基本信息，目录信息]和[指纹信息，子域信息]的列间距为15px，分别占6列-->
+                    <div class="layui-col-md6">
+                        <!-- 基本信息和目录信息的列间距为15px，其中数据统计和快捷入口分别占12列（满行会自动换行），基本信息和目录信息随着扫描数据的增长只会往下增长，不会影响左右布局 -->
+                        <div class="layui-row layui-col-space15">
+                            <!-- [1,1] 基本信息-->
+                            <div class="layui-col-md12">
+                                <div class="layui-card">
+                                    <!-- card
+                                    header：基本信息
+                                    body：class="layui-text"
+                                        layuimini-notice
+                                            layuimini-notice-title
+                                            layuimini-notice-extra
+                                            layuimini-notice-content(layui-hide)
+                                    -->
+                                    <div class="layui-card-header"><i class="fa fa-desktop icon-green"></i>基本信息</div>
+                                    <div class="layui-card-body layui-text">
+                                        <!-- TODO：IP address -->
+                                        <div class="layuimini-notice">
+                                            <div class="layuimini-notice-title">IP address：</div>
+                                            <div class="layuimini-notice-extra">221.122.179.47</div>
+                                            <!-- notice-content是隐藏起来的，项目后期可以用来展示具体信息 -->
+                                            <div class="layuimini-notice-content layui-hide"></div>
+                                        </div>
+                                        <!-- TODO：Port -->
+                                        <div class="layuimini-notice">
+                                            <div class="layuimini-notice-title">Port：</div>
+                                            <div class="layuimini-notice-extra">445，3389，1521，130</div>
+                                        </div>
+                                        <!-- TODO：Protocol： -->
+                                        <div class="layuimini-notice">
+                                            <div class="layuimini-notice-title">Protocol：</div>
+                                            <div class="layuimini-notice-extra">SMB，RDP，Oracle，Netbios-ssn</div>
+                                        </div>
+                                        <!-- TODO：WAF： -->
+                                        <div class="layuimini-notice">
+                                            <div class="layuimini-notice-title">WAF：</div>
+                                            <div class="layuimini-notice-extra">None</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [2,1] 目录信息-->
+                            <div class="layui-col-md12">
+                                <div class="layui-card">
+                                    <!-- card
+                                    header：基本信息
+                                    body：class="layui-text"
+                                        layuimini-notice
+                                            layuimini-notice-title
+                                            layuimini-notice-extra
+                                            layuimini-notice-content(layui-hide)
+                                    -->
+                                    <div class="layui-card-header"><i class="fa fa-sort-amount-desc icon-blue"></i>目录信息
+                                    </div>
+                                    <div class="layui-card-body layui-text">
+                                        <!-- TODO：Directory 项目最终使用方法渲染来渲染数据表格，展示使用的是转换静态表格。其中事件相关要用filter来指定，其他用id-->
+                                        <!-- 方法渲染-->
+                                        <!-- <table id="dir_table" lay-filter="Directory"></table> -->
+
+                                        <!-- 转换静态表格 -->
+                                        <table lay-even lay-skin="nob" lay-size="sm" lay-filter="Directory">
+                                            <thead>
+                                                <tr>
+                                                    <th lay-data="{field:'directory'}">扫描结果</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/wp-json/wp/v2/users/</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/wp-login.php</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/mongodb/</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/robots.txt</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/jenkins/</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/wp-admin/install.php</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/wp-includes/rss-functions.php</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/wp-content/</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/wp-json/</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/wp-content/plugins/akismet/akismet.php
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/wp-cron.php</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/team/</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/license.txt</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/readme.html</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/wp-config.php</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/favicon.ico</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://blog.nsfocus.net:80/.htaccess</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md6">
+                        <div class="layui-row layui-col-space15">
+                            <!-- [1,2] 指纹识别-->
+                            <div class="layui-col-md12">
+                                <div class="layui-card">
+                                    <div class="layui-card-header"><i class="fa fa-fire icon-yellow"></i>指纹识别</div>
+                                    <!-- <div class="layui-card-body"> -->
+                                    <div class="layui-card-body" style="height:169px;font-size:22px;line-height:55px;text-align:left;">
+                                        <!-- TODO：Web finger -->
+                                        <div class="layui-col-md12">
+                                            <div class="label layui-bg-red" style="margin:0px 18px 0px 0px;">PHP：7.4.7</div>
+                                            <div class="label layui-bg-orange " style="margin:0px 18px 0px 0px;">prettyPhoto</div>
+                                            <div class="label layui-bg-green" style="margin:0px 18px 0px 0px;">Font Awesome：4.7.0</div>
+                                            <div class="label layui-bg-cyan" style="margin:0px 18px 0px 0px;">Modernizr</div>
+                                            <div class="label layui-bg-blue" style="margin:0px 18px 0px 0px;">Google Font API</div>
+                                            <div class="label layui-bg-black" style="margin:0px 18px 0px 0px;">Nginx：1.18.0</div>
+                                            <div class="label layui-bg-cyan" style="margin:0px 18px 0px 0px;">jQuery Migrate：3.3.2</div>
+                                            <div class="label layui-bg-cyan" style="margin:0px 18px 0px 0px;">WordPress：5.7</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [2,2] 子域信息-->
+                            <div class="layui-col-md12">
+                                <div class="layui-card">
+                                    <!-- card
+                                    header：子域信息
+                                    body：class="layui-text"
+                                        layuimini-notice
+                                            layuimini-notice-title
+                                            layuimini-notice-extra
+                                            layuimini-notice-content(layui-hide)
+                                    -->
+                                    <div class="layui-card-header"><i class="fa fa-bars icon-black"></i>子域信息
+                                    </div>
+                                    <div class="layui-card-body layui-text">
+                                        <!-- TODO：Subdomain 项目最终使用方法渲染来渲染数据表格，展示使用的是转换静态表格。其中事件相关要用filter来指定，其他用id-->
+                                        <!-- 方法渲染-->
+                                        <!-- <table id="subdomain_table" lay-filter="Subdomain"></table> -->
+
+                                        <!-- 转换静态表格 -->
+                                        <table lay-even lay-skin="nob" lay-filter="Subdomain">
+                                            <thead>
+                                                <tr>
+                                                    <th lay-data="{field:'subdomain'}">扫描结果</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>https://mail.hxss.com.cn/</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>https://mail.hxss.com.cn/</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://m.hxss.com.cn/</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>http://bpm1.hxss.com.cn/</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </fieldset>
+
+        </div>
+    </div>
+
+    <script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+    <script src="../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+    <script>
+        layui.use(['table', 'miniTab'], function () {
+            var table = layui.table;
+            var $ = layui.jquery,
+                layer = layui.layer,
+                miniTab = layui.miniTab;
+
+            miniTab.listen();
+            // 转换静态表格
+            table.init('Directory', {
+                height: 300, //设置高度，可以用来调整布局
+                page: true, //先接通数据才好自定义分页
+            });
+            table.init('Subdomain', {});
+
+
+            //TODO:方法渲染
+            table.render({
+                elem: '#dir_table',
+                height: 300,
+                url: '/demo/table/user/', //数据接口
+                page: true, //开启分页
+                cols: [
+                    [ //表头
+                        {
+                            field: 'directory',
+                            title: '扫描结果',
+                            width: 300
+                        }
+                    ]
+                ]
+            });
+            table.render({
+                elem: '#subdomain_table',
+                height: 300,
+                url: '/demo/table/user/', //数据接口
+                page: true, //开启分页
+                cols: [
+                    [ //表头
+                        {
+                            field: 'subdomain',
+                            title: '扫描结果',
+                            width: 300
+                        }
+                    ]
+                ]
+            });
+            /**
+             * 查看详细信息
+             **/
+            $('body').on('click', '.layuimini-notice', function () {
+                var title = $(this).children('.layuimini-notice-title').text(),
+                    noticeTime = $(this).children('.layuimini-notice-extra').text(),
+                    content = $(this).children('.layuimini-notice-content').html();
+                var html =
+                    '<div style="padding:15px 20px; text-align:justify; line-height: 22px;border-bottom:1px solid #e2e2e2;background-color: #2f4056;color: #ffffff">\n' +
+                    '<div style="text-align: center;margin-bottom: 20px;font-weight: bold;border-bottom:1px solid #718fb5;padding-bottom: 5px"><h4 class="text-danger">' +
+                    title + '</h4></div>\n' +
+                    '<div style="font-size: 12px">' + content + '</div>\n' +
+                    '</div>\n';
+                parent.layer.open({
+                    type: 1,
+                    title: '详细信息' +
+                        '<span style="float: right;right: 1px;font-size: 12px;color: #b1b3b9;margin-top: 1px">' +
+                        noticeTime + '</span>',
+                    area: '300px;',
+                    shade: 0.8,
+                    id: 'layuimini-notice',
+                    btn: ['查看', '取消'],
+                    btnAlign: 'c',
+                    moveType: 1,
+                    content: html,
+                    success: function (layero) {
+                        var btn = layero.find('.layui-layer-btn');
+                        btn.find('.layui-layer-btn0').attr({
+                            href: 'https://gitee.com/zhongshaofa/layuimini',
+                            target: '_blank'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -5,6 +5,7 @@ import psutil
 import os
 import requests
 import json
+import sys
 
 
 def login_required(func):
@@ -54,7 +55,7 @@ def get_user_agent():
     return random.choice(user_agent_list)
 
 
-def exit_process(name):
+def exist_process(name):
     pids = psutil.pids()
     for pid in pids:
         p = psutil.Process(pid)
@@ -74,7 +75,30 @@ def push_dingding_group(content):
     # 消息类型和数据格式参照钉钉开发文档
     data = {"msgtype": "markdown", "markdown": {"title": "xray 发现了新漏洞"}}
     data['markdown']['text'] = content
-    r = requests.post(
+    requests.post(
         "https://oapi.dingtalk.com/robot/send?access_token=add36dd6ed87b89f7ae4de8db77f9810df57aced7fc466a68fcda06dc9aa4cde",
         data=json.dumps(data),
         headers=headers)
+
+
+def url_detect(url_list):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'}
+    alive = []
+    for url in url_list:
+        try:
+            https_url = 'https://' + url
+            requests.get(https_url, headers=get_user_agent(), timeout=5)
+            alive.append(url)
+            continue
+        except:
+            pass
+        try:
+            http_url = 'http://' + url
+            requests.get(http_url, headers=get_user_agent(), timeout=5)
+            alive.append(url)
+        except:
+            pass
+
+    return alive
+

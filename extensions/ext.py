@@ -9,7 +9,7 @@ import platform
 import json
 import simplejson
 import datetime
-from web.utils.auxiliary import get_user_agent, exit_process, kill_process
+from web.utils.auxiliary import get_user_agent, exist_process, kill_process, url_detect
 from extensions.Wappalyzer import Wappalyzer, WebPage
 import warnings
 
@@ -121,7 +121,7 @@ class OneForAllExt(object):
         result = []
         for d in task.datas:
             result.append(d['subdomain'])
-        result = list(set(result))
+        result = url_detect(list(set(result)))
 
         return result
 
@@ -200,7 +200,6 @@ class DirExt(object):
                 #     result.append(i['redirect'])
         result = list(set(result))
         f.close()
-        print(result)
         return result
 
 
@@ -264,7 +263,7 @@ class XrayExt(object):
 
     def __init__(self):
         self.XRAY_DIR = r'D:\Xray'
-        self.CRAWLERGO_DIR = r'D:\UY\crawlergo_x_XRAY'
+        self.RAD_DIR = r'D:\UY\rad'
         self.CHROME_DIR = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
         self.start_xray()
 
@@ -272,34 +271,25 @@ class XrayExt(object):
         print('***xray')
         # result_dir = r'D:\Xray\{}.json'.format(datetime.datetime.now().strftime("%Y_%m%d_%H%M%S"))
         # print(result_dir)
-        if not exit_process('xray.exe'):
-            webhook = 'http://127.0.0.1:5000/func/webhook'
-            command = r'{}\xray webscan --listen 127.0.0.1:7777 --webhook-output {}'.format(self.XRAY_DIR, webhook)
-            subprocess.Popen(command, shell=True)
+        if exist_process('xray.exe'):
+            kill_process('xray.exe')
+        webhook = 'http://127.0.0.1:5000/func/webhook'
+        command = r'{}\xray webscan --listen 127.0.0.1:7777 --webhook-output {}'.format(self.XRAY_DIR, webhook)
+        subprocess.Popen(command, shell=True)
 
-    def scan_all(self):
-        file = open(self.CRAWLERGO_DIR + r"\targets.txt")
-        for text in file.readlines():
-            url = text.strip('\n')
-            self.scan_one(url)
+    # def scan_all(self):
+    #     file = open(self.CRAWLERGO_DIR + r"\targets.txt")
+    #     for text in file.readlines():
+    #         url = text.strip('\n')
+    #         self.scan_one(url)
 
     def scan_one(self, url):
         print('***scan')
         # command = r'{}/crawlergo -c {} -t 10 -f smart --fuzz-path --output-mode json {}'.format(self.CRAWLERGO_DIR,
         #                                                                                         self.CHROME_DIR, url)
-        cmd = [r"D:\UY\crawlergo_x_XRAY\crawlergo", "-c", r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-               "-t", "5", "-f", "smart",
-               "--fuzz-path", "--custom-headers", json.dumps(get_user_agent()), "--push-to-proxy",
-               "http://127.0.0.1:7777/", "--push-pool-max", "10", "--output-mode", "json", url]
-        rsp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, error = rsp.communicate()
-        try:
-            result = simplejson.loads(output.decode().split("--[Mission Complete]--")[1])
-        except:
-            return
-        sub_domain = result["sub_domain_list"]
-        print("[crawl ok]")
-        print("[scanning]")
+        cmd = r'{}\rad -t {} --http-proxy 127.0.0.1:7777'.format(self.RAD_DIR, url)
+        subprocess.Popen(cmd)
+        # [*] All pending requests have been scanned
 
 
 class WappExt(object):
@@ -308,6 +298,7 @@ class WappExt(object):
     # def __init__(self):
 
     def detect(self, url):
+        url = 'http://' + url
         webpage = WebPage.new_from_url(url)
         wappalyzer = Wappalyzer.latest()
         result = wappalyzer.analyze_with_versions_and_categories(webpage)
@@ -327,5 +318,9 @@ class NessusExt(object):
 if __name__ == '__main__':
     # kill_process('xray.exe')
     # r = HydraExt('192.168.31.13').crack('ssh')
+    # XrayExt().scan_one(url='testphp.vulnweb.com')
+    # RAD_DIR = r'D:\UY\rad'
+    # url = 'testphp.vulnweb.com'
+    # cmd = r'{}\rad -t {} --http-proxy 127.0.0.1:7777'.format(RAD_DIR, url)
+    # rsp = subprocess.Popen(cmd)
     pass
-
