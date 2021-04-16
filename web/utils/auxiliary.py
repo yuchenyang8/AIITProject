@@ -5,6 +5,7 @@ import psutil
 import os
 import requests
 import json
+import re
 import sys
 
 
@@ -101,4 +102,21 @@ def url_detect(url_list):
             pass
 
     return alive
+
+
+def get_title(url):
+    try:
+        https_url = 'https://' + url
+        req = requests.get(https_url, timeout=3)
+        title = re.findall('<title>(.+)</title>', req.content.decode('utf-8'))
+        return title
+    except:
+        pass
+    try:
+        http_url = 'http://' + url
+        req = requests.get(http_url)
+        title = re.findall('<title>(.+)</title>', req.content.decode('utf-8'))
+        return title
+    except:
+        pass
 

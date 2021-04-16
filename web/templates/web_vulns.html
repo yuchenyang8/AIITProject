@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Asset</title>
+    <title>Vuln</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.5.5/css/layui.css') }}" media="all">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}" media="all">
 </head>
@@ -17,13 +17,13 @@
                         <div class="layui-inline">
                             <label class="layui-form-label">厂商</label>
                             <div class="layui-input-inline">
-                                <input type="text" name="asset_company" autocomplete="off" class="layui-input">
+                                <input type="text" name="vuln_company" autocomplete="off" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-inline">
                             <label class="layui-form-label">资产</label>
                             <div class="layui-input-inline">
-                                <input type="text" name="asset_name" autocomplete="off" class="layui-input">
+                                <input type="text" name="vuln_asset" autocomplete="off" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-inline">
@@ -38,14 +38,13 @@
 
         <script type="text/html" id="toolbarDemo">
             <div class="layui-btn-container">
-                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加资产</button>
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加漏洞</button>
             </div>
         </script>
 
         <table class="layui-hide" id="currentTable_task" lay-filter="currentTableFilter"></table>
 
         <script type="text/html" id="currentTableBar">
-            <a class="layui-btn layui-btn-xs layui-btn-sm data-count-start" lay-event="start">扫描</a>
             <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
         </script>
 
@@ -60,7 +59,7 @@
 
         table.render({
             elem: '#currentTable_task',
-            url: "{{ url_for('api_func_asset') }}",
+            url: "{{ url_for('api_func_vulns', type=vuln_type) }}",
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
@@ -69,18 +68,11 @@
             }],
             cols: [[
                 {field: 'id', width: 80, title: 'ID', sort: true},
-                {field: 'asset_company', width: 250, title: '所属厂商', align: "center", sort: true},
-                {
-                    field: 'asset_name',
-                    width: 350,
-                    title: '资产名称',
-                    align: "center",
-                    templet: '#asset_tpl',
-                    sort: true
-                },
-                {field: 'asset_type', width: 130, title: '资产类型', align: "center"},
-                {field: 'vuln_status', width: 200, title: '扫描状态', templet: '#vuln_flag_tpl', align: "center"},
-                {field: 'vuln_time', width: 300, title: '上次扫描日期', align: "center", sort: true},
+                {field: 'vuln_company', width: 150, title: '所属厂商', align: "center", sort: true},
+                {field: 'vuln_asset', width: 250, title: '所属资产', align: "center", sort: true},
+                {field: 'vuln_type', width: 300, title: '漏洞类型', align: "center", templet: '#vuln_type_tpl',sort: true},
+                {field: 'vuln_status', width: 200, title: '漏洞状态', templet: '#vuln_flag_tpl', align: "center"},
+                {field: 'vuln_time', width: 300, title: '发现时间', align: "center", sort: true},
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
             ]],
             limits: [10, 15, 20, 25, 50, 100],
@@ -126,30 +118,17 @@
         });
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
-            if (obj.event === 'start') {
-                layer.confirm('确定开始扫描该资产吗?', function (index) {
-                    layer.alert('漏洞扫描开始!', {title: '提示', icon: 1})
-                    layer.close(index);
-                });
-                $.ajax({
-                    url: "{{ url_for('api_func_vuln') }}",
-                    data: JSON.stringify(data),
-                    contentType: 'application/json;charset=UTF-8',
-                    dataType: 'json',
-                    type: 'post',
-                })
-            }
             if (obj.event === 'delete') {
-                layer.confirm('确定删除该资产吗?', function (index) {
+                layer.confirm('确定删除该漏洞吗?', function (index) {
                     $.ajax({
-                        url: "{{ url_for('api_func_asset') }}",
+                        url: "{{ url_for('api_func_vulns') }}",
                         data: JSON.stringify(data),
                         contentType: 'application/json;charset=UTF-8',
                         dataType: 'json',
                         type: 'delete',
                         success: function (result) {
                             if (result.status_code === 200) {
-                                layer.alert('删除资产成功!', {title: '提示', icon: 1})
+                                layer.alert('删除漏洞成功!', {title: '提示', icon: 1})
                                 obj.del();
                                 layer.close(index);
                             } else {
@@ -167,19 +146,20 @@
 </script>
 <script type="text/html" id="vuln_flag_tpl">
     {% raw %}
-    {{# if(d.vuln_status === '未扫描'){ }}
-    <span style="color: #334CFF;">{{ d.vuln_status }}</span>
-    {{#  } else if(d.vuln_status === '扫描完成'){ }}
+    {{# if(d.vuln_status === '未修复'){ }}
+    <span style="color: #ff3333;">{{ d.vuln_status }}</span>
+    {{#  } else if(d.vuln_status === '已修复'){ }}
     <span style="color: #33FF5E;">{{ d.vuln_status }}</span>
     {{#  } else { }}
-    <span style="color: #ff3333;">{{ d.vuln_status }}</span>
+    <span style="color: #334cff;">{{ d.vuln_status }}</span>
     {{#  } }}
     {% endraw %}
 </script>
-<script type="text/html" id="asset_tpl">
+<script type="text/html" id="vuln_type_tpl">
     {% raw %}
-    <a href="/func/asset/{{ d.asset_name }}">{{ d.asset_name }}</a>
+    <span class="layui-badge layui-bg-blue">{{ d.vuln_type }}</span>
     {% endraw %}
 </script>
+
 </body>
 </html>

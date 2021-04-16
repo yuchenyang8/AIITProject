@@ -7,11 +7,13 @@ import os
 from extensions.OneForAll.oneforall import OneForAll
 import platform
 import json
-import simplejson
-import datetime
-from web.utils.auxiliary import get_user_agent, exist_process, kill_process, url_detect
+from web.utils.auxiliary import exist_process, kill_process, url_detect
 from extensions.Wappalyzer import Wappalyzer, WebPage
 import warnings
+import urllib3
+import time
+
+urllib3.disable_warnings()
 
 warnings.filterwarnings(action='ignore')
 
@@ -206,14 +208,28 @@ class DirExt(object):
 class WafExt(object):
     """Wafw00f插件类"""
 
-    def __init__(self, url):
-        self.url = url
+    def __init__(self):
         self.TOOL_DIR = r'D:\UY\AIITProject\extensions\wafw00f\wafw00f\main.py'
         self.RESULT_DIR = r'D:\UY\AIITProject\extensions\wafw00f\result.json'
 
-    def waf_detect(self):
-        command = 'python {} -v -o {} {}'.format(self.TOOL_DIR, self.RESULT_DIR, self.url)
-        os.popen(command).read()
+    def detect(self, url):
+        flag = False
+        try:
+            https_url = 'https://' + url
+            requests.get(https_url, timeout=3)
+            command = 'python {} -v -o {} {}'.format(self.TOOL_DIR, self.RESULT_DIR, https_url)
+            os.popen(command).read()
+            flag = True
+        except:
+            pass
+        if not flag:
+            try:
+                http_url = 'http://' + url
+                command = 'python {} -v -o {} {}'.format(self.TOOL_DIR, self.RESULT_DIR, http_url)
+                os.popen(command).read()
+            except:
+                pass
+
         with open(self.RESULT_DIR, 'r+', encoding='utf-8') as f:
             data = json.load(f)
         result = data[0]['firewall'] if data else 'None'
@@ -309,18 +325,214 @@ class NessusExt(object):
     """Nessus插件类"""
 
     def __init__(self):
-        pass
+        self.url = 'https://localhost:8834'
+        self.accessKey = '2179ddb0a05e92c6b35f394a597290d6ae95645d0918859135ae3b06d4e9b013'
+        self.secretKey = '6bc3a119840685bcf1fc58cfdc693791185227f85dd4cef40f72c0fe86c4afb5'
+        self.verify = False
 
-    def scan(self, url):
-        pass
+    def __build_url(self, resource):
+        """拼接url"""
+
+        return '{0}{1}'.format(self.url, resource)
+
+    def __connect(self, method, resource, data=None):
+        """向Nessus发送请求"""
+
+        headers = {'X-ApiKeys': 'accessKey={accesskey};secretKey={secretkey}'.format(accesskey=self.accessKey,
+                                                                                     secretkey=self.secretKey),
+                   'content-type': 'application/json'}
+        verify = self.verify
+        data = json.dumps(data)
+
+        if method == 'POST':
+            r = requests.post(self.__build_url(resource), data=data, headers=headers, verify=verify)
+        elif method == 'PUT':
+            r = requests.put(self.__build_url(resource), data=data, headers=headers, verify=verify)
+        elif method == 'DELETE':
+            r = requests.delete(self.__build_url(resource), data=data, headers=headers, verify=verify)
+        else:
+            r = requests.get(self.__build_url(resource), params=data, headers=headers, verify=verify)
+
+        # Exit if there is an error.
+        if r.status_code != 200:
+            e = r.json()
+            print(e['error'])
+
+        # When downloading a scan we need the raw contents not the JSON data.
+        if 'download' in resource:
+            return r.content
+        else:
+            return r.json()
+
+    def __get_policies(self):
+        """获取扫描模板"""
+
+        data = self.__connect('GET', '/editor/policy/templates')
+
+        return dict((p['title'], p['uuid']) for p in data['templates'])
+
+    def __get_history_ids(self, sid):
+        """获取任务的所有历史扫描id"""
+
+        data = self.__connect('GET', '/scans/{0}'.format(sid))
+
+        return dict((h['uuid'], h['history_id']) for h in data['history'])
+
+    def __update(self, scan_id, name, targets, enabled, pid=None):
+        """更新扫描任务信息"""
+
+        scan = {'settings': {}}
+        scan['settings']['name'] = name
+        scan['settings']['enabled'] = enabled
+        scan['settings']['text_targets'] = targets
+
+        if pid is not None:
+            scan['uuid'] = pid
+
+        data = self.__connect('PUT', '/scans/{0}'.format(scan_id), data=scan)
+
+        return data
+
+    def __get_scan_history(self, sid, hid):
+        """
+        Scan history details
+        Get the details of a particular run of a scan.
+        """
+        params = {'history_id': hid}
+        data = self.__connect('GET', '/scans/{0}'.format(sid), params)
+
+        return data['info']
+
+    def __status(self, sid, hid):
+        """查询扫描状态"""
+
+        d = self.__get_scan_history(sid, hid)
+        return d['status']
+
+    def __export_status(self, sid, fid):
+        """
+        Check export status
+        Check to see if the export is ready for download.
+        """
+
+        data = self.__connect('GET', '/scans/{0}/export/{1}/status'.format(sid, fid))
+
+        return data['status'] == 'ready'
+
+    def __export(self, sid, hid):
+        """
+        Make an export request
+        Request an export of the scan results for the specified scan and
+        historical run. In this case the format is hard coded as nessus but the
+        format can be any one of nessus, html, pdf, csv, or db. Once the request
+        is made, we have to wait for the export to be ready.
+        """
+
+        data = {'history_id': hid,
+                'format': 'nessus'}
+
+        data = self.__connect('POST', '/scans/{0}/export'.format(sid), data=data)
+
+        fid = data['file']
+
+        while self.__export_status(sid, fid) is False:
+            time.sleep(5)
+
+        return fid
+
+    def __download(self, sid, fid):
+        """
+        Download the scan results
+        Download the scan results stored in the export file specified by fid for
+        the scan specified by sid.
+        """
+
+        data = self.__connect('GET', '/scans/{0}/export/{1}/download'.format(sid, fid))
+        filename = 'nessus_{0}_{1}.nessus'.format(sid, fid)
+
+        print('Saving scan results to {0}.'.format(filename))
+        with open(filename, 'w') as f:
+            f.write(data)
+
+    def __delete(self, scan_id):
+        """删除扫描任务"""
+
+        self.__connect('DELETE', '/scans/{0}'.format(scan_id))
+
+    def __history_delete(self, sid, hid):
+        """删除任务历史扫描"""
+
+        self.__connect('DELETE', '/scans/{0}/history/{1}'.format(sid, hid))
+
+    def create(self, name, targets, enabled=False, uuid=''):
+        """添加一个新的扫描任务"""
+        if uuid == '':
+            uuid = self.__get_policies()['Advanced Scan']
+        scan = {'uuid': uuid,
+                'settings': {
+                    'name': name,  # 任务名称
+                    'enabled': enabled,  # 是否开启定时任务
+                    'text_targets': targets,
+                }
+                }
+        data = self.__connect('POST', '/scans', data=scan)
+
+        # 返回scan_id
+        return data['scan']['id']
+
+    def launch(self, scan_id):
+        """执行扫描"""
+        try:
+            data = self.__connect('POST', '/scans/{0}/launch'.format(scan_id))
+            scan_uuid = data['scan_uuid']
+            history_ids = self.__get_history_ids(scan_id)
+            history_id = history_ids[scan_uuid]
+            return history_id
+        except:
+            return False
+
+    def get_plugin_detail(self, plugin_id):
+        """获取漏洞详情"""
+
+        data = self.__connect('GET', '/plugins/plugin/{0}'.format(plugin_id))
+        detail = {'family_name': data['family_name']}
+        for item in data['attributes']:
+            attr_name = item['attribute_name']
+            attr_value = item['attribute_value']
+            if attr_name == 'cve':
+                detail.update({'cve': attr_value})
+            elif attr_name == 'exploitability_ease':
+                detail.update({'exploitability_ease': attr_value})
+            elif attr_name == 'vuln_publication_date':
+                detail.update({'vuln_publication_date': attr_value})
+            elif attr_name == 'solution':
+                detail.update({'solution': attr_value})
+            elif attr_name == 'risk_factor':
+                detail.update({'risk_factor': attr_value})
+            elif attr_name == 'description':
+                detail.update({'description': attr_value})
+            elif attr_name == 'synopsis':
+                detail.update({'synopsis': attr_value})
+
+        return detail
+
+    def get_vuln_result(self, scan_id, history_id):
+        """获取扫描结果"""
+
+        while self.__status(scan_id, history_id) != 'completed':
+            time.sleep(5)
+        params = {'history_id': history_id}
+        data = self.__connect('GET', '/scans/{0}'.format(scan_id), params)
+
+        return data['vulnerabilities']
 
 
 if __name__ == '__main__':
     # kill_process('xray.exe')
     # r = HydraExt('192.168.31.13').crack('ssh')
     # XrayExt().scan_one(url='testphp.vulnweb.com')
-    # RAD_DIR = r'D:\UY\rad'
-    # url = 'testphp.vulnweb.com'
-    # cmd = r'{}\rad -t {} --http-proxy 127.0.0.1:7777'.format(RAD_DIR, url)
-    # rsp = subprocess.Popen(cmd)
+
+    # scan_id = n.create(name='192.168.31.19', targets='192.168.31.19')
+    # history_id = n.launch(scan_id)
+
     pass

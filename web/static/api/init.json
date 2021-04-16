@@ -5,7 +5,7 @@
   },
   "logoInfo": {
     "title": "安全评估平台",
-    "image": "#",
+    "image": "static/images/logo.png",
     "href": ""
   },
   "menuInfo": [
@@ -55,13 +55,13 @@
           "child": [
             {
               "title": "主机漏洞",
-              "href": "",
+              "href": "func/vulns/host",
               "icon": "fa fa-industry",
               "target": "_self"
             },
             {
               "title": "WEB漏洞",
-              "href": "func/vulns",
+              "href": "func/vulns/web",
               "icon": "fa fa-tasks",
               "target": "_self"
             }

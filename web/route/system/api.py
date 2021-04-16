@@ -43,31 +43,25 @@ class DashBoardAPI(Resource):
         for i in company_collection:
             company_name.append(i['ename'])
         """ 获取任务数量 """
-        task_collection = list(DB.db.task.find())
-        num_task = len(task_collection)
+        task_collection = DB.db.task.find()
+        asset_collection = DB.db.asset.find()
+        num_task = task_collection.count()
 
         """ 获取web任务和host任务的数量 """
         num_webscan = 0
         num_hostscan = 0
-        for i in task_collection:
-            if i['ttype'] == 'WEB':
-                num_webscan += 1
-            elif i['ttype'] == '主机':
-                num_hostscan += 1
-
-        """ 获取指纹信息 """
         finger_types = {}
-        for i in task_collection:
-            try:
-                finger = i['finger']
-                for k, v in finger.items():
-                    if v not in finger_types:
-                        finger_types[v] = 1
+        for asset in asset_collection:
+            if asset['type'] == 'WEB':
+                num_webscan += 1
+                for f in asset['finger'].keys():
+                    if f in finger_types:
+                        finger_types[f] += 1
                     else:
-                        finger_types[v] += 1
-                print(finger_types)
-            except:
-                print('No finger info!')
+                        finger_types[f] = 1
+            elif asset['type'] == '主机':
+                num_hostscan += 1
+        """ 获取指纹排序信息 """
         finger_types_sorted = sorted(finger_types, key=finger_types.__getitem__)[0:3]
 
         return {'company_name': company_name,

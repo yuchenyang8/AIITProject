@@ -3,7 +3,7 @@ from web.utils.auxiliary import login_required
 from web import APP, DB
 import datetime
 import logging
-from web.utils.auxiliary import push_dingding_group
+from web.utils.auxiliary import push_dingding_group, kill_process
 import re
 
 
@@ -45,29 +45,44 @@ def html_func_asset():
     return render_template('asset.html')
 
 
-@APP.route('/func/vulns')
-def html_func_vulns():
+@APP.route('/func/vulns/<string:vuln_type>')
+def html_func_vulns(vuln_type):
     """漏洞信息页面"""
-    return render_template('vulns.html')
+    if vuln_type == 'web':
+        return render_template('web_vulns.html', vuln_type='WEB')
+    elif vuln_type == 'host':
+        return render_template('host_vulns.html', vuln_type='主机')
 
 
-@APP.route('/func/asset_info')
-def html_func_assetinfo():
+@APP.route('/func/asset/<string:asset_name>')
+def html_func_assetinfo(asset_name):
     """资产详情页面"""
-    return render_template('asset_detail.html')
+    asset = DB.db.asset.find_one({'aname': asset_name})
+    return render_template('asset_detail.html', asset=asset)
+
+
+@APP.route('/func/test')
+def html_func_newtask():
+    """资产信息页面"""
+    return render_template('newtask.html')
 
 
 @APP.route('/func/webhook', methods=['POST'])
 def xray_webhook():
-    vuln = request.json
-    if 'create_time' in vuln['data']:
-        url = re.findall(r'//(.+?)/', vuln['data']["target"]["url"])[0]
+    data = request.json
+    data_type = data.get("type")
+    if data_type == 'web_statistic':
+        if data['data']['num_found_urls'] - data['data']['num_scanned_urls'] == 0:
+            kill_process('xray.exe')
+    if 'create_time' in data['data']:
+        url = re.findall(r'//(.+?)/', data['data']["target"]["url"])[0]
         ename = DB.db.asset.find_one({'aname': url})['ename']
         DB.db.vuln.insert_one({
             'vasset': url,
-            'vtype': vuln['data']["plugin"],
-            'vdate': str(datetime.datetime.fromtimestamp(vuln['data']["create_time"] / 1000)).split('.')[0],
-            'vdetail': vuln['data']['detail'],
+            'vtype': data['data']["plugin"],
+            'vdate': str(datetime.datetime.fromtimestamp(data['data']["create_time"] / 1000)).split('.')[0],
+            'type': 'WEB',
+            'vdetail': data['data']['detail'],
             'vstatus': '未修复',
             'ename': ename,
         })
