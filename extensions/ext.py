@@ -66,9 +66,10 @@ class NmapExt(object):
         port_list = []
         value_list = []
         for ip in nm.scan_result['scan']:
-            for port in nm.scan_result['scan'][ip]['tcp']:
-                port_list.append(str(port))
-                value_list.append(nm.scan_result['scan'][ip]['tcp'][port])
+            if 'tcp' in nm.scan_result['scan'][ip]:
+                for port in nm.scan_result['scan'][ip]['tcp']:
+                    port_list.append(str(port))
+                    value_list.append(nm.scan_result['scan'][ip]['tcp'][port])
         scan_result = dict(zip(port_list, value_list))
         # nm.scan_result['scan'][ip]['tcp'] = scan_result
         return scan_result
@@ -526,12 +527,42 @@ class NessusExt(object):
 
         return data['vulnerabilities']
 
+    def get_host_details(self, scan_id, host_id):
+        """获取主机详细信息"""
+
+        data = self.__connect('GET', '/scans/{0}/hosts/{1}'.format(scan_id, host_id))
+
+        return data['info']
+
+    def get_severitycount(self, scan_id, history_id):
+        """获取扫描概况"""
+
+        params = {'history_id': history_id}
+        data = self.__connect('GET', '/scans/{0}'.format(scan_id), params)
+
+        result = {}
+        for item in data['hosts'][0]['severitycount']['item']:
+            if item['severitylevel'] == 0:
+                result.update({'INFO': item['count']})
+            elif item['severitylevel'] == 1:
+                result.update({'LOW': item['count']})
+            elif item['severitylevel'] == 2:
+                result.update({'MEDIUM': item['count']})
+            elif item['severitylevel'] == 3:
+                result.update({'HIGH': item['count']})
+            elif item['severitylevel'] == 4:
+                result.update({'CRITICAL': item['count']})
+
+        return result
+
 
 if __name__ == '__main__':
     # kill_process('xray.exe')
     # r = HydraExt('192.168.31.13').crack('ssh')
     # XrayExt().scan_one(url='testphp.vulnweb.com')
-
+    n = NessusExt()
+    info = n.get_severitycount(52, 53)
+    print(info)
     # scan_id = n.create(name='192.168.31.19', targets='192.168.31.19')
     # history_id = n.launch(scan_id)
 

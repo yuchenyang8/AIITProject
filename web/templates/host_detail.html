@@ -174,13 +174,10 @@
             </div>
             <legend style="font-size: xx-large;font-weight: bolder">{{ asset['aname'] }}</legend>
             <div class="layui-row layui-col-space15">
-                <!--[基本信息，目录信息]和[指纹信息，子域信息]的列间距为15px，分别占6列-->
                 <div class="layui-col-md6">
-                    <!-- 基本信息和目录信息的列间距为15px，其中数据统计和快捷入口分别占12列（满行会自动换行），基本信息和目录信息随着扫描数据的增长只会往下增长，不会影响左右布局 -->
                     <div class="layui-row layui-col-space15">
                         <!-- [1,1] 基本信息-->
                         <div class="layui-col-md12">
-
                             <div class="layui-card">
                                 <div class="layui-card-header"><i class="fa fa-desktop icon-green"></i>基本信息</div>
                                 <div class="layui-card-body layui-text">
@@ -190,38 +187,35 @@
                                              style="font-size: larger">{{ asset['ename'] }}</div>
                                     </div>
                                     <div class="layuimini-notice">
-                                        <div class="layuimini-notice-title">IP address：</div>
+                                        <div class="layuimini-notice-title">START：</div>
                                         <div class="layuimini-notice-extra"
-                                             style="font-size: larger">{{ asset['ip'] }}</div>
-                                        <!-- notice-content是隐藏起来的，项目后期可以用来展示具体信息 -->
-                                        <div class="layuimini-notice-content layui-hide"></div>
+                                             style="font-size: larger">{{ asset['detail']['host_start'] }}</div>
                                     </div>
                                     <div class="layuimini-notice">
-                                        <div class="layuimini-notice-title">Title：</div>
+                                        <div class="layuimini-notice-title">END：</div>
                                         <div class="layuimini-notice-extra"
-                                             style="font-size: larger">{{ asset['title'][0] }}</div>
+                                             style="font-size: larger">{{ asset['detail']['host_end'] }}</div>
                                     </div>
                                     <div class="layuimini-notice">
-                                        <div class="layuimini-notice-title">WAF：</div>
-                                        {% if asset['waf'] == 'None' %}
-                                            <div class="layuimini-notice-extra layui-badge layui-bg-red"
-                                                 style="font-size: larger">{{ asset['waf'] }}</div>
-                                        {% else %}
-                                            <div class="layuimini-notice-extra"
-                                                 style="font-size: larger">{{ asset['waf'] }}</div>
-                                        {% endif %}
+                                        <div class="layuimini-notice-title">NETBIOS-NAME：</div>
+                                        <div class="layuimini-notice-extra"
+                                             style="font-size: larger">{{ asset['detail']['netbios-name'] }}</div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- [2,1] 目录信息-->
-                        <div class="layui-col-md12">
-                            <div class="layui-card">
-                                <div class="layui-card-header"><i class="fa fa-sort-amount-desc icon-blue"></i>目录信息
-                                </div>
-                                <div class="layui-card-body">
-                                    <table class="layui-hide" id="currentTable_dirs"
-                                           lay-filter="currentTableFilter"></table>
+                                    <div class="layuimini-notice">
+                                        <div class="layuimini-notice-title">MAC：</div>
+                                        <div class="layuimini-notice-extra"
+                                             style="font-size: larger">{{ asset['detail']['mac-address'] }}</div>
+                                    </div>
+                                    <div class="layuimini-notice">
+                                        <div class="layuimini-notice-title">OS：</div>
+                                        <div class="layuimini-notice-extra"
+                                             style="font-size: larger">{{ asset['detail']['operating-system'] }}</div>
+                                    </div>
+                                    <div class="layuimini-notice">
+                                        <div class="layuimini-notice-title">DNS：</div>
+                                        <div class="layuimini-notice-extra"
+                                             style="font-size: larger">{{ asset['detail']['host-fqdn'] }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -229,37 +223,12 @@
                 </div>
                 <div class="layui-col-md6">
                     <div class="layui-row layui-col-space15">
-                        <!-- [1,2] 指纹识别-->
                         <div class="layui-col-md12">
-                            <div class="layui-card">
-                                <div class="layui-card-header"><i class="fa fa-fire icon-yellow"></i>指纹识别</div>
-                                <!-- <div class="layui-card-body"> -->
-                                <div class="layui-card-body"
-                                     style="height:169px;font-size:22px;line-height:55px;text-align:left;">
-                                    <!-- TODO：Web finger -->
-                                    <div class="layui-col-md12">
-                                        {% for finger in asset['finger'] %}
-                                            <div class="label layui-bg-blue" style="margin:0px 18px 0px 0px;">
-                                                {{ finger }}{{ asset['finger'][finger]['versions'][0] }}</div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- [2,2] 子域信息-->
-                        <div class="layui-col-md12">
-                            <div class="layui-card">
-                                <div class="layui-card-header"><i class="fa fa-bars icon-black"></i>子域信息
-                                </div>
-                                <div class="layui-card-body">
-                                    <table class="layui-hide" id="currentTable_subs"
-                                           lay-filter="currentTableFilter"></table>
-                                </div>
-                            </div>
+                            <div id="echarts-pies"
+                                 style="background-color:#ffffff;min-height:300px;padding: 10px"></div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </fieldset>
     </div>
@@ -268,6 +237,12 @@
         <div class="layui-card-header"><i class="fa fa-list icon-blue"></i>端口信息</div>
         <div class="layui-card-body layui-text">
             <table class="layui-hide" id="currentTable_ports" lay-filter="currentTableFilter"></table>
+        </div>
+    </div>
+    <div class="layui-card">
+        <div class="layui-card-header"><i class="fa fa-book icon-yellow"></i>详细信息</div>
+        <div class="layui-card-body layui-text">
+            <table class="layui-hide" id="currentTable_infos" lay-filter="currentTableFilter"></table>
         </div>
     </div>
     <div class="layui-card">
@@ -281,41 +256,20 @@
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
 <script src="{{ url_for('static', filename='js/lay-config.js', v=1.0.4) }}" charset="utf-8"></script>
 <script>
-    layui.use(['table'], function () {
+    layui.use(['table', 'echarts'], function () {
         var table = layui.table;
         var $ = layui.jquery;
-        table.render({
-            elem: '#currentTable_dirs',
-            url: "{{ url_for('api_func_infos', asset_dir=asset['aname']) }}",
-            cols: [[
-                {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
-                {field: 'dir', title: '目录', align: "center", sort: true},
-            ]],
-            limits: [5, 10, 20, 25, 50, 100],
-            limit: 5,
-            page: true,
-            skin: 'line'
-        });
-        table.render({
-            elem: '#currentTable_subs',
-            url: "{{ url_for('api_func_infos', asset_sub=asset['aname']) }}",
-            cols: [[
-                {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
-                {field: 'subdomain', title: '子域名', align: "center", sort: true},
-            ]],
-            limits: [5, 10, 20, 25, 50, 100],
-            limit: 5,
-            page: true,
-            skin: 'line'
-        });
+        var echarts = layui.echarts;
+
         table.render({
             elem: '#currentTable_ports',
-            url: "{{ url_for('api_func_infos', ip=asset['ip']) }}",
+            url: "{{ url_for('api_func_infos', ip=asset['aname']) }}",
             cols: [[
-                {field: 'id', width: 80, align: "center", title: 'ID', sort: true},
-                {field: 'port', title: '端口号', align: "center", sort: true},
+                {field: 'id', width: 126, title: 'ID', sort: true},
+                {field: 'port', width: 150, title: '端口号', align: "center", sort: true},
                 {
                     field: 'port_state',
+                    width: 250,
                     title: '端口状态',
                     templet: '#port_state_tpl',
                     align: "center",
@@ -323,13 +277,14 @@
                 },
                 {
                     field: 'port_protocol',
+                    width: 350,
                     title: '端口协议',
                     templet: '#port_protocol_tpl',
                     align: "center",
                     sort: true
                 },
-                {field: 'port_service', title: '端口服务', align: "center"},
-                {field: 'sercive_version', title: '服务版本', align: "center"},
+                {field: 'port_service', width: 350, title: '端口服务', align: "center"},
+                {field: 'sercive_version', width: 400, title: '服务版本', align: "center"},
             ]],
             limits: [10, 15, 20, 25, 50, 100],
             limit: 20,
@@ -346,58 +301,61 @@
                 icon: 'layui-icon-tips'
             }],
             cols: [[
-                {field: 'id', width: 80, align: "center", title: 'ID', sort: true},
-                {field: 'vuln_company', title: '所属厂商', align: "center", sort: true},
-                {field: 'vuln_asset', title: '所属资产', align: "center", sort: true},
+                {field: 'id', width: 80, title: 'ID', sort: true},
+                {field: 'vuln_company', width: 150, title: '所属厂商', align: "center", sort: true},
+                {field: 'vuln_asset', width: 400, title: '所属资产', align: "center", sort: true},
                 {
                     field: 'vuln_type',
+                    width: 400,
                     title: '漏洞类型',
                     align: "center",
                     templet: '#vuln_type_tpl',
                     sort: true
                 },
-                {field: 'vuln_status', title: '漏洞状态', templet: '#vuln_flag_tpl', align: "center"},
-                {field: 'vuln_time', title: '发现时间', align: "center", sort: true},
+                {field: 'vuln_status', width: 200, title: '漏洞状态', templet: '#vuln_flag_tpl', align: "center"},
+                {field: 'vuln_time', width: 396, title: '发现时间', align: "center", sort: true},
             ]],
             limits: [10, 15, 20, 25, 50, 100],
             limit: 20,
             page: true,
             skin: 'line'
         });
-        /**
-         * 查看详细信息
-         **/
-        $('body').on('click', '.layuimini-notice', function () {
-            var title = $(this).children('.layuimini-notice-title').text(),
-                noticeTime = $(this).children('.layuimini-notice-extra').text(),
-                content = $(this).children('.layuimini-notice-content').html();
-            var html =
-                '<div style="padding:15px 20px; text-align:justify; line-height: 22px;border-bottom:1px solid #e2e2e2;background-color: #2f4056;color: #ffffff">\n' +
-                '<div style="text-align: center;margin-bottom: 20px;font-weight: bold;border-bottom:1px solid #718fb5;padding-bottom: 5px"><h4 class="text-danger">' +
-                title + '</h4></div>\n' +
-                '<div style="font-size: 12px">' + content + '</div>\n' +
-                '</div>\n';
-            parent.layer.open({
-                type: 1,
-                title: '详细信息' +
-                    '<span style="float: right;right: 1px;font-size: 12px;color: #b1b3b9;margin-top: 1px">' +
-                    noticeTime + '</span>',
-                area: '300px;',
-                shade: 0.8,
-                id: 'layuimini-notice',
-                btn: ['查看', '取消'],
-                btnAlign: 'c',
-                moveType: 1,
-                content: html,
-                success: function (layero) {
-                    var btn = layero.find('.layui-layer-btn');
-                    btn.find('.layui-layer-btn0').attr({
-                        href: 'https://gitee.com/zhongshaofa/layuimini',
-                        target: '_blank'
-                    });
-                }
-            });
-        });
+
+        var echartsPies = echarts.init(document.getElementById('echarts-pies'), 'walden');
+        $.get("{{ url_for('api_func_chart', ip=asset['aname']) }}").done(function (data) {
+            echartsPies.setOption({
+                title: {
+                    text: '扫描概况',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b} : {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    data: ['INFO', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+                },
+                series: [
+                    {
+                        name: '危害级别',
+                        type: 'pie',
+                        radius: [30, 100],
+                        center: ['50%', '60%'],
+                        {#roseType: 'radius',#}
+                        data: data,
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            })
+        })
     });
 </script>
 <script type="text/html" id="vuln_type_tpl">

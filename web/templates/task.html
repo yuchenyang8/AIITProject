@@ -5,108 +5,102 @@
     <title>Task</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.5.5/css/layui.css') }}" media="all">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}" media="all">
+    <style>
+        .layui-btn:not(.layui-btn-lg ):not(.layui-btn-sm):not(.layui-btn-xs) {
+            height: 34px;
+            line-height: 34px;
+            padding: 0 8px;
+        }
+    </style>
 </head>
 <body>
 <div class="layuimini-container">
-    <div class="row">
-        <div class="layuimini-main col-sm-9 col-md-9">
-            <fieldset class="table-search-fieldset">
-                <legend>搜索信息</legend>
-                <div style="margin: 10px 10px 10px 10px">
-                    <form class="layui-form layui-form-pane" action="">
-                        <div class="layui-form-item">
-                            <div class="layui-inline">
-                                <label class="layui-form-label">厂商名</label>
-                                <div class="layui-input-inline">
-                                    <input type="text" name="task_company" autocomplete="off" class="layui-input">
-                                </div>
-                            </div>
-                            <div class="layui-inline">
-                                <label class="layui-form-label">任务资产</label>
-                                <div class="layui-input-inline">
-                                    <input type="text" name="task_name" autocomplete="off" class="layui-input">
-                                </div>
-                            </div>
-                            <div class="layui-inline">
-                                <button type="submit" class="layui-btn layui-btn-primary" lay-submit
-                                        lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </fieldset>
-
-            <script type="text/html" id="toolbarDemo">
-                <div class="layui-btn-container">
-                    <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加任务</button>
-                </div>
-            </script>
-
-            <table class="layui-hide" id="currentTable_task" lay-filter="currentTableFilter"></table>
-
-            <script type="text/html" id="currentTableBar">
-                <a class="layui-btn layui-btn-xs layui-btn-sm data-count-start" lay-event="start">开始</a>
-                <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
-            </script>
-
+    <div class="layuimini-main">
+        <div>
+            <div class="layui-btn-group">
+                <button class="layui-btn" id="btn-expand">全部展开</button>
+                <button class="layui-btn layui-btn-normal" id="btn-fold">全部折叠</button>
+            </div>
+            <table id="munu-table" class="layui-table" lay-filter="munu-table"></table>
         </div>
     </div>
 </div>
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加任务</button>
+    </div>
+</script>
+<!-- 任务操作列 -->
+<script type="text/html" id="task-tool">
+    <a class="layui-btn layui-btn-xs layui-btn-sm data-count-start" lay-event="start">开始</a>
+    <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+</script>
+
+
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
+<script src="{{ url_for('static', filename='js/lay-config.js', v=1.0.4) }}" charset="utf-8"></script>
 <script>
-    layui.use(['form', 'table'], function () {
-        var $ = layui.jquery,
-            form = layui.form,
-            table = layui.table;
+    layui.use(['table', 'treetable'], function () {
+        var $ = layui.jquery;
+        var table = layui.table;
+        var treetable = layui.treetable;
 
-        table.render({
-            elem: '#currentTable_task',
-            url: "{{ url_for('api_func_task') }}",
+        // 渲染表格
+        layer.load(2);
+        var insTb = treetable.render({
+            treeColIndex: 1,
+            treeSpid: -1,
+            treeIdName: 'authorityId',
+            treePidName: 'parentId',
             toolbar: '#toolbarDemo',
-            defaultToolbar: ['filter', 'exports', 'print', {
-                title: '提示',
-                layEvent: 'LAYTABLE_TIPS',
-                icon: 'layui-icon-tips'
-            }],
+            elem: '#munu-table',
+            url: "{{ url_for('api_func_task') }}",
+            page: false,
             cols: [[
-                {field: 'id', width: 80, title: 'ID', sort: true},
-                {field: 'task_company', width: 250, title: '厂商', align: "center", sort: true},
-                {field: 'task_name', width: 350, title: '名称', sort: true, align: "center"},
-                {field: 'task_type', width: 130, title: '类型', align: "center"},
-                {field: 'task_status', width: 200, title: '状态', templet: '#task_flag_tpl', align: "center"},
-                {field: 'task_time', width: 300, title: '创建/完成时间', align: "center", sort: true},
-                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+                {type: 'numbers'},
+                {field: 'name', minWidth: 200, title: '名称'},
+                {field: 'company', width: 150, align: 'center', title: '厂商'},
+                {field: 'type', width: 80, align: 'center', title: '类型'},
+                {field: 'status', width: 150, align: 'center', templet: '#task_flag_tpl', title: '状态'},
+                {field: 'time', width: 250, align: 'center', title: '创建/完成时间'},
+                {
+                    field: 'isMenu', width: 80, align: 'center', templet: function (d) {
+                        if (d.parentId == -1) {
+                            return '<span class="layui-badge layui-bg-blue">任务</span>';
+                        } else {
+                            return '<span class="layui-badge-rim">资产</span>';
+                        }
+                    }, title: '类型'
+                },
+                {
+                    width: 120, align: 'center', title: '操作', templet: function (d) {
+                        if (d.parentId == -1) {
+                            return '<a class="layui-btn layui-btn-xs layui-btn-sm data-count-start" lay-event="start">开始</a>\n' +
+                                '<a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="taskdelete">删除</a>';
+                        } else {
+                            return '<a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="assetdelete">删除</a>';
+                        }
+                    }
+                }
             ]],
-            limits: [10, 15, 20, 25, 50, 100],
-            limit: 20,
-            page: true,
-            skin: 'line'
+            done: function () {
+                layer.closeAll('loading');
+            }
         });
 
-        // 监听搜索操作
-        form.on('submit(data-search-btn)', function (data) {
-            var result = JSON.stringify(data.field);
-
-            //执行搜索重载
-            table.reload('currentTable_task', {
-                page: {
-                    curr: 1
-                }
-                , where: {
-                    searchParams: result
-                }
-            }, 'data');
-            return false;
+        $('#btn-expand').click(function () {
+            treetable.expandAll('#munu-table');
         });
 
-        /**
-         * toolbar监听事件
-         */
-        table.on('toolbar(currentTableFilter)', function (obj) {
+        $('#btn-fold').click(function () {
+            treetable.foldAll('#munu-table');
+        });
+
+        //监听工具条
+        table.on('toolbar(munu-table)', function (obj) {
             if (obj.event === 'add') {  // 监听添加操作
                 var index = layer.open({
-                    title: '添加厂商',
+                    title: '添加任务',
                     type: 2,
                     shade: 0.2,
                     maxmin: true,
@@ -119,10 +113,12 @@
                 });
             }
         });
-        table.on('tool(currentTableFilter)', function (obj) {
+        table.on('tool(munu-table)', function (obj) {
             var data = obj.data;
-            if (obj.event === 'start') {
-                layer.confirm('确定开始该资产任务吗?', function (index) {
+            var layEvent = obj.event;
+
+            if (layEvent === 'start') {
+                layer.confirm('确定开始该任务吗?', function (index) {
                     layer.alert('信息搜集开始!', {title: '提示', icon: 1})
                     layer.close(index);
                 });
@@ -134,8 +130,8 @@
                     type: 'post',
                 })
             }
-            if (obj.event === 'delete') {
-                layer.confirm('确定删除该资产任务吗?', function (index) {
+            if (layEvent === 'taskdelete') {
+                layer.confirm('确定删除该任务吗?', function (index) {
                     $.ajax({
                         url: "{{ url_for('api_func_task') }}",
                         data: JSON.stringify(data),
@@ -144,7 +140,30 @@
                         type: 'delete',
                         success: function (result) {
                             if (result.status_code === 200) {
-                                layer.alert('删除资产任务成功!', {title: '提示', icon: 1})
+                                layer.alert('删除任务成功!', {title: '提示', icon: 1})
+                                obj.del();
+                                layer.close(index);
+                            } else {
+                                layer.alert(result.msg, {title: '提示', icon: 2})
+                            }
+                        },
+                        error: function (e) {
+                            layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
+                        }
+                    })
+                });
+            }
+            if (layEvent === 'assetdelete') {
+                layer.confirm('确定删除该资产吗?', function (index) {
+                    $.ajax({
+                        url: "{{ url_for('api_func_asset') }}",
+                        data: JSON.stringify(data),
+                        contentType: 'application/json;charset=UTF-8',
+                        dataType: 'json',
+                        type: 'delete',
+                        success: function (result) {
+                            if (result.status_code === 200) {
+                                layer.alert('删除资产成功!', {title: '提示', icon: 1})
                                 obj.del();
                                 layer.close(index);
                             } else {
@@ -162,12 +181,16 @@
 </script>
 <script type="text/html" id="task_flag_tpl">
     {% raw %}
-    {{# if(d.task_status === '未探测'){ }}
-    <span style="color: #334CFF;">{{ d.task_status }}</span>
-    {{#  } else if(d.task_status === '探测完成'){ }}
-    <span style="color: #33FF5E;">{{ d.task_status }}</span>
+    {{# if(d.status === '未开始' ){ }}
+    <span style="color: #334CFF;">{{ d.status }}</span>
+    {{#  } else if(d.status === '未探测' ){ }}
+    <span style="color: #334CFF;">{{ d.status }}</span>
+    {{#  } else if(d.status === '已完成' ){ }}
+    <span style="color: #15b664;">{{ d.status }}</span>
+    {{#  } else if(d.status === '探测完成' ){ }}
+    <span style="color: #15b664;">{{ d.status }}</span>
     {{#  } else { }}
-    <span style="color: #ff3333;">{{ d.task_status }}</span>
+    <span style="color: #ff3333;">{{ d.status }}</span>
     {{#  } }}
     {% endraw %}
 </script>

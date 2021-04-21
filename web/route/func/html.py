@@ -58,13 +58,10 @@ def html_func_vulns(vuln_type):
 def html_func_assetinfo(asset_name):
     """资产详情页面"""
     asset = DB.db.asset.find_one({'aname': asset_name})
-    return render_template('asset_detail.html', asset=asset)
-
-
-@APP.route('/func/test')
-def html_func_newtask():
-    """资产信息页面"""
-    return render_template('newtask.html')
+    if asset['type'] == 'WEB':
+        return render_template('asset_detail.html', asset=asset)
+    elif asset['type'] == '主机':
+        return render_template('host_detail.html', asset=asset)
 
 
 @APP.route('/func/webhook', methods=['POST'])

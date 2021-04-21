@@ -1,11 +1,12 @@
-from flask_restful import reqparse, Resource
-from flask import session, json, redirect, url_for
 import datetime
-from web import DB
 import re
-from extensions.ext import NmapExt, HydraExt, XrayExt, WafExt, DirExt, WhatwebExt, OneForAllExt, WappExt, NessusExt
+
+from flask import session, json, redirect, url_for
+from flask_restful import reqparse, Resource
+
+from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappExt, NessusExt
+from web import DB
 from web.utils.auxiliary import get_title
-import bson
 
 
 class FuncCompanyAPI(Resource):
@@ -14,6 +15,7 @@ class FuncCompanyAPI(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("company_name", type=str, location='json')  # 名称
+        self.parser.add_argument("company_people", type=str, location='json')  # 名称
         self.parser.add_argument("company_contact", type=str, location='json')  # 联系方式
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
@@ -24,12 +26,14 @@ class FuncCompanyAPI(Resource):
             return redirect(url_for('html_system_login'), 302)
         args = self.parser.parse_args()
         company_name = args.company_name
+        company_people = args.company_people
         company_contact = args.company_contact
         company_query = DB.db.company.find_one({'ename': company_name})
         if company_query:
             return {'status_code': 201, 'msg': f'已存在[{company_name}]厂商名'}
         new_company = {
             'ename': company_name,
+            'epeople': company_people,
             'econtact': company_contact,
         }
         DB.db.company.insert_one(new_company)
@@ -39,7 +43,6 @@ class FuncCompanyAPI(Resource):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
-        company_name = args.company_name
         key_page = args.page
         key_limit = args.limit
         key_searchparams = args.searchParams
@@ -72,7 +75,8 @@ class FuncCompanyAPI(Resource):
                 data1 = {
                     'id': index,
                     'company_name': i['ename'],
-                    'company_contact': i['econtact']
+                    'company_contact': i['econtact'],
+                    'company_people': i['epeople'],
                 }
                 data.append(data1)
                 index += 1
@@ -103,6 +107,7 @@ class FuncTaskAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
+        self.parser.add_argument("name", type=str, location='json')
         self.parser.add_argument("task_name", type=str, location='json')
         self.parser.add_argument("task_company", type=str, location='json')
         self.parser.add_argument("task_type", type=str, location='json')
@@ -151,10 +156,7 @@ class FuncTaskAPI(Resource):
     def get(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
-        args = self.parser.parse_args()
-        key_page = args.page
-        key_limit = args.limit
-        key_searchparams = args.searchParams
+
         task_count = DB.db.task.find().count()
         asset_count = DB.db.asset.find().count()
         count = task_count + asset_count
@@ -162,40 +164,15 @@ class FuncTaskAPI(Resource):
         if count == 0:  # 若没有数据返回空列表
             jsondata.update({'data': []})
             return jsondata
-        if not key_searchparams:  # 若没有查询参数
-            if not key_page or not key_limit:  # 判断是否有分页查询参数
-                paginate = DB.db.task.find().limit(20).skip(0)
-            else:
-                paginate = DB.db.task.find().limit(key_limit).skip((key_page - 1) * key_limit)
-        else:
-            try:
-                search_dict = json.loads(key_searchparams)  # 解析查询参数
-            except:
-                paginate = DB.db.task.find().limit(20).skip(0)
-            else:
-                if 'task_name' not in search_dict or 'task_company' not in search_dict:  # 查询参数有误
-                    paginate = DB.db.task.find().limit(20).skip(0)
-                elif 'task_company' not in search_dict:
-                    paginate1 = DB.db.task.find({'tname': re.compile(search_dict['task_name'])})
-                    paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
-                    jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
-                elif 'task_name' not in search_dict:
-                    paginate1 = DB.db.task.find({'ename': re.compile(search_dict['task_company'])})
-                    paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
-                    jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
-                else:
-                    paginate1 = DB.db.task.find({
-                        'ename': re.compile(search_dict['task_company']),
-                        'tname': re.compile(search_dict['task_name']),
-                    })
-                    paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
-                    jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
+
+        paginate = DB.db.task.find()
+
         data = []
         if paginate:
             index = 1
             for i in paginate:
                 task_data = {
-                    'id': index,
+                    # 'id': index,
                     'authorityId': str(i['_id']),
                     'name': i['tname'],
                     'type': i['type'],
@@ -210,14 +187,14 @@ class FuncTaskAPI(Resource):
                 assets = DB.db.asset.find({'taskid': objid})
                 for asset in assets:
                     asset_data = {
-                        'id': index,
+                        # 'id': index,
                         'authorityId': str(asset['_id']),
                         'name': asset['aname'],
                         'type': asset['type'],
                         'company': asset['ename'],
                         'status': asset['infostatus'],
                         'time': asset['createdate'].strftime("%Y-%m-%d %H:%M:%S"),
-                        'parentId': asset['parentid'],
+                        'parentId': str(asset['parentid']),
                     }
                     data.append(asset_data)
                     index += 1
@@ -232,11 +209,13 @@ class FuncTaskAPI(Resource):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
-        task_name = args.task_name
+        task_name = args.name
         searchdict = {'tname': task_name}
         task_query = DB.db.task.find_one(searchdict)
         if not task_query:  # 删除的任务不存在
             return {'status_code': 500, 'msg': '删除资产任务失败，此任务不存在'}
+        taskid = task_query['_id']
+        DB.db.asset.delete_many({'taskid': taskid})
         DB.db.task.delete_one(searchdict)
         return {'status_code': 200, 'msg': '删除资产任务成功'}
 
@@ -248,7 +227,7 @@ class FuncAssetAPI(Resource):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("asset_company", type=str, location='json')
         self.parser.add_argument("asset_type", type=str, location='json')
-        self.parser.add_argument("asset_name", type=str, location='json')
+        self.parser.add_argument("name", type=str, location='json')
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
@@ -304,7 +283,7 @@ class FuncAssetAPI(Resource):
                     vtime = 'None'
                 data1 = {
                     'id': index,
-                    'asset_name': i['aname'],
+                    'name': i['aname'],
                     'asset_type': i['type'],
                     'asset_company': i['ename'],
                     'vuln_status': i['vulnstatus'],
@@ -323,7 +302,7 @@ class FuncAssetAPI(Resource):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
-        asset_name = args.asset_name
+        asset_name = args.name
         searchdict = {'aname': asset_name}
         asset_query = DB.db.asset.find_one(searchdict)
         if not asset_query:  # 删除的资产不存在
@@ -338,9 +317,9 @@ class InfoAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument("task_name", type=str, location='json')
-        self.parser.add_argument("task_type", type=str, location='json')
-        self.parser.add_argument("task_company", type=str, location='json')
+        self.parser.add_argument("name", type=str, location='json')
+        self.parser.add_argument("type", type=str, location='json')
+        self.parser.add_argument("company", type=str, location='json')
         self.ports = '1-1000'
 
     def post(self):
@@ -348,12 +327,13 @@ class InfoAPI(Resource):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
         ports = self.ports
-        task_name = args.task_name
-        task_type = args.task_type
-        task_company = args.task_company
+        task_name = args.name
+        task_type = args.type
+        task_company = args.company
         task_info = DB.db.task.find_one({'tname': task_name})['tinfo']
         task_objid = DB.db.task.find_one({'tname': task_name})['_id']
-
+        # 更新任务状态
+        DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '进行中'}})
         if task_type == '主机':
             for info in task_info:
                 # 主机探测
@@ -368,6 +348,8 @@ class InfoAPI(Resource):
                         DB.db.asset.update_one({'aname': host},
                                                {'$set': {'ports': portsinfo, 'infostatus': '探测完成',
                                                          'vulnstatus': '未扫描'}})
+            # 更新任务状态
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '已完成'}})
         elif task_type == 'WEB':
             for asset_name in task_info:
                 # WEB信息搜集
@@ -412,7 +394,8 @@ class InfoAPI(Resource):
                     DB.db.asset.update_one({'aname': subdomain},
                                            {'$set': {'dir': subdomain_dir_list, 'infostatus': '探测完成',
                                                      'vulnstatus': '未扫描'}})
-                    # DB.db.asset.update_one({'aname': subdomain}, {'$set': {'infostatus': '探测完成', 'vulnstatus': '未扫描'}})
+                # 更新任务状态
+                DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '已完成'}})
         return {'status_code': 200}
 
     def create_asset(self, aname, asset_type, ename, objid, taskid):
@@ -428,6 +411,7 @@ class InfoAPI(Resource):
         }
         if asset_type == '主机':
             new_asset.update({'info': []})
+            new_asset.update({'detail': {}})
         DB.db.asset.insert_one(new_asset)
 
     def ip_detect(self, target, objid, taskid):
@@ -548,7 +532,7 @@ class VulnAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument("asset_name", type=str, location='json')
+        self.parser.add_argument("name", type=str, location='json')
         self.parser.add_argument("asset_type", type=str, location='json')
         self.parser.add_argument("asset_company", type=str, location='json')
 
@@ -557,16 +541,21 @@ class VulnAPI(Resource):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
         asset_type = args.asset_type
-        asset_name = args.asset_name
+        asset_name = args.name
         company_name = args.asset_company
         if asset_type == 'WEB':
             XrayExt().scan_one(url=asset_name)
         elif asset_type == '主机':
             n = NessusExt()
-            if 'scan_id' not in DB.db.asset.find_one({'aname': asset_name}).keys():
+            hostdict = DB.db.asset.find_one({'aname': asset_name})
+            if 'severity' not in hostdict.keys():
+                DB.db.asset.update_one({'aname': asset_name}, {
+                    '$set': {'severity': {'INFO': 0, 'LOW': 0, 'MEDIUM': 0, 'HIGH': 0, 'CRITICAL': 0}}})
+            if 'scan_id' not in hostdict.keys():
                 scan_id = n.create(name=asset_name, targets=asset_name)
                 DB.db.asset.update_one({'aname': asset_name}, {'$set': {'scan_id': scan_id}})
-            scan_id = DB.db.asset.find_one({'aname': asset_name})['scan_id']
+            hostdict = DB.db.asset.find_one({'aname': asset_name})
+            scan_id = hostdict['scan_id']
             history_id = n.launch(scan_id)
             vulns = n.get_vuln_result(scan_id, history_id)
             for v in vulns:
@@ -583,6 +572,9 @@ class VulnAPI(Resource):
                                            'vdetail': detail,
                                            'vstatus': '未修复',
                                            'ename': company_name, })
+            info = n.get_host_details(scan_id=scan_id, host_id=2)
+            severitycount = n.get_severitycount(scan_id=scan_id, history_id=history_id)
+            DB.db.asset.update_one({'aname': asset_name}, {'$set': {'detail': info, 'severity': severitycount}})
         DB.db.asset.update_one({'aname': asset_name},
                                {'$set': {'vulndate': datetime.datetime.now(), 'vulnstatus': '扫描完成'}})
         pass
@@ -605,11 +597,12 @@ class FuncVulnAPI(Resource):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
-        vuln_type = args.type
         asset_name = args.asset_name
         key_page = args.page
         key_limit = args.limit
         key_searchparams = args.searchParams
+        vuln_type = DB.db.asset.find_one({'aname': asset_name})['type'] if asset_name else args.type
+
         count = DB.db.vuln.find({'type': vuln_type}).count()
         jsondata = {'code': 0, 'msg': '', 'count': count}
         if count == 0:  # 若没有数据返回空列表
@@ -681,3 +674,25 @@ class FuncVulnAPI(Resource):
             return {'status_code': 500, 'msg': '删除资产失败，此资产不存在'}
         DB.db.asset.delete_one(searchdict)
         return {'status_code': 200, 'msg': '删除资产成功'}
+
+
+class ChartAPI(Resource):
+    """图表信息类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("ip", type=str)
+
+    def get(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        ip = args.ip
+        if ip:
+            data = DB.db.asset.find_one({'aname': ip})['severity']
+            result = []
+            for i in data:
+                newdict = {'value': data[i], 'name': i}
+                result.append(newdict)
+
+            return result

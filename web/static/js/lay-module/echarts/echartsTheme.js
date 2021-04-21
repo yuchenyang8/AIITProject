@@ -2,11 +2,11 @@ layui.define(function(exports) {
     exports('echartsTheme',
         {
             "color": [
-                "#3fb1e3",
-                "#6be6c1",
-                "#626c91",
-                "#a0a7e6",
-                "#c4ebad",
+                "#0071b9",
+                "#3fae49",
+                "#fdc431",
+                "#ee9336",
+                "#d43f3a",
                 "#96dee8"
             ],
             "backgroundColor": "rgba(252,252,252,0)",

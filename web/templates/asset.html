@@ -68,19 +68,19 @@
                 icon: 'layui-icon-tips'
             }],
             cols: [[
-                {field: 'id', width: 80, title: 'ID', sort: true},
-                {field: 'asset_company', width: 250, title: '所属厂商', align: "center", sort: true},
+                {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
+                {field: 'asset_company', title: '所属厂商', align: "center", sort: true},
                 {
-                    field: 'asset_name',
+                    field: 'name',
                     width: 350,
                     title: '资产名称',
                     align: "center",
                     templet: '#asset_tpl',
                     sort: true
                 },
-                {field: 'asset_type', width: 130, title: '资产类型', align: "center"},
-                {field: 'vuln_status', width: 200, title: '扫描状态', templet: '#vuln_flag_tpl', align: "center"},
-                {field: 'vuln_time', width: 300, title: '上次扫描日期', align: "center", sort: true},
+                {field: 'asset_type', title: '资产类型', align: "center"},
+                {field: 'vuln_status', title: '扫描状态', templet: '#vuln_flag_tpl', align: "center"},
+                {field: 'vuln_time', title: '上次扫描日期', align: "center", sort: true},
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
             ]],
             limits: [10, 15, 20, 25, 50, 100],
@@ -170,7 +170,7 @@
     {{# if(d.vuln_status === '未扫描'){ }}
     <span style="color: #334CFF;">{{ d.vuln_status }}</span>
     {{#  } else if(d.vuln_status === '扫描完成'){ }}
-    <span style="color: #33FF5E;">{{ d.vuln_status }}</span>
+    <span style="color: #15b664;">{{ d.vuln_status }}</span>
     {{#  } else { }}
     <span style="color: #ff3333;">{{ d.vuln_status }}</span>
     {{#  } }}
@@ -178,7 +178,7 @@
 </script>
 <script type="text/html" id="asset_tpl">
     {% raw %}
-    <a href="/func/asset/{{ d.asset_name }}">{{ d.asset_name }}</a>
+    <a href="/func/asset/{{ d.name }}">{{ d.name }}</a>
     {% endraw %}
 </script>
 </body>
