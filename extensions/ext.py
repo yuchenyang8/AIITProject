@@ -241,21 +241,19 @@ class WafExt(object):
 class HydraExt(object):
     """Hydra插件类"""
 
-    def __init__(self, host):
-        self.host = host
+    def __init__(self):
         self.thread = 16
         self.TOOL_DIR = r'D:\HYDRA'
         # self.RESULT_DIR = r'D:\HYDRA\result.txt'
 
-    def crack(self, service):
+    def crack(self, host, service):
         username = r'D:\HYDRA\username.txt'
         password = r'D:\HYDRA\password.txt'
         thread = self.thread
-        host = self.host
         command = r'{}\hydra -L {} -P {} -t {} -f {} {}'.format(self.TOOL_DIR, username, password, thread,
                                                                 host, service)
         result = os.popen(command).readlines()
-        resultdict = {'host': host}
+        resultdict = {}
         pattern_username = 'login:\s(.+?)\s+password:'
         pattern_password = 'password:\s(.+?)$'
         flag = False
@@ -268,7 +266,7 @@ class HydraExt(object):
             if re.findall(pattern_password, res):
                 resultdict['password'] = re.findall(pattern_password, res)[0]
                 flag = True
-                break
+                break   # 只返回第一对账号密码
         if flag:
             return resultdict
         else:
@@ -558,11 +556,12 @@ class NessusExt(object):
 
 if __name__ == '__main__':
     # kill_process('xray.exe')
-    # r = HydraExt('192.168.31.13').crack('ssh')
+    # r = HydraExt().crack('192.168.31.19''ssh')
+    # print(r)
     # XrayExt().scan_one(url='testphp.vulnweb.com')
-    n = NessusExt()
-    info = n.get_severitycount(52, 53)
-    print(info)
+    # n = NessusExt()
+    # info = n.get_severitycount(52, 53)
+    # print(info)
     # scan_id = n.create(name='192.168.31.19', targets='192.168.31.19')
     # history_id = n.launch(scan_id)
 

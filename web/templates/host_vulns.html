@@ -67,12 +67,12 @@
                 icon: 'layui-icon-tips'
             }],
             cols: [[
-                {field: 'id', width: 80, title: 'ID', sort: true},
-                {field: 'vuln_company', width: 150, title: '所属厂商', align: "center", sort: true},
-                {field: 'vuln_asset', width: 250, title: '所属资产', align: "center", sort: true},
-                {field: 'vuln_type', width: 300, title: '漏洞类型', align: "center", templet: '#vuln_type_tpl',sort: true},
-                {field: 'vuln_status', width: 200, title: '漏洞状态', templet: '#vuln_flag_tpl', align: "center"},
-                {field: 'vuln_time', width: 300, title: '发现时间', align: "center", sort: true},
+                {field: 'id', width: 80, align: "center", title: 'ID', sort: true},
+                {field: 'vuln_company', title: '所属厂商', align: "center", sort: true},
+                {field: 'vuln_asset', title: '所属资产', align: "center", sort: true},
+                {field: 'vuln_type', width: 600, title: '漏洞类型', align: "center", templet: '#vuln_type_tpl',sort: true},
+                {field: 'vuln_status', title: '漏洞状态', templet: '#vuln_flag_tpl', align: "center"},
+                {field: 'vuln_time', title: '发现时间', align: "center", sort: true},
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
             ]],
             limits: [10, 15, 20, 25, 50, 100],

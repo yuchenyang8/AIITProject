@@ -64,6 +64,12 @@
               "href": "func/vulns/web",
               "icon": "fa fa-tasks",
               "target": "_self"
+            },
+            {
+              "title": "弱口令",
+              "href": "func/password",
+              "icon": "fa fa-tasks",
+              "target": "_self"
             }
           ]
         },

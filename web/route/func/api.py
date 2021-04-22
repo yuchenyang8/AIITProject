@@ -4,7 +4,7 @@ import re
 from flask import session, json, redirect, url_for
 from flask_restful import reqparse, Resource
 
-from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappExt, NessusExt
+from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappExt, NessusExt, HydraExt
 from web import DB
 from web.utils.auxiliary import get_title
 
@@ -535,6 +535,8 @@ class VulnAPI(Resource):
         self.parser.add_argument("name", type=str, location='json')
         self.parser.add_argument("asset_type", type=str, location='json')
         self.parser.add_argument("asset_company", type=str, location='json')
+        self.parser.add_argument("port_protocol", type=str, location='json')
+        self.parser.add_argument("ip", type=str)
 
     def post(self):
         if not session.get('status'):
@@ -543,6 +545,22 @@ class VulnAPI(Resource):
         asset_type = args.asset_type
         asset_name = args.name
         company_name = args.asset_company
+        port_protocol = args.port_protocol
+        ip = args.ip
+        support_protocol = ['ssh', 'ftp', 'mysql']
+        # 弱口令检测
+        if ip and port_protocol in support_protocol:
+            h = HydraExt()
+            r = h.crack(host=ip, service=port_protocol)
+            if r:
+                weakpass = {
+                    'host': ip,
+                    'time': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'service': port_protocol,
+                    'company': DB.db.asset.find_one({'aname': ip})['ename']
+                }
+                weakpass.update(r)
+                DB.db.weak.insert_one(weakpass)
         if asset_type == 'WEB':
             XrayExt().scan_one(url=asset_name)
         elif asset_type == '主机':
@@ -567,7 +585,7 @@ class VulnAPI(Resource):
                 else:
                     DB.db.vuln.insert_one({'vasset': asset_name,
                                            'vtype': v['plugin_name'],
-                                           'vdate': datetime.datetime.now(),
+                                           'vdate': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                                            'type': '主机',
                                            'vdetail': detail,
                                            'vstatus': '未修复',
@@ -696,3 +714,65 @@ class ChartAPI(Resource):
                 result.append(newdict)
 
             return result
+
+
+class PasswordAPI(Resource):
+    """弱口令信息类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+        self.parser.add_argument("searchParams", type=str)
+
+    def get(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        key_page = args.page
+        key_limit = args.limit
+        key_searchparams = args.searchParams
+        count = DB.db.weak.find().count()
+        jsondata = {'code': 0, 'msg': '', 'count': count}
+        if count == 0:  # 若没有数据返回空列表
+            jsondata.update({'data': []})
+            return jsondata
+        if not key_searchparams:  # 若没有查询参数
+            if not key_page or not key_limit:  # 判断是否有分页查询参数
+                paginate = DB.db.weak.find().limit(20).skip(0)
+            else:
+                paginate = DB.db.weak.find().limit(key_limit).skip((key_page - 1) * key_limit)
+        else:
+            try:
+                search_dict = json.loads(key_searchparams)  # 解析查询参数
+            except:
+                paginate = DB.db.weak.find().limit(20).skip(0)
+            else:
+                if 'company_name' not in search_dict:  # 查询参数有误
+                    paginate = DB.db.weak.find().limit(20).skip(0)
+                else:
+                    paginate1 = DB.db.weak.find({'company': re.compile(search_dict['company_name'])})
+                    paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
+                    jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
+        data = []
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                data1 = {
+                    'id': index,
+                    'host': i['host'],
+                    'time': i['time'],
+                    'service': i['service'],
+                    'company': i['company'],
+                    'username': i['username'],
+                    'password': i['password'],
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
+

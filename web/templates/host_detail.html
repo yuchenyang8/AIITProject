@@ -251,8 +251,12 @@
             <table class="layui-hide" id="currentTable_vulns" lay-filter="currentTableFilter"></table>
         </div>
     </div>
+
 </div>
-</div>
+<script type="text/html" id="currentTableBar">
+    <a class="layui-btn layui-btn-warm layui-btn-xs layui-btn-sm data-count-start" lay-event="weak"><i
+            class="fa fa-search"></i></a>
+</script>
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
 <script src="{{ url_for('static', filename='js/lay-config.js', v=1.0.4) }}" charset="utf-8"></script>
 <script>
@@ -265,7 +269,7 @@
             elem: '#currentTable_ports',
             url: "{{ url_for('api_func_infos', ip=asset['aname']) }}",
             cols: [[
-                {field: 'id', width: 126, title: 'ID', sort: true},
+                {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
                 {field: 'port', width: 150, title: '端口号', align: "center", sort: true},
                 {
                     field: 'port_state',
@@ -277,14 +281,14 @@
                 },
                 {
                     field: 'port_protocol',
-                    width: 350,
                     title: '端口协议',
                     templet: '#port_protocol_tpl',
                     align: "center",
                     sort: true
                 },
-                {field: 'port_service', width: 350, title: '端口服务', align: "center"},
-                {field: 'sercive_version', width: 400, title: '服务版本', align: "center"},
+                {field: 'port_service', title: '端口服务', align: "center"},
+                {field: 'sercive_version', title: '服务版本', align: "center"},
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
             ]],
             limits: [10, 15, 20, 25, 50, 100],
             limit: 20,
@@ -302,25 +306,37 @@
             }],
             cols: [[
                 {field: 'id', width: 80, title: 'ID', sort: true},
-                {field: 'vuln_company', width: 150, title: '所属厂商', align: "center", sort: true},
-                {field: 'vuln_asset', width: 400, title: '所属资产', align: "center", sort: true},
                 {
                     field: 'vuln_type',
-                    width: 400,
                     title: '漏洞类型',
                     align: "center",
                     templet: '#vuln_type_tpl',
                     sort: true
                 },
                 {field: 'vuln_status', width: 200, title: '漏洞状态', templet: '#vuln_flag_tpl', align: "center"},
-                {field: 'vuln_time', width: 396, title: '发现时间', align: "center", sort: true},
+                {field: 'vuln_time', title: '发现时间', align: "center", sort: true},
             ]],
             limits: [10, 15, 20, 25, 50, 100],
             limit: 20,
             page: true,
             skin: 'line'
         });
-
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'weak') {
+                layer.confirm('确定对该端口进行弱口令检测吗?', function (index) {
+                    layer.alert('弱口令检测开始!', {title: '提示', icon: 1})
+                    layer.close(index);
+                });
+                $.ajax({
+                    url: "{{ url_for('api_func_vuln', ip=asset['aname']) }}",
+                    data: JSON.stringify(data),
+                    contentType: 'application/json;charset=UTF-8',
+                    dataType: 'json',
+                    type: 'post',
+                })
+            }
+        });
         var echartsPies = echarts.init(document.getElementById('echarts-pies'), 'walden');
         $.get("{{ url_for('api_func_chart', ip=asset['aname']) }}").done(function (data) {
             echartsPies.setOption({

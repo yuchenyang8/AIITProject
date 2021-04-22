@@ -11,7 +11,7 @@ API = Api(APP)
 from web.route.system import html
 from web.route.func import html
 from web.route.system.api import UserLoginAPI, DashBoardAPI
-from web.route.func.api import FuncCompanyAPI, FuncTaskAPI, FuncAssetAPI, InfoAPI, VulnAPI, FuncVulnAPI, FuncInfoAPI, ChartAPI
+from web.route.func.api import FuncCompanyAPI, FuncTaskAPI, FuncAssetAPI, InfoAPI, VulnAPI, FuncVulnAPI, FuncInfoAPI, ChartAPI, PasswordAPI
 
 API.add_resource(UserLoginAPI, '/api/user/login', endpoint='api_user_login')
 API.add_resource(FuncCompanyAPI, '/api/func/company', endpoint='api_func_company')
@@ -21,5 +21,6 @@ API.add_resource(FuncVulnAPI, '/api/func/vulns', endpoint='api_func_vulns')
 API.add_resource(InfoAPI, '/api/func/info', endpoint='api_func_info')
 API.add_resource(FuncInfoAPI, '/api/func/infos', endpoint='api_func_infos')
 API.add_resource(VulnAPI, '/api/func/vuln', endpoint='api_func_vuln')
+API.add_resource(PasswordAPI, '/api/func/password', endpoint='api_func_password')
 API.add_resource(ChartAPI, '/api/func/chart', endpoint='api_func_chart')
 API.add_resource(DashBoardAPI, '/api/dashboard', endpoint='api_dashboard')

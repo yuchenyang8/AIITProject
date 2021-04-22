@@ -64,6 +64,12 @@ def html_func_assetinfo(asset_name):
         return render_template('host_detail.html', asset=asset)
 
 
+@APP.route('/func/password')
+def html_func_password():
+    """弱口令结果页面"""
+    return render_template('password.html')
+
+
 @APP.route('/func/webhook', methods=['POST'])
 def xray_webhook():
     data = request.json
