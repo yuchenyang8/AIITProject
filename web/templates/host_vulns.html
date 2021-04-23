@@ -45,6 +45,10 @@
         <table class="layui-hide" id="currentTable_task" lay-filter="currentTableFilter"></table>
 
         <script type="text/html" id="currentTableBar">
+            {% raw %}
+            <a class="layui-btn layui-btn-xs layui-btn data-count-start" lay-event="info"
+               href="/func/vulns/host/{{ d.objid }}">详情</a>
+            {% endraw %}
             <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
         </script>
 
@@ -68,9 +72,11 @@
             }],
             cols: [[
                 {field: 'id', width: 80, align: "center", title: 'ID', sort: true},
+                {field: 'objid', title: 'OBJID', hide: true},
+                {field: 'vuln_severity', width: 110, title: '漏洞级别', templet: '#vuln_severity_tpl', align: "center", sort: true},
                 {field: 'vuln_company', title: '所属厂商', align: "center", sort: true},
                 {field: 'vuln_asset', title: '所属资产', align: "center", sort: true},
-                {field: 'vuln_type', width: 600, title: '漏洞类型', align: "center", templet: '#vuln_type_tpl',sort: true},
+                {field: 'vuln_type', width: 600, title: '漏洞名称', align: "left", templet: '#vuln_type_tpl', sort: true},
                 {field: 'vuln_status', title: '漏洞状态', templet: '#vuln_flag_tpl', align: "center"},
                 {field: 'vuln_time', title: '发现时间', align: "center", sort: true},
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
@@ -103,7 +109,7 @@
         table.on('toolbar(currentTableFilter)', function (obj) {
             if (obj.event === 'add') {  // 监听添加操作
                 var index = layer.open({
-                    title: '添加资产',
+                    title: '添加漏洞',
                     type: 2,
                     shade: 0.2,
                     maxmin: true,
@@ -160,6 +166,18 @@
     <span class="layui-badge layui-bg-blue">{{ d.vuln_type }}</span>
     {% endraw %}
 </script>
-
+<script type="text/html" id="vuln_severity_tpl">
+    {% raw %}
+    {{# if(d.vuln_severity === 'Low'){ }}
+    <span class="layui-badge" style="background-color:#3fae49!important;">{{ d.vuln_severity }}</span>
+    {{#  } else if(d.vuln_severity === 'Medium'){ }}
+    <span class="layui-badge" style="background-color:#fdc431!important;">{{ d.vuln_severity }}</span>
+    {{#  } else if(d.vuln_severity === 'High'){ }}
+    <span class="layui-badge" style="background-color:#ee9336!important;">{{ d.vuln_severity }}</span>
+    {{#  } else { }}
+    <span class="layui-badge" style="background-color:#d43f3a!important;">{{ d.vuln_severity }}</span>
+    {{#  } }}
+    {% endraw %}
+</script>
 </body>
 </html>

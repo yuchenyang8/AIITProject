@@ -578,7 +578,9 @@ class VulnAPI(Resource):
             vulns = n.get_vuln_result(scan_id, history_id)
             for v in vulns:
                 plugin_id = v['plugin_id']
-                detail = n.get_plugin_detail(plugin_id)
+                detail = n.get_plugin_detail(plugin_id=plugin_id)
+                output = n.get_plugin_output(scan_id=scan_id, host_id=2, plugin_id=plugin_id)
+                detail.update(output)
                 if v['severity'] == 0:
                     info_detail = {v['plugin_name']: detail}
                     DB.db.asset.update_one({'aname': asset_name}, {'$addToSet': {'info': info_detail}})
@@ -606,6 +608,7 @@ class FuncVulnAPI(Resource):
         self.parser.add_argument("asset_name", type=str)
         self.parser.add_argument("vuln_company", type=str, location='json')
         self.parser.add_argument("vuln_asset", type=str, location='json')
+        self.parser.add_argument("vuln_type", type=str, location='json')
         self.parser.add_argument("type", type=str)
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
@@ -670,8 +673,14 @@ class FuncVulnAPI(Resource):
                     'vuln_asset': i['vasset'],
                     'vuln_company': i['ename'],
                     'vuln_status': i['vstatus'],
-                    'vuln_time': i['vdate']
+                    'vuln_time': i['vdate'],
+                    'objid': str(i['_id']),
                 }
+                if i['type'] == '主机':
+                    data1.update({
+                        'vuln_severity': i['vdetail']['risk_factor'],
+                        'vuln_synopsis': i['vdetail']['synopsis'],
+                    })
                 data.append(data1)
                 index += 1
             jsondata.update({'data': data})
@@ -686,11 +695,12 @@ class FuncVulnAPI(Resource):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
         vuln_asset = args.vuln_asset
-        searchdict = {'vasset': vuln_asset}
+        vuln_type = args.vuln_type
+        searchdict = {'vasset': vuln_asset, 'vtype': vuln_type}
         asset_query = DB.db.vuln.find_one(searchdict)
         if not asset_query:  # 删除的资产不存在
             return {'status_code': 500, 'msg': '删除资产失败，此资产不存在'}
-        DB.db.asset.delete_one(searchdict)
+        DB.db.vuln.delete_one(searchdict)
         return {'status_code': 200, 'msg': '删除资产成功'}
 
 
@@ -775,4 +785,3 @@ class PasswordAPI(Resource):
             jsondata = {'code': 0, 'msg': '', 'count': 0}
             jsondata.update({'data': []})
             return jsondata
-

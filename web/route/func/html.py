@@ -5,6 +5,7 @@ import datetime
 import logging
 from web.utils.auxiliary import push_dingding_group, kill_process
 import re
+import bson
 
 
 @APP.route('/func/company')
@@ -40,12 +41,14 @@ def html_func_task_add():
 
 
 @APP.route('/func/asset')
+@login_required
 def html_func_asset():
     """资产信息页面"""
     return render_template('asset.html')
 
 
 @APP.route('/func/vulns/<string:vuln_type>')
+@login_required
 def html_func_vulns(vuln_type):
     """漏洞信息页面"""
     if vuln_type == 'web':
@@ -54,7 +57,28 @@ def html_func_vulns(vuln_type):
         return render_template('host_vulns.html', vuln_type='主机')
 
 
+@APP.route('/func/vulns/host/<string:objid>')
+@login_required
+def html_func_host_vulninfo(objid):
+    """主机漏洞详情页面"""
+
+    objid = bson.ObjectId(objid)
+    vuln = DB.db.vuln.find_one({'_id': objid})
+    return render_template('host_vuln_detail.html', vuln=vuln)
+
+
+@APP.route('/func/vulns/web/<string:objid>')
+@login_required
+def html_func_web_vulninfo(objid):
+    """WEB漏洞详情页面"""
+
+    objid = bson.ObjectId(objid)
+    vuln = DB.db.vuln.find_one({'_id': objid})
+    return render_template('web_vuln_detail.html', vuln=vuln)
+
+
 @APP.route('/func/asset/<string:asset_name>')
+@login_required
 def html_func_assetinfo(asset_name):
     """资产详情页面"""
     asset = DB.db.asset.find_one({'aname': asset_name})
@@ -65,6 +89,7 @@ def html_func_assetinfo(asset_name):
 
 
 @APP.route('/func/password')
+@login_required
 def html_func_password():
     """弱口令结果页面"""
     return render_template('password.html')

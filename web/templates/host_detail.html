@@ -182,7 +182,7 @@
                                 <div class="layui-card-header"><i class="fa fa-desktop icon-green"></i>基本信息</div>
                                 <div class="layui-card-body layui-text">
                                     <div class="layuimini-notice">
-                                        <div class="layuimini-notice-title">Company：</div>
+                                        <div class="layuimini-notice-title">COMPANY：</div>
                                         <div class="layuimini-notice-extra"
                                              style="font-size: larger">{{ asset['ename'] }}</div>
                                     </div>
@@ -257,6 +257,12 @@
     <a class="layui-btn layui-btn-warm layui-btn-xs layui-btn-sm data-count-start" lay-event="weak"><i
             class="fa fa-search"></i></a>
 </script>
+<script type="text/html" id="TableBar">
+    {% raw %}
+    <a class="layui-btn layui-btn-xs layui-btn data-count-start" lay-event="info"
+       href="/func/vulns/host/{{ d.objid }}">详情</a>
+    {% endraw %}
+</script>
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
 <script src="{{ url_for('static', filename='js/lay-config.js', v=1.0.4) }}" charset="utf-8"></script>
 <script>
@@ -306,15 +312,26 @@
             }],
             cols: [[
                 {field: 'id', width: 80, title: 'ID', sort: true},
+                {field: 'objid', title: 'OBJID', hide: true},
+                {
+                    field: 'vuln_severity',
+                    width: 110,
+                    title: '漏洞级别',
+                    templet: '#vuln_severity_tpl',
+                    align: "center",
+                    sort: true
+                },
                 {
                     field: 'vuln_type',
-                    title: '漏洞类型',
-                    align: "center",
+                    title: '漏洞名称',
+                    align: "left",
                     templet: '#vuln_type_tpl',
                     sort: true
                 },
-                {field: 'vuln_status', width: 200, title: '漏洞状态', templet: '#vuln_flag_tpl', align: "center"},
-                {field: 'vuln_time', title: '发现时间', align: "center", sort: true},
+                {field: 'vuln_synopsis', title: '漏洞概述', align: "left"},
+                {field: 'vuln_status', width: 100, title: '漏洞状态', templet: '#vuln_flag_tpl', align: "center"},
+                {field: 'vuln_time', width: 200, title: '发现时间', align: "center", sort: true},
+                {title: '操作', width: 80, toolbar: '#TableBar', align: "center"}
             ]],
             limits: [10, 15, 20, 25, 50, 100],
             limit: 20,
@@ -377,6 +394,19 @@
 <script type="text/html" id="vuln_type_tpl">
     {% raw %}
     <span class="layui-badge layui-bg-blue">{{ d.vuln_type }}</span>
+    {% endraw %}
+</script>
+<script type="text/html" id="vuln_severity_tpl">
+    {% raw %}
+    {{# if(d.vuln_severity === 'Low'){ }}
+    <span class="layui-badge" style="background-color:#3fae49!important;">{{ d.vuln_severity }}</span>
+    {{#  } else if(d.vuln_severity === 'Medium'){ }}
+    <span class="layui-badge" style="background-color:#fdc431!important;">{{ d.vuln_severity }}</span>
+    {{#  } else if(d.vuln_severity === 'High'){ }}
+    <span class="layui-badge" style="background-color:#ee9336!important;">{{ d.vuln_severity }}</span>
+    {{#  } else { }}
+    <span class="layui-badge" style="background-color:#d43f3a!important;">{{ d.vuln_severity }}</span>
+    {{#  } }}
     {% endraw %}
 </script>
 <script type="text/html" id="vuln_flag_tpl">

@@ -266,7 +266,7 @@ class HydraExt(object):
             if re.findall(pattern_password, res):
                 resultdict['password'] = re.findall(pattern_password, res)[0]
                 flag = True
-                break   # 只返回第一对账号密码
+                break  # 只返回第一对账号密码
         if flag:
             return resultdict
         else:
@@ -515,6 +515,14 @@ class NessusExt(object):
 
         return detail
 
+    def get_plugin_output(self, scan_id, host_id, plugin_id):
+        """获取漏洞输出信息"""
+
+        data = self.__connect('GET', '/scans/{0}/hosts/{1}/plugins/{2}'.format(scan_id, host_id, plugin_id))
+        result = {'ports': list(data['outputs'][0]['ports'].keys())[0], 'output': data['outputs'][0]['plugin_output']}
+
+        return result
+
     def get_vuln_result(self, scan_id, history_id):
         """获取扫描结果"""
 
@@ -560,6 +568,7 @@ if __name__ == '__main__':
     # print(r)
     # XrayExt().scan_one(url='testphp.vulnweb.com')
     # n = NessusExt()
+    # n.get_plugin_output(64, 2, 58327)
     # info = n.get_severitycount(52, 53)
     # print(info)
     # scan_id = n.create(name='192.168.31.19', targets='192.168.31.19')
