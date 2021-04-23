@@ -238,7 +238,7 @@
                 {% elif vuln['vdetail']['risk_factor'] == 'Critical' %}
                     <span class="sev-4">{{ vuln['vdetail']['risk_factor'].upper() }}</span>
                 {% endif %}
-                {{ vuln['vtype'] }}
+                {{ vuln['vtype'].upper() }}
             </legend>
             <div class="layui-row layui-col-space15">
                 <div class="layui-col-md12">
@@ -247,47 +247,58 @@
                         </div>
                         <div class="layui-card-body layui-text" style="height: 50px">
                             <div style="display: block;float: left;margin-right: 100px">
-                                <div class="basic-card">FAMLIY</div>
-                                <div>{{ vuln['vdetail']['family_name'] }}</div>
+                                <div class="basic-card">URL</div>
+                                <div>{{ vuln['vdetail']['addr'] }}</div>
                             </div>
                             <div style="display: block;float: left;margin-right: 100px">
-                                <div class="basic-card">PUBLIC DATE</div>
-                                <div>{{ vuln['vdetail']['vuln_publication_date'] }}</div>
-                            </div>
-                            <div style="display: block;float: left;margin-right: 100px">
-                                <div class="basic-card">CVE</div>
-                                <div>{{ vuln['vdetail']['cve'] }}</div>
-                            </div>
-                            <div style="display: block;float: left;margin-right: 100px">
-                                <div class="basic-card">EXP</div>
-                                <div>{{ vuln['vdetail']['exploitability_ease'] }}</div>
+                                <div class="basic-card">PAYLOAD</div>
+                                <div>{{ vuln['vdetail']['payload'] }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="layui-col-md12">
                     <div class="layui-card">
-                        <div class="layui-card-header"><i class="fa fa-book icon-blue"></i>详细描述</div>
-                        <div class="layui-card-body layui-text">{{ vuln['vdetail']['description'] }}</div>
-                    </div>
-                </div>
-                <div class="layui-col-md12">
-                    <div class="layui-card">
-                        <div class="layui-card-header"><i class="fa fa-bookmark icon-yellow"></i>解决方案</div>
-                        <div class="layui-card-body layui-text">{{ vuln['vdetail']['solution'] }}</div>
-                    </div>
-                </div>
-                <div class="layui-col-md12">
-                    <div class="layui-card">
-                        <div class="layui-card-header"><i class="fa fa-info icon-black"></i>输出信息</div>
+                        <div class="layui-card-header"><i class="fa fa-book icon-blue"></i>详细信息</div>
                         <div class="layui-card-body layui-text">
-                            <div>Port: &nbsp;&nbsp;{{ vuln['vdetail']['ports'] }}</div>
-                            <span style="word-wrap:break-word;display: block;overflow: hidden;white-space: pre-line;">
-                                {{ vuln['vdetail']['output'] }}
-                            </span>
+                            {% for v in vuln['vdetail']['extra']['param'] %}
+                            <p><span style="width: 80px;display: inline-block"><b>{{ v }}:</b></span>&nbsp;&nbsp;&nbsp;{{ vuln['vdetail']['extra']['param'][v] }}</p>
+                            {% endfor %}
+                            {% for n in vuln['vdetail']['extra'] %}
+                                {% if n != 'param' %}
+                                <p><span style="width: 80px;display: inline-block"><b>{{ n }}:</b></span>&nbsp;&nbsp;&nbsp;{{ vuln['vdetail']['extra'][n] }}</p>
+                                {% endif %}
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
+                {% for r in vuln['vdetail']['snapshot'] %}
+                    <div class="layui-col-md12">
+                        <div class="layui-col-md6">
+                            <div class="layui-card">
+                                <div class="layui-card-header"><i class="fa fa-mail-forward icon-black"></i>Request&nbsp;{{ vuln['vdetail']['snapshot'].index(r) + 1 }}
+                                </div>
+                                <div class="layui-card-body layui-text">
+                                <span style="word-wrap:break-word;display: block;overflow: hidden;white-space: pre-line;">
+                                    {{ r[0] }}
+                                </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-md6">
+                            <div class="layui-card">
+                                <div class="layui-card-header"><i
+                                        class="fa fa-mail-reply icon-black"></i>Response&nbsp;{{ vuln['vdetail']['snapshot'].index(r) + 1 }}
+                                </div>
+                                <div class="layui-card-body layui-text">
+                                <span style="word-wrap:break-word;display: block;overflow: hidden;white-space: pre-line;">
+                                    {{ r[1] }}
+                                </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
         </fieldset>
     </div>

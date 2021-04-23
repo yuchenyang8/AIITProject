@@ -61,7 +61,6 @@ def html_func_vulns(vuln_type):
 @login_required
 def html_func_host_vulninfo(objid):
     """主机漏洞详情页面"""
-
     objid = bson.ObjectId(objid)
     vuln = DB.db.vuln.find_one({'_id': objid})
     return render_template('host_vuln_detail.html', vuln=vuln)
@@ -71,7 +70,6 @@ def html_func_host_vulninfo(objid):
 @login_required
 def html_func_web_vulninfo(objid):
     """WEB漏洞详情页面"""
-
     objid = bson.ObjectId(objid)
     vuln = DB.db.vuln.find_one({'_id': objid})
     return render_template('web_vuln_detail.html', vuln=vuln)
@@ -83,7 +81,7 @@ def html_func_assetinfo(asset_name):
     """资产详情页面"""
     asset = DB.db.asset.find_one({'aname': asset_name})
     if asset['type'] == 'WEB':
-        return render_template('asset_detail.html', asset=asset)
+        return render_template('web_detail.html', asset=asset)
     elif asset['type'] == '主机':
         return render_template('host_detail.html', asset=asset)
 
