@@ -33,7 +33,7 @@
 
         .icon-yellow {
             margin-right: 10px;
-            color: #a3702d;
+            color: #f3c319;
         }
 
         .icon-red {
@@ -240,9 +240,9 @@
         </div>
     </div>
     <div class="layui-card">
-        <div class="layui-card-header"><i class="fa fa-book icon-yellow"></i>详细信息</div>
+        <div class="layui-card-header"><i class="fa fa-exclamation-triangle icon-yellow"></i>弱口令信息</div>
         <div class="layui-card-body layui-text">
-            <table class="layui-hide" id="currentTable_infos" lay-filter="currentTableFilter"></table>
+            <table class="layui-hide" id="currentTable_password" lay-filter="currentTableFilter"></table>
         </div>
     </div>
     <div class="layui-card">
@@ -251,7 +251,12 @@
             <table class="layui-hide" id="currentTable_vulns" lay-filter="currentTableFilter"></table>
         </div>
     </div>
-
+    <div class="layui-card">
+        <div class="layui-card-header"><i class="fa fa-book icon-yellow"></i>详细信息</div>
+        <div class="layui-card-body layui-text">
+            <table class="layui-hide" id="currentTable_infos" lay-filter="currentTableFilter"></table>
+        </div>
+    </div>
 </div>
 <script type="text/html" id="currentTableBar">
     <a class="layui-btn layui-btn-warm layui-btn-xs layui-btn-sm data-count-start" lay-event="weak"><i
@@ -331,6 +336,27 @@
                 {field: 'vuln_status', width: 100, title: '漏洞状态', templet: '#vuln_flag_tpl', align: "center"},
                 {field: 'vuln_time', width: 200, title: '发现时间', align: "center", sort: true},
                 {title: '操作', width: 80, toolbar: '#TableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 20,
+            page: true,
+            skin: 'line'
+        });
+        table.render({
+            elem: '#currentTable_password',
+            url: "{{ url_for('api_func_password', asset_name=asset['aname'])}}",
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [[
+                {field: 'id', width: 80, title: 'ID', sort: true},
+                {field: 'username', title: '账号', align: "center"},
+                {field: 'password', title: '密码', align: "center"},
+                {field: 'service', title: '服务', templet: '#service_tpl', align: "center"},
+                {field: 'time', title: '发现时间', align: "center", sort: true},
             ]],
             limits: [10, 15, 20, 25, 50, 100],
             limit: 20,
@@ -433,6 +459,11 @@
 <script type="text/html" id="port_protocol_tpl">
     {% raw %}
     <span class="layui-badge layui-bg-blue">{{ d.port_protocol }}</span>
+    {% endraw %}
+</script>
+<script type="text/html" id="service_tpl">
+    {% raw %}
+    <span class="layui-badge layui-bg-blue">{{ d.service }}</span>
     {% endraw %}
 </script>
 </body>

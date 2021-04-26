@@ -8,6 +8,7 @@ from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappE
 from web import DB
 from web.utils.auxiliary import get_title
 
+import bson
 
 class FuncCompanyAPI(Resource):
     """厂商管理类"""
@@ -731,6 +732,8 @@ class PasswordAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
+        self.parser.add_argument("objid", type=str, location='json')
+        self.parser.add_argument("asset_name", type=str)
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
@@ -739,15 +742,23 @@ class PasswordAPI(Resource):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
+        host = args.asset_name
         key_page = args.page
         key_limit = args.limit
         key_searchparams = args.searchParams
-        count = DB.db.weak.find().count()
+
+        count = DB.db.weak.find({'host': host}).count() if host else DB.db.weak.find().count()
         jsondata = {'code': 0, 'msg': '', 'count': count}
         if count == 0:  # 若没有数据返回空列表
             jsondata.update({'data': []})
             return jsondata
-        if not key_searchparams:  # 若没有查询参数
+
+        if host:
+            if not key_page or not key_limit:  # 判断是否有分页查询参数
+                paginate = DB.db.weak.find({'host': host}).limit(20).skip(0)
+            else:
+                paginate = DB.db.weak.find({'host': host}).limit(key_limit).skip((key_page - 1) * key_limit)
+        elif not key_searchparams:  # 若没有查询参数
             if not key_page or not key_limit:  # 判断是否有分页查询参数
                 paginate = DB.db.weak.find().limit(20).skip(0)
             else:
@@ -776,6 +787,7 @@ class PasswordAPI(Resource):
                     'company': i['company'],
                     'username': i['username'],
                     'password': i['password'],
+                    'objid': str(i['_id']),
                 }
                 data.append(data1)
                 index += 1
@@ -785,3 +797,15 @@ class PasswordAPI(Resource):
             jsondata = {'code': 0, 'msg': '', 'count': 0}
             jsondata.update({'data': []})
             return jsondata
+
+    def delete(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        objid = bson.ObjectId(args.objid)
+        searchdict = {'_id': objid}
+        weak_query = DB.db.weak.find_one(searchdict)
+        if not weak_query:
+            return {'status_code': 500, 'msg': '删除失败，不存在'}
+        DB.db.weak.delete_one(searchdict)
+        return {'status_code': 200, 'msg': '删除成功'}
