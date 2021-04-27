@@ -70,7 +70,7 @@
             }],
             cols: [[
                 {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
-                {field: 'company_name', title: '厂商名', align: "center"},
+                {field: 'company_name', title: '厂商名', templet: '#company_tpl', align: "center"},
                 {field: 'company_people', title: '联系人', align: "center"},
                 {field: 'company_contact', title: '联系方式', align: "center"},
                 {#{field: 'company_asset', width: 130, title: '资产数'},#}
@@ -119,8 +119,6 @@
                 });
             }
         });
-
-
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
             if (obj.event === 'delete') {
@@ -150,6 +148,10 @@
 
     });
 </script>
-
+<script type="text/html" id="company_tpl">
+    {% raw %}
+    <a href="/func/company/{{ d.company_name }}">{{ d.company_name }}</a>
+    {% endraw %}
+</script>
 </body>
 </html>

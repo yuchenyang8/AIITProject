@@ -86,6 +86,13 @@ def html_func_assetinfo(asset_name):
         return render_template('host_detail.html', asset=asset)
 
 
+@APP.route('/func/company/<string:company_name>')
+@login_required
+def html_func_company_info(company_name):
+    """厂商详情页面"""
+    return render_template('company_detail.html', company_name=company_name)
+
+
 @APP.route('/func/password')
 @login_required
 def html_func_password():
