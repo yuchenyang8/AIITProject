@@ -1,6 +1,7 @@
 import datetime
 import re
 
+import bson
 from flask import session, json, redirect, url_for
 from flask_restful import reqparse, Resource
 
@@ -8,7 +9,6 @@ from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappE
 from web import DB
 from web.utils.auxiliary import get_title
 
-import bson
 
 class FuncCompanyAPI(Resource):
     """厂商管理类"""
@@ -101,6 +101,49 @@ class FuncCompanyAPI(Resource):
         DB.db.asset.delete_many(searchdict)
         DB.db.vuln.delete_many(searchdict)
         return {'status_code': 200, 'msg': '删除厂商成功'}
+
+
+class CompanyInfoAPI(Resource):
+    """厂商详细信息类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+
+    def get(self, asset_type, company):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        assets = DB.db.asset.find({'type': asset_type, 'ename': company})
+        result = []
+        for asset in assets:
+            vulns = DB.db.vuln.find({'vasset': asset['aname']}).count()
+            if vulns > 0:
+                asset_dict = {'name': asset['aname'], 'value': vulns}
+                result.append(asset_dict)
+        return result
+
+
+class CompanyVulnTrendsAPI(Resource):
+    """厂商漏洞趋势类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+
+    def get(self, company):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        result = []
+        hostvulns = 0
+        webvulns = 0
+        appvulns = 0
+        firmvulns = 0
+        for i in range(-6, 1, 1):
+            day = str(datetime.date.today() + datetime.timedelta(days=i))
+            hostvulns += DB.db.vuln.find({'type': '主机', 'ename': company, 'vdate': re.compile(day)}).count()
+            webvulns += DB.db.vuln.find({'type': 'WEB', 'ename': company, 'vdate': re.compile(day)}).count()
+            appvulns += DB.db.vuln.find({'type': 'APP', 'ename': company, 'vdate': re.compile(day)}).count()
+            firmvulns += DB.db.vuln.find({'type': '固件', 'ename': company, 'vdate': re.compile(day)}).count()
+            result.append({'date': day, 'host': hostvulns, 'web': webvulns, 'app': appvulns, 'firm': firmvulns})
+        return result
 
 
 class FuncTaskAPI(Resource):
@@ -227,8 +270,8 @@ class FuncAssetAPI(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("asset_company", type=str, location='json')
-        self.parser.add_argument("asset_type", type=str, location='json')
         self.parser.add_argument("name", type=str, location='json')
+        self.parser.add_argument("type", type=str)
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
@@ -237,15 +280,26 @@ class FuncAssetAPI(Resource):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
+        asset_type = args.type
         key_page = args.page
         key_limit = args.limit
         key_searchparams = args.searchParams
-        count = DB.db.asset.find({'infostatus': '探测完成'}).count()
+
+        count = DB.db.asset.find(
+            {'infostatus': '探测完成', 'type': asset_type}).count() if asset_type else DB.db.asset.find(
+            {'infostatus': '探测完成'}).count()
+
         jsondata = {'code': 0, 'msg': '', 'count': count}
         if count == 0:  # 若没有数据返回空列表
             jsondata.update({'data': []})
             return jsondata
-        if not key_searchparams:  # 若没有查询参数
+        if asset_type:
+            if not key_page or not key_limit:  # 判断是否有分页查询参数
+                paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': asset_type}).limit(20).skip(0)
+            else:
+                paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': asset_type}).limit(key_limit).skip(
+                    (key_page - 1) * key_limit)
+        elif not key_searchparams:  # 若没有查询参数
             if not key_page or not key_limit:  # 判断是否有分页查询参数
                 paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(20).skip(0)
             else:
@@ -290,6 +344,18 @@ class FuncAssetAPI(Resource):
                     'vuln_status': i['vulnstatus'],
                     'vuln_time': vtime
                 }
+                if i['type'] == '主机':
+                    host_os = i['detail']['operating-system'] if 'operating-system' in i['detail'].keys() else '-'
+                    netbios_name = i['detail']['netbios-name'] if 'netbios-name' in i['detail'].keys() else '-'
+                    data1.update({
+                        'os': host_os,
+                        'netbios-name': netbios_name,
+                    })
+                elif i['type'] == 'WEB':
+                    data1.update({
+                        'title': i['title'],
+                        'ip': i['ip'],
+                    })
                 data.append(data1)
                 index += 1
             jsondata.update({'data': data})
@@ -311,6 +377,199 @@ class FuncAssetAPI(Resource):
         DB.db.asset.delete_one(searchdict)
         DB.db.vuln.delete_many({'vasset': asset_name})
         return {'status_code': 200, 'msg': '删除资产成功'}
+
+
+class FuncHostInfoAPI(Resource):
+    """主机资产详情管理类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("ename", type=str)
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+
+    def get(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        company_name = args.ename
+        key_page = args.page
+        key_limit = args.limit
+
+        count = DB.db.asset.find({'infostatus': '探测完成', 'type': '主机', 'ename': company_name}).count()
+        jsondata = {'code': 0, 'msg': '', 'count': count}
+        if count == 0:  # 若没有数据返回空列表
+            jsondata.update({'data': []})
+            return jsondata
+        if not key_page or not key_limit:  # 判断是否有分页查询参数
+            paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': '主机', 'ename': company_name}).limit(20).skip(0)
+        else:
+            paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': '主机', 'ename': company_name}).limit(
+                key_limit).skip((key_page - 1) * key_limit)
+
+        data = []
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                host_os = i['detail']['operating-system'] if 'operating-system' in i['detail'].keys() else '-'
+                netbios_name = i['detail']['netbios-name'] if 'netbios-name' in i['detail'].keys() else '-'
+                data1 = {
+                    'id': index,
+                    'name': i['aname'],
+                    'os': host_os,
+                    'netbios-name': netbios_name,
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
+
+
+class FuncWebInfoAPI(Resource):
+    """WEB资产详情管理类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("ename", type=str)
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+
+    def get(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        company_name = args.ename
+        key_page = args.page
+        key_limit = args.limit
+
+        count = DB.db.asset.find({'infostatus': '探测完成', 'type': 'WEB', 'ename': company_name}).count()
+        jsondata = {'code': 0, 'msg': '', 'count': count}
+        if count == 0:  # 若没有数据返回空列表
+            jsondata.update({'data': []})
+            return jsondata
+        if not key_page or not key_limit:  # 判断是否有分页查询参数
+            paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': 'WEB', 'ename': company_name}).limit(20).skip(0)
+        else:
+            paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': 'WEB', 'ename': company_name}).limit(
+                key_limit).skip(
+                (key_page - 1) * key_limit)
+
+        data = []
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                data1 = {
+                    'id': index,
+                    'name': i['aname'],
+                    'title': i['title'],
+                    'ip': i['ip'],
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
+
+
+class FuncAppInfoAPI(Resource):
+    """APP资产详情管理类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("ename", type=str)
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+
+    def get(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        company_name = args.ename
+        key_page = args.page
+        key_limit = args.limit
+
+        count = DB.db.asset.find({'infostatus': '探测完成', 'type': 'APP', 'ename': company_name}).count()
+        jsondata = {'code': 0, 'msg': '', 'count': count}
+        if count == 0:  # 若没有数据返回空列表
+            jsondata.update({'data': []})
+            return jsondata
+        if not key_page or not key_limit:  # 判断是否有分页查询参数
+            paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': 'APP', 'ename': company_name}).limit(20).skip(0)
+        else:
+            paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': 'APP', 'ename': company_name}).limit(
+                key_limit).skip(
+                (key_page - 1) * key_limit)
+
+        data = []
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                data1 = {
+                    'id': index,
+                    'name': i['name'],
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
+
+
+class FuncFirmInfoAPI(Resource):
+    """固件资产详情管理类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("ename", type=str)
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+
+    def get(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        company_name = args.ename
+        key_page = args.page
+        key_limit = args.limit
+
+        count = DB.db.asset.find({'infostatus': '探测完成', 'type': '固件', 'ename': company_name}).count()
+        jsondata = {'code': 0, 'msg': '', 'count': count}
+        if count == 0:  # 若没有数据返回空列表
+            jsondata.update({'data': []})
+            return jsondata
+        if not key_page or not key_limit:  # 判断是否有分页查询参数
+            paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': '固件', 'ename': company_name}).limit(20).skip(0)
+        else:
+            paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': '固件', 'ename': company_name}).limit(
+                key_limit).skip(
+                (key_page - 1) * key_limit)
+
+        data = []
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                data1 = {
+                    'id': index,
+                    'name': i['name'],
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
 
 
 class InfoAPI(Resource):
@@ -625,7 +884,7 @@ class FuncVulnAPI(Resource):
         key_searchparams = args.searchParams
         vuln_type = DB.db.asset.find_one({'aname': asset_name})['type'] if asset_name else args.type
 
-        count = DB.db.vuln.find({'type': vuln_type}).count()
+        count = DB.db.vuln.find({'type': vuln_type, 'vasset': asset_name}).count() if asset_name else DB.db.vuln.find({'type': vuln_type}).count()
         jsondata = {'code': 0, 'msg': '', 'count': count}
         if count == 0:  # 若没有数据返回空列表
             jsondata.update({'data': []})
@@ -658,7 +917,7 @@ class FuncVulnAPI(Resource):
                     paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
                 else:
-                    paginate1 = DB.db.asset.find({'type': vuln_type,
+                    paginate1 = DB.db.vuln.find({'type': vuln_type,
                                                   'ename': re.compile(search_dict['vuln_company']),
                                                   'vasset': re.compile(search_dict['vuln_asset']),
                                                   })
@@ -711,12 +970,14 @@ class ChartAPI(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("ip", type=str)
+        self.parser.add_argument("company", type=str)
 
     def get(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
         ip = args.ip
+        company = args.company
         if ip:
             data = DB.db.asset.find_one({'aname': ip})['severity']
             result = []

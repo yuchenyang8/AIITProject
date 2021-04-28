@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <title>{{ company_name }}</title>
+    <title>{{ company['ename'] }}</title>
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -134,93 +134,118 @@
         }
     </style>
 </head>
-
+<script>
+    function back() {
+        window.history.back()
+    }
+</script>
 <body>
 <div class="layuimini-container">
     <div class="layuimini-main">
-        <fieldset class="layui-elem-field ">
-            <legend style="font-size:18px;font-family:\u5E7C\u5706,sans-serif;">资产分布</legend>
-            <!--主机数、web数、APP数、固件数的列间距为15px，分别占3列
-                    每一项采用card来布局：
-                        header：数据标题
-                        body：数据表格
-            -->
-            <div class="layui-row layui-col-space15 ">
-                <!-- [1,1] 主机数-->
-                <div class="layui-col-md6">
-                    <div class="layui-card">
-                        <div class="layui-card-header card-header layui-bg-cyan"><i class="fa fa-laptop" style="margin-right: 10px;
-                                    color: #ffffff;"></i>主机数：99
-                        </div>
-                        <div class="layui-card-body layui-text">
-                            <table id="HostTableId" lay-filter="HostTableFilter"></table>
-                        </div>
-                    </div>
-                </div>
-                <!-- [1,2] Web数-->
-                <div class="layui-col-md6">
-                    <div class="layui-card">
-                        <div class="layui-card-header card-header layui-bg-green"><i class="fa fa-skyatlas" style="margin-right: 10px;
-                                color: #ffffff;"></i>Web数：99
-                        </div>
-                        <div class="layui-card-body layui-text">
-                            <table id="WebTableId" lay-filter="WebTableFilter"></table>
-                        </div>
-                    </div>
-                </div>
-                <div class="layui-col-md6">
-                    <!-- [1,3] APP数-->
-                    <div class="layui-card">
-                        <div class="layui-card-header card-header " style="background-color: #2f738d ;color: #ffffff;">
-                            <i class=" fa fa-mobile" style="margin-right: 10px;
-                                color: #ffffff;"></i>App数：99
-                        </div>
-                        <div class="layui-card-body layui-text">
-                            <table id="AppTableId" lay-filter="AppTableFilter"></table>
-                        </div>
-                    </div>
-                </div>
-                <div class="layui-col-md6">
-                    <!-- [1,4] 固件数-->
-                    <div class="layui-card">
-                        <div class="layui-card-header  card-header " style="background-color: #42465f ;color: #ffffff;">
-                            <i class="fa fa-gavel" style="margin-right: 10px;
-                                color: #ffffff;"></i>固件数：99
-                        </div>
-                        <div class="layui-card-body layui-text">
-                            <table id="FirmwareTableId" lay-filter=" FirmwareTableFilter"></table>
-                        </div>
-                    </div>
-                </div>
+        <fieldset class="layui-elem-field">
+            <div class="layui-btn-container" style="display: inline-block;float: right">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="back" onclick="back()">
+                    返回
+                </button>
             </div>
-        </fieldset>
+            <legend style="font-size: xx-large;font-weight: bolder">{{ company['ename'] }}</legend>
+            <br>
+            <br>
+            <fieldset class="layui-elem-field ">
+                <legend style="font-size:18px;font-family:\u5E7C\u5706,sans-serif;">资产分布</legend>
+                <!--主机数、web数、APP数、固件数的列间距为15px，分别占3列
+                        每一项采用card来布局：
+                            header：数据标题
+                            body：数据表格
+                -->
+                <div class="layui-row layui-col-space15 ">
+                    <!-- [1,1] 主机数-->
+                    <div class="layui-col-md12">
+                        <div class="layui-col-md6">
+                            <div class="layui-card">
+                                <div class="layui-card-header card-header layui-bg-cyan">
+                                    <i class="fa fa-laptop" style="margin-right: 10px;
+                                        color: #ffffff;"></i>主机数：{{ company['count']['host'] }}
+                                </div>
+                                <div class="layui-card-body ">
+                                    <table id="HostTableId" lay-filter="HostTableFilter"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- [1,2] Web数-->
+                        <div class="layui-col-md6">
+                            <div class="layui-card">
+                                <div class="layui-card-header card-header layui-bg-green">
+                                    <i class="fa fa-skyatlas" style="margin-right: 10px;
+                                    color: #ffffff;"></i>Web数：{{ company['count']['web'] }}
+                                </div>
+                                <div class="layui-card-body ">
+                                    <table id="WebTableId" lay-filter="WebTableFilter"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md12">
+                        <div class="layui-col-md6">
+                            <!-- [1,3] APP数-->
+                            <div class="layui-card">
+                                <div class="layui-card-header card-header "
+                                     style="background-color: #2f738d ;color: #ffffff;">
+                                    <i class=" fa fa-mobile" style="margin-right: 10px;
+                                    color: #ffffff;"></i>App数：{{ company['count']['app'] }}
+                                </div>
+                                <div class="layui-card-body ">
+                                    <table id="AppTableId" lay-filter="AppTableFilter"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-md6">
+                            <!-- [1,4] 固件数-->
+                            <div class="layui-card">
+                                <div class="layui-card-header  card-header "
+                                     style="background-color: #42465f ;color: #ffffff;">
+                                    <i class="fa fa-gavel" style="margin-right: 10px;
+                                    color: #ffffff;"></i>固件数：{{ company['count']['firmware'] }}
+                                </div>
+                                <div class="layui-card-body ">
+                                    <table id="FirmwareTableId" lay-filter=" FirmwareTableFilter"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
 
-        <fieldset class="layui-elem-field ">
-            <legend style="font-size:18px;font-family:\u5E7C\u5706,sans-serif;">漏洞趋势</legend>
-            <div class="layui-row layui-col-space15">
-                <div class="layui-col-md12">
-                    <div id="VulEchartsID" style="background-color:#ffffff;width: 100%;min-height:500px"></div>
+            <fieldset class="layui-elem-field ">
+                <legend style="font-size:18px;font-family:\u5E7C\u5706,sans-serif;">漏洞趋势</legend>
+                <div class="layui-row layui-col-space15">
+                    <div class="layui-col-md12">
+                        <div id="VulEchartsID" style="background-color:#ffffff;width: 100%;min-height:500px"></div>
+                    </div>
                 </div>
-            </div>
-        </fieldset>
+            </fieldset>
 
-        <fieldset class="layui-elem-field ">
-            <legend style="font-size:18px;font-family:\u5E7C\u5706,sans-serif;">漏洞分布</legend>
-            <div class="layui-row layui-col-space15">
-                <div class="layui-col-md3">
-                    <div id="VulHostEchartsID" style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
+            <fieldset class="layui-elem-field ">
+                <legend style="font-size:18px;font-family:\u5E7C\u5706,sans-serif;">漏洞分布</legend>
+                <div class="layui-row layui-col-space15">
+                    <div class="layui-col-md6">
+                        <div id="VulnHostEchartsID"
+                             style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
+                    </div>
+                    <div class="layui-col-md6">
+                        <div id="VulnWebEchartsID"
+                             style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
+                    </div>
+                    <div class="layui-col-md6">
+                        <div id="VulnAppEchartsID"
+                             style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
+                    </div>
+                    <div class="layui-col-md6">
+                        <div id="VulnFirmwareEchartsID"
+                             style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
+                    </div>
                 </div>
-                <div class="layui-col-md3">
-                    <div id="VulWebEchartsID" style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
-                </div>
-                <div class="layui-col-md3">
-                    <div id="VulAppEchartsID" style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
-                </div>
-                <div class="layui-col-md3">
-                    <div id="VulFirmwareEchartsID"
-                         style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
-                </div>
-            </div>
+            </fieldset>
         </fieldset>
     </div>
 </div>
@@ -228,341 +253,301 @@
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
 <script src="{{ url_for('static', filename='js/lay-config.js', v=1.0.4) }}" charset="utf-8"></script>
 <script>
-    layui.use(['table', 'miniTab', 'echarts'], function () {
+    layui.use(['table', 'echarts'], function () {
         var table = layui.table,
             echarts = layui.echarts,
             $ = layui.jquery;
-        // 主机数
+
         table.render({
             elem: '#HostTableId',
-            url: '../api/host.json',
+            url: "{{ url_for('api_func_asset_host', ename=company['ename']) }}",
             skin: 'nob',
             cols: [[
-                {field: 'host', title: 'Host', minWidth: 246},
-                {field: 'IP', title: 'IP', minWidth: 246},
-                {field: 'OS', title: 'OS', minWidth: 300}
+                {field: 'name', title: 'IP', templet: '#asset_tpl'},
+                {field: 'netbios-name', title: 'Name'},
+                {field: 'os', title: 'OS', minWidth: 300}
             ]],
             page: {
                 limit: 5,
+                limits: [5, 10, 20, 25, 50, 100],
                 theme: '#3a4b5b'
-            },
-            done: function (res, curr, count) {
-                // $('th').hide(); //表头隐藏的样式
-                $('th').css({'background-color': '#ffffff'});//改变表头背景颜色
-                $('div').css("border-style", "none");//去掉表格的外边框
             }
         });
-        // Web数
         table.render({
             elem: '#WebTableId',
-            url: '../api/web.json', //数据接口
+            url: "{{ url_for('api_func_asset_web', ename=company['ename']) }}", //数据接口
             skin: 'nob',
             cols: [[
-                {field: 'title', title: 'Title', minWidth: 395},
-                {field: 'IP', title: 'IP', minWidth: 396},
+                {field: 'name', title: 'DOMAIN', templet: '#asset_tpl'},
+                {field: 'ip', title: 'IP'},
+                {field: 'title', title: 'Title'},
             ]],
             page: {
                 limit: 5,
+                limits: [5, 10, 20, 25, 50, 100],
                 theme: '#009688'
             }
         });
-        //APP数：99
         table.render({
             elem: '#AppTableId',
-            url: '../api/app.json', //数据接口
+            url: "{{ url_for('api_func_asset_app', ename=company['ename']) }}", //数据接口
             skin: 'nob',
             cols: [[
                 {field: 'name', align: 'center', title: 'Name', minWidth: 793}
             ]],
             page: {
                 limit: 5,
+                limits: [5, 10, 20, 25, 50, 100],
                 theme: '#2f738d'
             }
         });
-        //固件数
         table.render({
             elem: '#FirmwareTableId',
-            url: '../api/firmware.json',
+            url: "{{ url_for('api_func_asset_firm', ename=company['ename']) }}",
             skin: 'nob',
             cols: [[
                 {field: 'name', align: 'center', title: 'Name', minWidth: 793}
             ]],
             page: {
                 limit: 5,
+                limits: [5, 10, 20, 25, 50, 100],
                 theme: '#42465f'
             }
         })
 
-        /**
-         * 报表功能
-         */
         var echartsRecords = echarts.init(document.getElementById('VulEchartsID'), 'walden');
-        var optionRecords = {
-            tooltip: {
-                trigger: 'axis'
-            },
-            legend: {
-                data: ['主机漏洞', 'Web漏洞', 'APP漏洞', '固件漏洞']
-            },
-            grid: {
-                left: '3%',
-                right: '4%',
-                bottom: '3%',
-                containLabel: true
-            },
-            toolbox: {
-                feature: {
-                    saveAsImage: {}
-                }
-            },
-            xAxis: {
-                type: 'category',
-                boundaryGap: false,
-                data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-            },
-            yAxis: {
-                type: 'value'
-            },
-            series: [{
-                name: '主机漏洞',
-                type: 'line',
-                data: [120, 132, 101, 134, 90, 230, 210]
-            },
-                {
-                    name: 'Web漏洞',
-                    type: 'line',
-                    data: [220, 182, 191, 234, 290, 330, 310]
+        $.get("{{ url_for('api_func_company_trends', company=company['ename']) }}").done(function (data) {
+            let day_list = []
+            let host_count = []
+            let web_count = []
+            let app_count = []
+            let firm_count = []
+            for (let i = 0; i < data.length; i++) {
+                day_list.push(data[i]['date'])
+                host_count.push(data[i]['host'])
+                web_count.push(data[i]['web'])
+                app_count.push(data[i]['app'])
+                firm_count.push(data[i]['firm'])
+            }
+            echartsRecords.setOption({
+                tooltip: {
+                    trigger: 'axis'
                 },
-                {
-                    name: 'APP漏洞',
-                    type: 'line',
-                    data: [150, 232, 201, 154, 190, 330, 410]
+                legend: {
+                    data: ['主机漏洞', 'Web漏洞', 'APP漏洞', '固件漏洞']
                 },
-                {
-                    name: '固件漏洞',
-                    type: 'line',
-                    data: [320, 332, 301, 334, 390, 330, 320]
-                }
-            ]
-        };
-        echartsRecords.setOption(optionRecords);
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: {}
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: day_list
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: '主机漏洞',
+                        type: 'line',
+                        data: host_count
+                    },
+                    {
+                        name: 'Web漏洞',
+                        type: 'line',
+                        data: web_count
+                    },
+                    {
+                        name: 'APP漏洞',
+                        type: 'line',
+                        data: app_count
+                    },
+                    {
+                        name: '固件漏洞',
+                        type: 'line',
+                        data: firm_count
+                    }
+                ]
+            })
+        })
+
 
         // echarts 窗口缩放自适应
         window.onresize = function () {
             echartsRecords.resize();
         }
-        /**
-         * 玫瑰图表
-         */
-        var echartsPies = echarts.init(document.getElementById('VulHostEchartsID'), 'walden');
-        var optionPies = {
-            title: {
-                text: '主机漏洞分布图',
-                left: 'center'
-            },
-            tooltip: {
-                trigger: 'item',
-                formatter: '{a} <br/>{b} : {c} ({d}%)'
-            },
-            legend: {
-                orient: 'vertical',
-                left: 'left',
-                data: ['HOST1', 'HOST2', 'HOST3', 'HOST4', 'HOST5']
-            },
-            series: [{
-                name: '主机漏洞分布图',
-                type: 'pie',
-                radius: '55%',
-                center: ['50%', '60%'],
-                roseType: 'radius',
-                data: [{
-                    value: 335,
-                    name: 'HOST1'
+
+        var echartsPiesHost = echarts.init(document.getElementById('VulnHostEchartsID'), 'walden');
+        $.get("{{ url_for('api_func_company_info', company=company['ename'], asset_type='主机') }}").done(function (data) {
+            let hosts = []
+            for (let i = 0; i < data.length; i++) {
+                hosts.push(data[i]['name'])
+            }
+            echartsPiesHost.setOption({
+                title: {
+                    text: '主机漏洞分布图',
+                    left: 'center'
                 },
-                    {
-                        value: 310,
-                        name: 'HOST2'
-                    },
-                    {
-                        value: 234,
-                        name: 'HOST3'
-                    },
-                    {
-                        value: 135,
-                        name: 'HOST4'
-                    },
-                    {
-                        value: 368,
-                        name: 'HOST5'
-                    }
-                ],
-                emphasis: {
-                    itemStyle: {
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.5)'
-                    }
-                }
-            }]
-        };
-        echartsPies.setOption(optionPies);
-        var echartsPies = echarts.init(document.getElementById('VulWebEchartsID'), 'walden');
-        var optionPies = {
-            title: {
-                text: 'Web漏洞分布图',
-                left: 'center'
-            },
-            tooltip: {
-                trigger: 'item',
-                formatter: '{a} <br/>{b} : {c} ({d}%)'
-            },
-            legend: {
-                orient: 'vertical',
-                left: 'left',
-                data: ['Web1', 'Web2', 'Web3', 'Web4', 'Web5']
-            },
-            series: [{
-                name: 'Web漏洞分布图',
-                type: 'pie',
-                radius: '55%',
-                center: ['50%', '60%'],
-                roseType: 'radius',
-                data: [{
-                    value: 335,
-                    name: 'Web1'
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b} : {c} ({d}%)'
                 },
-                    {
-                        value: 310,
-                        name: 'Web2'
-                    },
-                    {
-                        value: 234,
-                        name: 'Web3'
-                    },
-                    {
-                        value: 135,
-                        name: 'Web4'
-                    },
-                    {
-                        value: 368,
-                        name: 'Web5'
-                    }
-                ],
-                emphasis: {
-                    itemStyle: {
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.5)'
-                    }
-                }
-            }]
-        };
-        echartsPies.setOption(optionPies);
-        var echartsPies = echarts.init(document.getElementById('VulAppEchartsID'), 'walden');
-        var optionPies = {
-            title: {
-                text: 'App漏洞分布图',
-                left: 'center'
-            },
-            tooltip: {
-                trigger: 'item',
-                formatter: '{a} <br/>{b} : {c} ({d}%)'
-            },
-            legend: {
-                orient: 'vertical',
-                left: 'left',
-                data: ['App1', 'App2', 'App3', 'App4', 'App5']
-            },
-            series: [{
-                name: 'App漏洞分布图',
-                type: 'pie',
-                radius: '55%',
-                center: ['50%', '60%'],
-                roseType: 'radius',
-                data: [{
-                    value: 335,
-                    name: 'App1'
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    data: hosts,
                 },
+                series: [
                     {
-                        value: 310,
-                        name: 'App2'
-                    },
-                    {
-                        value: 234,
-                        name: 'App3'
-                    },
-                    {
-                        value: 135,
-                        name: 'App4'
-                    },
-                    {
-                        value: 368,
-                        name: 'App5'
+                        name: '漏洞归属IP',
+                        type: 'pie',
+                        radius: [30, 100],
+                        center: ['50%', '60%'],
+                        {#roseType: 'radius',#}
+                        data: data,
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
                     }
-                ],
-                emphasis: {
-                    itemStyle: {
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.5)'
-                    }
-                }
-            }]
-        };
-        echartsPies.setOption(optionPies);
-        var echartsPies = echarts.init(document.getElementById('VulFirmwareEchartsID'), 'walden');
-        var optionPies = {
-            title: {
-                text: '固件漏洞分布图',
-                left: 'center'
-            },
-            tooltip: {
-                trigger: 'item',
-                formatter: '{a} <br/>{b} : {c} ({d}%)'
-            },
-            legend: {
-                orient: 'vertical',
-                left: 'left',
-                data: ['固件1', '固件2', '固件3', '固件4', '固件5']
-            },
-            series: [{
-                name: '固件漏洞分布图',
-                type: 'pie',
-                radius: '55%',
-                center: ['50%', '60%'],
-                roseType: 'radius',
-                data: [{
-                    value: 335,
-                    name: '固件1'
+                ]
+            })
+        })
+        var echartsPiesWeb = echarts.init(document.getElementById('VulnWebEchartsID'), 'walden');
+        $.get("{{ url_for('api_func_company_info', company=company['ename'], asset_type='WEB') }}").done(function (data) {
+            let domains = []
+            for (let i = 0; i < data.length; i++) {
+                domains.push(data[i]['name'])
+            }
+            echartsPiesWeb.setOption({
+                title: {
+                    text: 'Web漏洞分布图',
+                    left: 'center'
                 },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b} : {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    data: domains,
+                },
+                series: [
                     {
-                        value: 310,
-                        name: '固件2'
-                    },
-                    {
-                        value: 234,
-                        name: '固件3'
-                    },
-                    {
-                        value: 135,
-                        name: '固件4'
-                    },
-                    {
-                        value: 368,
-                        name: '固件5'
+                        name: '漏洞归属域名',
+                        type: 'pie',
+                        radius: [30, 100],
+                        center: ['50%', '60%'],
+                        {#roseType: 'radius',#}
+                        data: data,
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
                     }
-                ],
-                emphasis: {
-                    itemStyle: {
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                ]
+            })
+        })
+        var echartsPiesApp = echarts.init(document.getElementById('VulnAppEchartsID'), 'walden');
+        $.get("{{ url_for('api_func_company_info', company=company['ename'], asset_type='APP') }}").done(function (data) {
+            let domains = []
+            for (let i = 0; i < data.length; i++) {
+                domains.push(data[i]['name'])
+            }
+            echartsPiesApp.setOption({
+                title: {
+                    text: 'App漏洞分布图',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b} : {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    data: domains,
+                },
+                series: [
+                    {
+                        name: '漏洞归属App',
+                        type: 'pie',
+                        radius: [30, 100],
+                        center: ['50%', '60%'],
+                        {#roseType: 'radius',#}
+                        data: data,
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
                     }
-                }
-            }]
-        };
-        echartsPies.setOption(optionPies);
+                ]
+            })
+        })
+        var echartsPiesFirm = echarts.init(document.getElementById('VulnFirmwareEchartsID'), 'walden');
+        $.get("{{ url_for('api_func_company_info', company=company['ename'], asset_type='固件') }}").done(function (data) {
+            let domains = []
+            for (let i = 0; i < data.length; i++) {
+                domains.push(data[i]['name'])
+            }
+            echartsPiesFirm.setOption({
+                title: {
+                    text: '固件漏洞分布图',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b} : {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    data: domains,
+                },
+                series: [
+                    {
+                        name: '漏洞归属固件',
+                        type: 'pie',
+                        radius: [30, 100],
+                        center: ['50%', '60%'],
+                        {#roseType: 'radius',#}
+                        data: data,
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            })
+        })
     });
+</script>
+<script type="text/html" id="asset_tpl">
+    {% raw %}
+    <a href="/func/asset/{{ d.name }}">{{ d.name }}</a>
+    {% endraw %}
 </script>
 </body>
 

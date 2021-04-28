@@ -1,11 +1,12 @@
-from flask import render_template, redirect, url_for, request
-from web.utils.auxiliary import login_required
-from web import APP, DB
 import datetime
-import logging
-from web.utils.auxiliary import push_dingding_group, kill_process
 import re
+
 import bson
+from flask import render_template, request
+
+from web import APP, DB
+from web.utils.auxiliary import kill_process
+from web.utils.auxiliary import login_required
 
 
 @APP.route('/func/company')
@@ -90,7 +91,14 @@ def html_func_assetinfo(asset_name):
 @login_required
 def html_func_company_info(company_name):
     """厂商详情页面"""
-    return render_template('company_detail.html', company_name=company_name)
+    hostcount = DB.db.asset.find({'ename': company_name, 'type': '主机'}).count()
+    webcount = DB.db.asset.find({'ename': company_name, 'type': 'WEB'}).count()
+    appcount = DB.db.asset.find({'ename': company_name, 'type': 'APP'}).count()
+    firmwarecount = DB.db.asset.find({'ename': company_name, 'type': '固件'}).count()
+    DB.db.company.update_one({'ename': company_name}, {
+        '$set': {'count.host': hostcount, 'count.web': webcount, 'count.app': appcount, 'count.firmware': firmwarecount}})
+    company = DB.db.company.find_one({'ename': company_name})
+    return render_template('company_detail.html', company=company)
 
 
 @APP.route('/func/password')

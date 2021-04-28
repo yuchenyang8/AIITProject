@@ -7,7 +7,10 @@ layui.define(function(exports) {
                 "#fdc431",
                 "#ee9336",
                 "#d43f3a",
-                "#96dee8"
+                "#96dee8",
+                "#96aec7",
+                "#96aea9",
+                "#3faea4"
             ],
             "backgroundColor": "rgba(252,252,252,0)",
             "textStyle": {},

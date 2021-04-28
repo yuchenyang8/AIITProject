@@ -1,6 +1,7 @@
 from flask import Flask
-from flask_restful import Api
 from flask_pymongo import PyMongo
+from flask_restful import Api
+
 from web.config import Config
 
 APP = Flask(__name__)
@@ -11,12 +12,19 @@ API = Api(APP)
 from web.route.system import html
 from web.route.func import html
 from web.route.system.api import UserLoginAPI, DashBoardAPI
-from web.route.func.api import FuncCompanyAPI, FuncTaskAPI, FuncAssetAPI, InfoAPI, VulnAPI, FuncVulnAPI, FuncInfoAPI, ChartAPI, PasswordAPI
+from web.route.func.api import FuncCompanyAPI, FuncTaskAPI, FuncAssetAPI, InfoAPI, VulnAPI, FuncVulnAPI, FuncInfoAPI, \
+    ChartAPI, PasswordAPI, FuncAppInfoAPI, FuncFirmInfoAPI, FuncHostInfoAPI, FuncWebInfoAPI, CompanyInfoAPI, CompanyVulnTrendsAPI
 
 API.add_resource(UserLoginAPI, '/api/user/login', endpoint='api_user_login')
 API.add_resource(FuncCompanyAPI, '/api/func/company', endpoint='api_func_company')
+API.add_resource(CompanyInfoAPI, '/api/func/company/<string:company>/<string:asset_type>', endpoint='api_func_company_info')
+API.add_resource(CompanyVulnTrendsAPI, '/api/func/company/trends/<string:company>', endpoint='api_func_company_trends')
 API.add_resource(FuncTaskAPI, '/api/func/task', endpoint='api_func_task')
 API.add_resource(FuncAssetAPI, '/api/func/asset', endpoint='api_func_asset')
+API.add_resource(FuncHostInfoAPI, '/api/func/asset/host', endpoint='api_func_asset_host')
+API.add_resource(FuncWebInfoAPI, '/api/func/asset/web', endpoint='api_func_asset_web')
+API.add_resource(FuncAppInfoAPI, '/api/func/asset/app', endpoint='api_func_asset_app')
+API.add_resource(FuncFirmInfoAPI, '/api/func/asset/firm', endpoint='api_func_asset_firm')
 API.add_resource(FuncVulnAPI, '/api/func/vulns', endpoint='api_func_vulns')
 API.add_resource(InfoAPI, '/api/func/info', endpoint='api_func_info')
 API.add_resource(FuncInfoAPI, '/api/func/infos', endpoint='api_func_infos')
