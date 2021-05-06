@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
-import requests
-import re
-import nmap
-import subprocess
-import os
-from extensions.OneForAll.oneforall import OneForAll
-import platform
 import json
-from web.utils.auxiliary import exist_process, kill_process, url_detect
-from extensions.Wappalyzer import Wappalyzer, WebPage
-import warnings
-import urllib3
+import os
+import platform
+import re
+import subprocess
 import time
+import warnings
+
+import nmap
+import requests
+import urllib3
+from pocsuite3.api import get_results
+from pocsuite3.api import init_pocsuite
+from pocsuite3.api import start_pocsuite
+from pocsuite3.api import load_file_to_module
+
+from extensions.OneForAll.oneforall import OneForAll
+from extensions.Wappalyzer import Wappalyzer, WebPage
+from web.utils.auxiliary import exist_process, kill_process, url_detect
 
 urllib3.disable_warnings()
 
@@ -562,6 +568,40 @@ class NessusExt(object):
         return result
 
 
+class PocExt(object):
+    """POC插件类"""
+
+    def __init__(self):
+        self.poc_dir = r'D:\VENV\py3flask\Lib\site-packages\pocsuite3\pocs'
+        self.config = {}
+
+    def get_poc_list(self):
+        poc_dir = self.poc_dir
+        poc_list = []
+        for file in os.listdir(poc_dir):
+            file_name = os.path.splitext(file)[0]
+            poc_list.append(file_name)
+        poc_list.remove('__init__')
+        poc_list.remove('__pycache__')
+        poc_list.remove('demo_poc')
+        return poc_list
+
+    def get_poc_info(self, poc_name):
+        poc_filename = self.poc_dir + '\\' + poc_name + '.py'
+        init_pocsuite(self.config)
+        mod = load_file_to_module(poc_filename)
+        result = mod.get_infos()
+        return result
+
+    def verify(self, url, poc):
+        config = self.config
+        config.update({'url': url, 'poc': poc})
+        init_pocsuite(config)
+        start_pocsuite()
+        result = get_results()
+        return result
+
+
 if __name__ == '__main__':
     # kill_process('xray.exe')
     # r = HydraExt().crack('192.168.31.19''ssh')
@@ -573,5 +613,29 @@ if __name__ == '__main__':
     # print(info)
     # scan_id = n.create(name='192.168.31.19', targets='192.168.31.19')
     # history_id = n.launch(scan_id)
+
+    # config = {
+    #     'url': {'127.0.0.1:8080/S2-045/', '127.0.0.1:8080/S2-046/'},
+    #     'poc': {'struts2_045_rce', 'struts2_046_rce'}
+    # }
+    # config2 = {
+    #     'url': {'127.0.0.1:8080/S2-046/'},
+    #     'poc': {'struts2_045_rce'}
+    # }
+    # init_pocsuite(config)
+    # start_pocsuite()
+    # result = get_results()
+    # print(result)
+    # poc_filename = r'D:\VENV\py3flask\Lib\site-packages\pocsuite3\pocs\struts2_045_rce.py'
+    # mod = load_file_to_module(poc_filename)
+    # print(mod.get_infos())
+    # start_pocsuite()
+    # result = get_results()
+    # print(result)
+    # p = PocExt()
+    # p.get_poc_info('Confluence_CVE_2019_3396')
+
+
+
 
     pass

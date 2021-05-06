@@ -48,6 +48,13 @@ def html_func_asset():
     return render_template('asset.html')
 
 
+@APP.route('/func/poc')
+@login_required
+def html_func_poc():
+    """POC信息页面"""
+    return render_template('poc.html')
+
+
 @APP.route('/func/vulns/<string:vuln_type>')
 @login_required
 def html_func_vulns(vuln_type):
@@ -96,7 +103,8 @@ def html_func_company_info(company_name):
     appcount = DB.db.asset.find({'ename': company_name, 'type': 'APP'}).count()
     firmwarecount = DB.db.asset.find({'ename': company_name, 'type': '固件'}).count()
     DB.db.company.update_one({'ename': company_name}, {
-        '$set': {'count.host': hostcount, 'count.web': webcount, 'count.app': appcount, 'count.firmware': firmwarecount}})
+        '$set': {'count.host': hostcount, 'count.web': webcount, 'count.app': appcount,
+                 'count.firmware': firmwarecount}})
     company = DB.db.company.find_one({'ename': company_name})
     return render_template('company_detail.html', company=company)
 

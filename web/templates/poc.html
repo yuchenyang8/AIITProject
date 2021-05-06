@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Poc</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.5.5/css/layui.css') }}" media="all">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}" media="all">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">POC</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="poc_name" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary" lay-submit
+                                    lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 上传POC</button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTable_task" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            {% raw %}
+            <a class="layui-btn layui-btn-xs layui-btn data-count-start" lay-event="info"
+               href="/func/vulns/host/{{ d.objid }}">详情</a>
+            {% endraw %}
+            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+        </script>
+
+    </div>
+</div>
+<script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+
+        table.render({
+            elem: '#currentTable_task',
+            url: "{{ url_for('api_func_poc') }}",
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [[
+                {field: 'id', width: 80, align: "center", title: 'ID', sort: true},
+                {field: 'name', width: 600, title: 'POC名称', align: "left", sort: true},
+                {field: 'appName', title: '影响组件', templet: "#app_tpl", align: "center", sort: true},
+                {field: 'appVersion', width: 300, title: '组件版本', align: "center"},
+                {field: 'vulType', title: '漏洞类型', templet: "#vuln_type_tpl", align: "center", sort: true},
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 20,
+            page: true,
+            skin: 'line'
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            var result = JSON.stringify(data.field);
+
+            //执行搜索重载
+            table.reload('currentTable_task', {
+                page: {
+                    curr: 1
+                }
+                , where: {
+                    searchParams: result
+                }
+            }, 'data');
+            return false;
+        });
+
+        /**
+         * toolbar监听事件
+         */
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {  // 监听添加操作
+                var index = layer.open({
+                    title: '添加漏洞',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: "{{ url_for('html_func_task_add') }}",
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            }
+        });
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'delete') {
+                layer.confirm('确定删除该漏洞吗?', function (index) {
+                    $.ajax({
+                        url: "{{ url_for('api_func_vulns') }}",
+                        data: JSON.stringify(data),
+                        contentType: 'application/json;charset=UTF-8',
+                        dataType: 'json',
+                        type: 'delete',
+                        success: function (result) {
+                            if (result.status_code === 200) {
+                                layer.alert('删除漏洞成功!', {title: '提示', icon: 1})
+                                obj.del();
+                                layer.close(index);
+                            } else {
+                                layer.alert(result.msg, {title: '提示', icon: 2})
+                            }
+                        },
+                        error: function (e) {
+                            layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
+                        }
+                    })
+                });
+            }
+        });
+    });
+</script>
+<script type="text/html" id="app_tpl">
+    {% raw %}
+    <span class="layui-badge layui-bg-black">{{ d.appName }}</span>
+    {% endraw %}
+</script>
+<script type="text/html" id="vuln_type_tpl">
+    {% raw %}
+    <span class="layui-badge layui-bg-blue">{{ d.vulType }}</span>
+    {% endraw %}
+</script>
+</body>
+</html>

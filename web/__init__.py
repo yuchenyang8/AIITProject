@@ -13,13 +13,17 @@ from web.route.system import html
 from web.route.func import html
 from web.route.system.api import UserLoginAPI, DashBoardAPI
 from web.route.func.api import FuncCompanyAPI, FuncTaskAPI, FuncAssetAPI, InfoAPI, VulnAPI, FuncVulnAPI, FuncInfoAPI, \
-    ChartAPI, PasswordAPI, FuncAppInfoAPI, FuncFirmInfoAPI, FuncHostInfoAPI, FuncWebInfoAPI, CompanyInfoAPI, CompanyVulnTrendsAPI
+    ChartAPI, PasswordAPI, FuncAppInfoAPI, FuncFirmInfoAPI, FuncHostInfoAPI, FuncWebInfoAPI, CompanyInfoAPI, \
+    CompanyVulnTrendsAPI, PocTaskAPI, PocAPI
 
 API.add_resource(UserLoginAPI, '/api/user/login', endpoint='api_user_login')
 API.add_resource(FuncCompanyAPI, '/api/func/company', endpoint='api_func_company')
-API.add_resource(CompanyInfoAPI, '/api/func/company/<string:company>/<string:asset_type>', endpoint='api_func_company_info')
+API.add_resource(CompanyInfoAPI, '/api/func/company/<string:company>/<string:asset_type>',
+                 endpoint='api_func_company_info')
 API.add_resource(CompanyVulnTrendsAPI, '/api/func/company/trends/<string:company>', endpoint='api_func_company_trends')
 API.add_resource(FuncTaskAPI, '/api/func/task', endpoint='api_func_task')
+API.add_resource(PocTaskAPI, '/api/func/poc/task', endpoint='api_func_poc_task')
+API.add_resource(PocAPI, '/api/func/poc', endpoint='api_func_poc')
 API.add_resource(FuncAssetAPI, '/api/func/asset', endpoint='api_func_asset')
 API.add_resource(FuncHostInfoAPI, '/api/func/asset/host', endpoint='api_func_asset_host')
 API.add_resource(FuncWebInfoAPI, '/api/func/asset/web', endpoint='api_func_asset_web')
@@ -32,3 +36,4 @@ API.add_resource(VulnAPI, '/api/func/vuln', endpoint='api_func_vuln')
 API.add_resource(PasswordAPI, '/api/func/password', endpoint='api_func_password')
 API.add_resource(ChartAPI, '/api/func/chart', endpoint='api_func_chart')
 API.add_resource(DashBoardAPI, '/api/dashboard', endpoint='api_dashboard')
+

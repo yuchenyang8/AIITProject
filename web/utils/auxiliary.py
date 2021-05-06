@@ -1,12 +1,12 @@
-from functools import wraps
-from flask import session, redirect, url_for, current_app
-import random
-import psutil
-import os
-import requests
 import json
+import os
+import random
 import re
-import sys
+from functools import wraps
+
+import psutil
+import requests
+from flask import session, redirect, url_for
 
 
 def login_required(func):

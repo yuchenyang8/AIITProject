@@ -5,7 +5,7 @@ import bson
 from flask import session, json, redirect, url_for
 from flask_restful import reqparse, Resource
 
-from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappExt, NessusExt, HydraExt
+from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappExt, NessusExt, HydraExt, PocExt
 from web import DB
 from web.utils.auxiliary import get_title
 
@@ -857,7 +857,6 @@ class VulnAPI(Resource):
             DB.db.asset.update_one({'aname': asset_name}, {'$set': {'detail': info, 'severity': severitycount}})
         DB.db.asset.update_one({'aname': asset_name},
                                {'$set': {'vulndate': datetime.datetime.now(), 'vulnstatus': '扫描完成'}})
-        pass
 
 
 class FuncVulnAPI(Resource):
@@ -884,7 +883,8 @@ class FuncVulnAPI(Resource):
         key_searchparams = args.searchParams
         vuln_type = DB.db.asset.find_one({'aname': asset_name})['type'] if asset_name else args.type
 
-        count = DB.db.vuln.find({'type': vuln_type, 'vasset': asset_name}).count() if asset_name else DB.db.vuln.find({'type': vuln_type}).count()
+        count = DB.db.vuln.find({'type': vuln_type, 'vasset': asset_name}).count() if asset_name else DB.db.vuln.find(
+            {'type': vuln_type}).count()
         jsondata = {'code': 0, 'msg': '', 'count': count}
         if count == 0:  # 若没有数据返回空列表
             jsondata.update({'data': []})
@@ -918,9 +918,9 @@ class FuncVulnAPI(Resource):
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
                 else:
                     paginate1 = DB.db.vuln.find({'type': vuln_type,
-                                                  'ename': re.compile(search_dict['vuln_company']),
-                                                  'vasset': re.compile(search_dict['vuln_asset']),
-                                                  })
+                                                 'ename': re.compile(search_dict['vuln_company']),
+                                                 'vasset': re.compile(search_dict['vuln_asset']),
+                                                 })
                     paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
         data = []
@@ -1070,3 +1070,120 @@ class PasswordAPI(Resource):
             return {'status_code': 500, 'msg': '删除失败，不存在'}
         DB.db.weak.delete_one(searchdict)
         return {'status_code': 200, 'msg': '删除成功'}
+
+
+class PocTaskAPI(Resource):
+    """POC任务管理类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("task_name", type=str, location='json')
+        self.parser.add_argument("poc", type=str, location='json')
+        self.parser.add_argument("url", type=str, location='json')
+
+    def put(self):
+        if not session.get('status'):
+            return redirect(url_for('html_system_login'), 302)
+        args = self.parser.parse_args()
+        task_name = args.task_name
+        url = args.url
+        poc = args.poc
+        new_poc_task = {
+            'task_name': task_name,
+            'url': url,
+            'poc': poc,
+            'time': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        DB.db.poc.insert_one(new_poc_task)
+        return {'status_code': 200, 'msg': '创建POC任务成功'}
+
+    def post(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        poc = args.poc
+        url = args.url
+        p = PocExt()
+        results = p.verify(url=url, poc=poc)
+        for result in results:
+            result_info = {}
+            for item in result.items():
+                result_info.update({item[0]: item[1]})
+            DB.db.poc.insert_one(result_info)
+
+    def get(self):
+        pass
+
+    def delete(self):
+        pass
+
+
+class PocAPI(Resource):
+    """POC管理类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+        self.parser.add_argument("searchParams", type=str)
+
+    def get(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        key_page = args.page
+        key_limit = args.limit
+        key_searchparams = args.searchParams
+        p = PocExt()
+        poc_list = p.get_poc_list()
+        count = len(poc_list)
+        jsondata = {'code': 0, 'msg': '', 'count': count}
+        if count == 0:  # 若没有数据返回空列表
+            jsondata.update({'data': []})
+            return jsondata
+        poc_info_list = []
+        for poc in poc_list:
+            poc_info = p.get_poc_info(poc_name=poc)
+            poc_info_list.append(poc_info)
+
+        if not key_searchparams:  # 若没有查询参数
+            if not key_page or not key_limit:  # 判断是否有分页查询参数
+                paginate = poc_info_list[:20]
+            else:
+                paginate = poc_info_list[(key_page - 1) * key_limit:key_page * key_limit]
+        else:
+            try:
+                search_dict = json.loads(key_searchparams)  # 解析查询参数
+            except:
+                paginate = DB.db.company.find().limit(20).skip(0)
+            else:
+                if 'company_name' not in search_dict:  # 查询参数有误
+                    paginate = DB.db.company.find().limit(20).skip(0)
+                else:
+                    paginate1 = DB.db.company.find({'ename': re.compile(search_dict['company_name'])})
+                    paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
+                    jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
+        data = []
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                version = i['appVersion'] if 'appVersion' in i.keys() else '-'
+                data1 = {
+                    'id': index,
+                    'name': i['name'],
+                    'appName': i['appName'],
+                    'appVersion': version,
+                    'vulType': i['vulType'],
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            print(jsondata)
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
+
+    def delete(self):
+        pass

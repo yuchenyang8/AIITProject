@@ -81,7 +81,7 @@
           "child": [
             {
               "title": "POC管理",
-              "href": "",
+              "href": "func/poc",
               "icon": "fa fa-industry",
               "target": "_self"
             },
