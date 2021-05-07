@@ -57,7 +57,7 @@
 
         table.render({
             elem: '#currentTable_task',
-            url: "{{ url_for('api_func_poc') }}",
+            url: "{{ url_for('api_func_poc', u='xx') }}",
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',

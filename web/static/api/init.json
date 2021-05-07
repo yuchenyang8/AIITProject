@@ -22,7 +22,7 @@
           "target": "_self"
         },
         {
-          "title": "信息搜集",
+          "title": "任务管理",
           "href": "",
           "icon": "fa fa-tasks",
           "target": "_self",
@@ -34,7 +34,7 @@
               "target": "_self"
             },
             {
-              "title": "任务管理",
+              "title": "信息搜集",
               "href": "func/task",
               "icon": "fa fa-tasks",
               "target": "_self"
@@ -42,6 +42,12 @@
             {
               "title": "资产管理",
               "href": "func/asset",
+              "icon": "fa fa-money",
+              "target": "_self"
+            },
+            {
+              "title": "POC检测",
+              "href": "func/poc/task",
               "icon": "fa fa-money",
               "target": "_self"
             }

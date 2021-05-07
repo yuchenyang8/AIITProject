@@ -48,6 +48,20 @@ def html_func_asset():
     return render_template('asset.html')
 
 
+@APP.route('/func/poc/task')
+@login_required
+def html_func_poc_task():
+    """POC任务页面"""
+    return render_template('poc_task.html')
+
+
+@APP.route('/func/poc/task_add')
+@login_required
+def html_func_poc_task_add():
+    """添加POC任务页面"""
+    return render_template('poc_task_add.html')
+
+
 @APP.route('/func/poc')
 @login_required
 def html_func_poc():

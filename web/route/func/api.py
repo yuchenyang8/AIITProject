@@ -1126,6 +1126,7 @@ class PocAPI(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("filename", type=str, location='json')
+        self.parser.add_argument("u", type=str)
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
@@ -1136,6 +1137,7 @@ class PocAPI(Resource):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
+        u = args.u
         key_page = args.page
         key_limit = args.limit
         key_searchparams = args.searchParams
@@ -1146,10 +1148,17 @@ class PocAPI(Resource):
             jsondata.update({'data': []})
             return jsondata
         poc_info_list = []
+        value = 1
+        poc_transfer_list = []
         for poc in poc_list:
             poc_info = self.p.get_poc_info(poc_name=poc)
             poc_info_list.append(poc_info)
+            poc_transfer_list.append({'value': value, 'title': poc})
+            value += 1
 
+        if u == 'uy':
+            jsondata.update({'data': poc_transfer_list})
+            return jsondata
         if not key_searchparams:  # 若没有查询参数
             if not key_page or not key_limit:  # 判断是否有分页查询参数
                 paginate = poc_info_list[:20]
@@ -1206,4 +1215,3 @@ class PocAPI(Resource):
             return {'code': 200, 'msg': '上传成功！'}
         else:
             return {'code': 500, 'msg': '上传失败！'}
-
