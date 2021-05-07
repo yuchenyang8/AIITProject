@@ -1,9 +1,11 @@
 import datetime
+import os
 import re
 
 import bson
-from flask import session, json, redirect, url_for
+from flask import session, json, redirect, url_for, request
 from flask_restful import reqparse, Resource
+from werkzeug.utils import secure_filename
 
 from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappExt, NessusExt, HydraExt, PocExt
 from web import DB
@@ -959,9 +961,9 @@ class FuncVulnAPI(Resource):
         searchdict = {'vasset': vuln_asset, 'vtype': vuln_type}
         asset_query = DB.db.vuln.find_one(searchdict)
         if not asset_query:  # 删除的资产不存在
-            return {'status_code': 500, 'msg': '删除资产失败，此资产不存在'}
+            return {'status_code': 500, 'msg': '删除漏洞失败，此漏洞不存在'}
         DB.db.vuln.delete_one(searchdict)
-        return {'status_code': 200, 'msg': '删除资产成功'}
+        return {'status_code': 200, 'msg': '删除漏洞成功'}
 
 
 class ChartAPI(Resource):
@@ -1123,9 +1125,12 @@ class PocAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
+        self.parser.add_argument("filename", type=str, location='json')
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
+        self.p = PocExt()
+        self.poc_file_path = r'D:\VENV\py3flask\Lib\site-packages\pocsuite3\pocs'
 
     def get(self):
         if not session.get('status'):
@@ -1134,8 +1139,7 @@ class PocAPI(Resource):
         key_page = args.page
         key_limit = args.limit
         key_searchparams = args.searchParams
-        p = PocExt()
-        poc_list = p.get_poc_list()
+        poc_list = self.p.get_poc_list()
         count = len(poc_list)
         jsondata = {'code': 0, 'msg': '', 'count': count}
         if count == 0:  # 若没有数据返回空列表
@@ -1143,7 +1147,7 @@ class PocAPI(Resource):
             return jsondata
         poc_info_list = []
         for poc in poc_list:
-            poc_info = p.get_poc_info(poc_name=poc)
+            poc_info = self.p.get_poc_info(poc_name=poc)
             poc_info_list.append(poc_info)
 
         if not key_searchparams:  # 若没有查询参数
@@ -1155,14 +1159,14 @@ class PocAPI(Resource):
             try:
                 search_dict = json.loads(key_searchparams)  # 解析查询参数
             except:
-                paginate = DB.db.company.find().limit(20).skip(0)
+                paginate = poc_info_list[:20]
             else:
-                if 'company_name' not in search_dict:  # 查询参数有误
-                    paginate = DB.db.company.find().limit(20).skip(0)
+                if 'poc_name' not in search_dict:  # 查询参数有误
+                    paginate = poc_info_list[:20]
                 else:
-                    paginate1 = DB.db.company.find({'ename': re.compile(search_dict['company_name'])})
-                    paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
-                    jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
+                    paginate1 = [x for i, x in enumerate(poc_info_list) if search_dict['poc_name'] in x['name']]
+                    paginate = paginate1[(key_page - 1) * key_limit:key_page * key_limit]
+                    jsondata = {'code': 0, 'msg': '', 'count': len(paginate1)}
         data = []
         if paginate:
             index = (key_page - 1) * key_limit + 1
@@ -1174,11 +1178,11 @@ class PocAPI(Resource):
                     'appName': i['appName'],
                     'appVersion': version,
                     'vulType': i['vulType'],
+                    'filename': i['filename'],
                 }
                 data.append(data1)
                 index += 1
             jsondata.update({'data': data})
-            print(jsondata)
             return jsondata
         else:
             jsondata = {'code': 0, 'msg': '', 'count': 0}
@@ -1186,4 +1190,20 @@ class PocAPI(Resource):
             return jsondata
 
     def delete(self):
-        pass
+        args = self.parser.parse_args()
+        if args.filename.split('.')[0] not in self.p.get_poc_list():
+            return {'status_code': 500, 'msg': '删除POC失败，此POC不存在'}
+        filename = self.poc_file_path + '\\' + args.filename
+        cmd = r'del {}'.format(filename)
+        os.system(cmd)
+        return {'status_code': 200, 'msg': '删除POC成功'}
+
+    def post(self):
+        file_data = request.files['file']
+        path = self.poc_file_path
+        if file_data:
+            file_data.save(path + '\\' + secure_filename(file_data.filename))
+            return {'code': 200, 'msg': '上传成功！'}
+        else:
+            return {'code': 500, 'msg': '上传失败！'}
+

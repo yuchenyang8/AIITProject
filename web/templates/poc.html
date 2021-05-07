@@ -32,17 +32,16 @@
 
         <script type="text/html" id="toolbarDemo">
             <div class="layui-btn-container">
-                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 上传POC</button>
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" id="poc-upload"> 上传POC</button>
+                <button class="layui-btn layui-btn-primary layui-border-blue layui-btn-sm"><a
+                        href="https://github.com/knownsec/pocsuite3/blob/master/docs/CODING.md"
+                        target="_blank" style="color: lightskyblue">POC撰写规范</a></button>
             </div>
         </script>
 
         <table class="layui-hide" id="currentTable_task" lay-filter="currentTableFilter"></table>
 
         <script type="text/html" id="currentTableBar">
-            {% raw %}
-            <a class="layui-btn layui-btn-xs layui-btn data-count-start" lay-event="info"
-               href="/func/vulns/host/{{ d.objid }}">详情</a>
-            {% endraw %}
             <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
         </script>
 
@@ -50,8 +49,9 @@
 </div>
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
 <script>
-    layui.use(['form', 'table'], function () {
+    layui.use(['form', 'table', 'upload'], function () {
         var $ = layui.jquery,
+            upload = layui.upload,
             form = layui.form,
             table = layui.table;
 
@@ -66,6 +66,7 @@
             }],
             cols: [[
                 {field: 'id', width: 80, align: "center", title: 'ID', sort: true},
+                {field: 'filename', hide: true},
                 {field: 'name', width: 600, title: 'POC名称', align: "left", sort: true},
                 {field: 'appName', title: '影响组件', templet: "#app_tpl", align: "center", sort: true},
                 {field: 'appVersion', width: 300, title: '组件版本', align: "center"},
@@ -94,38 +95,39 @@
             return false;
         });
 
-        /**
-         * toolbar监听事件
-         */
-        table.on('toolbar(currentTableFilter)', function (obj) {
-            if (obj.event === 'add') {  // 监听添加操作
-                var index = layer.open({
-                    title: '添加漏洞',
-                    type: 2,
-                    shade: 0.2,
-                    maxmin: true,
-                    shadeClose: true,
-                    area: ['100%', '100%'],
-                    content: "{{ url_for('html_func_task_add') }}",
-                });
-                $(window).on("resize", function () {
-                    layer.full(index);
-                });
-            }
+        //执行实例
+        var uploadInst = upload.render({
+            elem: '#poc-upload', //绑定元素
+            url: "{{ url_for('api_func_poc') }}", //上传接口
+            accept: 'file',
+            exts: 'py',
+            multiple: true,
+            drag: true,
+            done: function (res) {
+                //上传完毕回调
+                if (res.code === 200) {
+                    layer.alert(res.msg, {title: '提示', icon: 1})
+                } else {
+                    layer.alert(res.msg, {title: '提示', icon: 2})
+                }
+            },
+            error: function () {
+                //请求异常回调
+            },
         });
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
             if (obj.event === 'delete') {
-                layer.confirm('确定删除该漏洞吗?', function (index) {
+                layer.confirm('确定删除该POC吗?', function (index) {
                     $.ajax({
-                        url: "{{ url_for('api_func_vulns') }}",
+                        url: "{{ url_for('api_func_poc') }}",
                         data: JSON.stringify(data),
                         contentType: 'application/json;charset=UTF-8',
                         dataType: 'json',
                         type: 'delete',
                         success: function (result) {
                             if (result.status_code === 200) {
-                                layer.alert('删除漏洞成功!', {title: '提示', icon: 1})
+                                layer.alert('删除POC成功!', {title: '提示', icon: 1})
                                 obj.del();
                                 layer.close(index);
                             } else {

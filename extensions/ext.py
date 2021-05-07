@@ -591,6 +591,7 @@ class PocExt(object):
         init_pocsuite(self.config)
         mod = load_file_to_module(poc_filename)
         result = mod.get_infos()
+        result.update({'filename': poc_name + '.py'})
         return result
 
     def verify(self, url, poc):
@@ -634,8 +635,5 @@ if __name__ == '__main__':
     # print(result)
     # p = PocExt()
     # p.get_poc_info('Confluence_CVE_2019_3396')
-
-
-
 
     pass
