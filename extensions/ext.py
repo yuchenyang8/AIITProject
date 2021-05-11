@@ -599,8 +599,17 @@ class PocExt(object):
         config.update({'url': url, 'poc': poc})
         init_pocsuite(config)
         start_pocsuite()
-        result = get_results()
-        return result
+        r = get_results()
+        results = []
+        for item in r:
+            result = ({
+                'status': item['status'],
+                'target': item['target'],
+                'poc_name': item['poc_name'],
+                'created': item['created'],
+            })
+            results.append(result)
+        return results
 
 
 if __name__ == '__main__':
@@ -616,8 +625,8 @@ if __name__ == '__main__':
     # history_id = n.launch(scan_id)
 
     # config = {
-    #     'url': {'127.0.0.1:8080/S2-045/', '127.0.0.1:8080/S2-046/'},
-    #     'poc': {'struts2_045_rce', 'struts2_046_rce'}
+    #     'url': ['127.0.0.1:8080/S2-045/', '127.0.0.1:8080/S2-046/'],
+    #     'poc': ['struts2_045_rce', 'struts2_046_rce']
     # }
     # config2 = {
     #     'url': {'127.0.0.1:8080/S2-046/'},
@@ -627,13 +636,16 @@ if __name__ == '__main__':
     # start_pocsuite()
     # result = get_results()
     # print(result)
-    # poc_filename = r'D:\VENV\py3flask\Lib\site-packages\pocsuite3\pocs\struts2_045_rce.py'
-    # mod = load_file_to_module(poc_filename)
-    # print(mod.get_infos())
-    # start_pocsuite()
-    # result = get_results()
-    # print(result)
+    # for r in result:
+    #     print('----------------------------------------')
+    #     print(r['result'])
+    #     print(r['status'])
+    #     print(r['target'])
+    #     print(r['poc_name'])
+    #     print(r['created'])
+    # url = ['127.0.0.1:8080/S2-046/', '127.0.0.1:8080/S2-045/']
+    # poc = ['struts2_005_rce', 'struts2_008_rce', 'struts2_009_rce', 'struts2_013_rce', 'struts2_015_rce', 'struts2_016_rce', 'struts2_029_rce', 'struts2_032_rce', 'struts2_045_rce', 'struts2_046_rce', 'struts2_048_rce', 'struts2_052_rce', 'struts2_057_rce', 'struts2_devMode_rce', 'tomcat-ajp-ghostcat_all_lfi']
     # p = PocExt()
-    # p.get_poc_info('Confluence_CVE_2019_3396')
-
+    # res = p.verify(url=url, poc=poc)
+    # print(res)
     pass

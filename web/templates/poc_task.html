@@ -11,26 +11,7 @@
 <div class="container-fluid">
     <div class="layuimini-container col-sm-9 col-md-10 main">
         <div class="layuimini-main">
-            <fieldset class="table-search-fieldset">
-                <legend>搜索信息</legend>
-                <div style="margin: 10px 10px 10px 10px">
-                    <form class="layui-form layui-form-pane" action="">
-                        <div class="layui-form-item">
-                            <div class="layui-inline">
-                                <label class="layui-form-label">厂商名</label>
-                                <div class="layui-input-inline">
-                                    <input type="text" name="company_name" autocomplete="off" class="layui-input">
-                                </div>
-                            </div>
-                            <div class="layui-inline">
-                                <button type="submit" class="layui-btn layui-btn-primary" lay-submit
-                                        lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </fieldset>
+
 
             <script type="text/html" id="toolbarDemo">
                 <div class="layui-btn-container">
@@ -42,6 +23,11 @@
             <table class="layui-hide" id="currentTable_customer" lay-filter="currentTableFilter"></table>
 
             <script type="text/html" id="currentTableBar">
+                <a class="layui-btn layui-btn-xs layui-btn-sm data-count-start" lay-event="start">开始</a>
+                {% raw %}
+                <a class="layui-btn layui-btn-xs layui-btn-warm data-count-start" lay-event="info"
+                   href="/func/poc/task/{{ d.objid }}">详情</a>
+                {% endraw %}
                 <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
             </script>
 
@@ -49,8 +35,6 @@
     </div>
 
 </div>
-</div>
-
 
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
 <script>
@@ -61,8 +45,9 @@
 
         table.render({
             elem: '#currentTable_customer',
-            url: "{{ url_for('api_func_company') }}",
+            url: "{{ url_for('api_func_poc_task') }}",
             toolbar: '#toolbarDemo',
+            size: 'lg',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
                 layEvent: 'LAYTABLE_TIPS',
@@ -70,17 +55,38 @@
             }],
             cols: [[
                 {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
-                {field: 'company_name', title: '厂商名', templet: '#company_tpl', align: "center"},
-                {field: 'company_people', title: '联系人', align: "center"},
-                {field: 'company_contact', title: '联系方式', align: "center"},
-                {#{field: 'company_asset', width: 130, title: '资产数'},#}
-                {#{field: 'company_time', width: 300, title: '添加时间'},#}
+                {field: 'objid', hide: true},
+                {field: 'task_name', title: '任务名', align: "center"},
+                {
+                    field: 'asset', title: '资产列表', unresize: true, templet: function (d) {
+                        let res = "";
+                        $.each(d.asset, function (index, item) {
+                            res += '<option value="">' + item + '</option>';
+                        });
+                        return '<select name="asset" lay-filter="testSelect" lay-verify="required" data-value="">\n' + res + '</select>';
+                    }, align: "center"
+                },
+                {
+                    field: 'poc', title: 'POC列表', unresize: true, templet: function (d) {
+                        let res = "";
+                        $.each(d.poc, function (index, item) {
+                            res += '<option value="">' + item + '</option>';
+                        });
+                        return '<select name="poc" lay-filter="testSelect" lay-verify="required" data-value="" >\n' + res + '</select>';
+                    }, align: "center"
+                },
+                {field: 'status', title: '任务状态', templet: '#poc_task_flag_tpl', align: "center"},
+                {field: 'time', title: '创建时间/完成时间', align: "center"},
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
             ]],
             limits: [10, 15, 20, 25, 50, 100],
             limit: 20,
             page: true,
-            skin: 'line'
+            skin: 'line',
+            done: function (res, curr, count) {
+                $(".layui-table-body, .layui-table-box, .layui-table-cell").css('overflow', 'visible');
+                form.render();
+            }
         });
 
         // 监听搜索操作
@@ -100,13 +106,10 @@
             return false;
         });
 
-        /**
-         * toolbar监听事件
-         */
         table.on('toolbar(currentTableFilter)', function (obj) {
             if (obj.event === 'add') {  // 监听添加操作
                 var index = layer.open({
-                    title: '添加厂商',
+                    title: '新建POC检测任务',
                     type: 2,
                     shade: 0.2,
                     maxmin: true,
@@ -119,19 +122,33 @@
                 });
             }
         });
+
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
+            if (obj.event === 'start') {
+                layer.confirm('确定开始该任务吗?', function (index) {
+                    layer.alert('POC检测开始!', {title: '提示', icon: 1})
+                    layer.close(index);
+                });
+                $.ajax({
+                    url: "{{ url_for('api_func_poc') }}",
+                    data: JSON.stringify(data),
+                    contentType: 'application/json;charset=UTF-8',
+                    dataType: 'json',
+                    type: 'post',
+                })
+            }
             if (obj.event === 'delete') {
                 layer.confirm('确定删除该任务吗?', function (index) {
                     $.ajax({
-                        url: "{{ url_for('api_func_company') }}",
+                        url: "{{ url_for('api_func_poc_task') }}",
                         data: JSON.stringify(data),
                         contentType: 'application/json;charset=UTF-8',
                         dataType: 'json',
                         type: 'delete',
                         success: function (result) {
                             if (result.status_code === 200) {
-                                layer.alert('删除厂商成功!', {title: '提示', icon: 1})
+                                layer.alert('删除任务成功!', {title: '提示', icon: 1})
                                 obj.del();
                                 layer.close(index);
                             } else {
@@ -148,9 +165,15 @@
 
     });
 </script>
-<script type="text/html" id="company_tpl">
+<script type="text/html" id="poc_task_flag_tpl">
     {% raw %}
-    <a href="/func/company/{{ d.company_name }}">{{ d.company_name }}</a>
+    {{# if(d.status === '未开始'){ }}
+    <span style="color: #334CFF;">{{ d.status }}</span>
+    {{#  } else if(d.status === '检测完成'){ }}
+    <span style="color: #15b664;">{{ d.status }}</span>
+    {{#  } else { }}
+    <span style="color: #ff3333;">{{ d.status }}</span>
+    {{#  } }}
     {% endraw %}
 </script>
 </body>

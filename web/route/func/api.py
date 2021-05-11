@@ -272,6 +272,7 @@ class FuncAssetAPI(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("asset_company", type=str, location='json')
+        self.parser.add_argument("u", type=str)
         self.parser.add_argument("name", type=str, location='json')
         self.parser.add_argument("type", type=str)
         self.parser.add_argument("page", type=int)
@@ -282,6 +283,7 @@ class FuncAssetAPI(Resource):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
+        u = args.u
         asset_type = args.type
         key_page = args.page
         key_limit = args.limit
@@ -294,6 +296,15 @@ class FuncAssetAPI(Resource):
         jsondata = {'code': 0, 'msg': '', 'count': count}
         if count == 0:  # 若没有数据返回空列表
             jsondata.update({'data': []})
+            return jsondata
+        asset_transfer_list = []
+        if u == 'uy':
+            assets = DB.db.asset.find()
+            c = 1
+            for asset in assets:
+                asset_transfer_list.append({'value': c, 'title': asset['aname']})
+                c += 1
+            jsondata.update({'data': asset_transfer_list})
             return jsondata
         if asset_type:
             if not key_page or not key_limit:  # 判断是否有分页查询参数
@@ -1079,22 +1090,36 @@ class PocTaskAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument("task_name", type=str, location='json')
+        self.parser.add_argument("poc_task_name", type=str, location='json')
+        self.parser.add_argument("poc_task_cycle", type=str, location='json')
+        self.parser.add_argument("input_asset", type=str, location='json')
+        self.parser.add_argument("objid", type=str, location='json')
         self.parser.add_argument("poc", type=str, location='json')
-        self.parser.add_argument("url", type=str, location='json')
+        self.parser.add_argument("asset", type=str, location='json')
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+        self.parser.add_argument("searchParams", type=str)
 
     def put(self):
         if not session.get('status'):
             return redirect(url_for('html_system_login'), 302)
         args = self.parser.parse_args()
-        task_name = args.task_name
-        url = args.url
-        poc = args.poc
+        input_asset = args.input_asset
+        task_name = args.poc_task_name
+        cycle = args.poc_task_cycle
+        asset = [a['title'] for a in eval(args.asset)]
+        if input_asset:
+            alist = list(set(input_asset.split()))
+            for a in alist:
+                asset.append(a)
+        poc = [p['title'] for p in eval(args.poc)]
         new_poc_task = {
             'task_name': task_name,
-            'url': url,
+            'cycle': cycle if cycle else '-',
+            'asset': asset,
             'poc': poc,
             'time': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'status': '未开始',
         }
         DB.db.poc.insert_one(new_poc_task)
         return {'status_code': 200, 'msg': '创建POC任务成功'}
@@ -1114,10 +1139,68 @@ class PocTaskAPI(Resource):
             DB.db.poc.insert_one(result_info)
 
     def get(self):
-        pass
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        key_page = args.page
+        key_limit = args.limit
+        # key_searchparams = args.searchParams
+        count = DB.db.poc.find().count()
+        jsondata = {'code': 0, 'msg': '', 'count': count}
+        if count == 0:  # 若没有数据返回空列表
+            jsondata.update({'data': []})
+            return jsondata
+        # if not key_searchparams:  # 若没有查询参数
+        if not key_page or not key_limit:  # 判断是否有分页查询参数
+            paginate = DB.db.poc.find().limit(20).skip(0)
+        else:
+            paginate = DB.db.poc.find().limit(key_limit).skip((key_page - 1) * key_limit)
+        # else:
+        #     try:
+        #         search_dict = json.loads(key_searchparams)  # 解析查询参数
+        #     except:
+        #         paginate = DB.db.poc.find().limit(20).skip(0)
+        #     else:
+        #         if 'company_name' not in search_dict:  # 查询参数有误
+        #             paginate = DB.db.poc.find().limit(20).skip(0)
+        #         else:
+        #             paginate1 = DB.db.poc.find({'ename': re.compile(search_dict['company_name'])})
+        #             paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
+        #             jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
+        data = []
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                data1 = {
+                    'id': index,
+                    'objid': str(i['_id']),
+                    'task_name': i['task_name'],
+                    'cycle': i['cycle'],
+                    'asset': i['asset'],
+                    'poc': i['poc'],
+                    'time': i['time'],
+                    'status': i['status'],
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
 
     def delete(self):
-        pass
+        if not session.get('status'):
+            return redirect(url_for('html_system_login'), 302)
+        args = self.parser.parse_args()
+        objid = bson.ObjectId(args.objid)
+        searchdict = {'_id': objid}
+        poctask_query = DB.db.poc.find_one(searchdict)
+        if not poctask_query:
+            return {'status_code': 500, 'msg': '删除失败，不存在'}
+        DB.db.poc.delete_one(searchdict)
+        return {'status_code': 200, 'msg': '删除成功'}
 
 
 class PocAPI(Resource):
@@ -1126,6 +1209,9 @@ class PocAPI(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("filename", type=str, location='json')
+        self.parser.add_argument("poc", type=list, location='json')
+        self.parser.add_argument("asset", type=list, location='json')
+        self.parser.add_argument("objid", type=str, location='json')
         self.parser.add_argument("u", type=str)
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
@@ -1208,10 +1294,35 @@ class PocAPI(Resource):
         return {'status_code': 200, 'msg': '删除POC成功'}
 
     def post(self):
-        file_data = request.files['file']
-        path = self.poc_file_path
-        if file_data:
-            file_data.save(path + '\\' + secure_filename(file_data.filename))
-            return {'code': 200, 'msg': '上传成功！'}
-        else:
-            return {'code': 500, 'msg': '上传失败！'}
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        objid = bson.ObjectId(args.objid)
+        poc = args.poc
+        url = args.asset
+        try:
+            file_data = request.files['file']
+            path = self.poc_file_path
+            if file_data:
+                file_data.save(path + '\\' + secure_filename(file_data.filename))
+                return {'code': 200, 'msg': '上传成功！'}
+            else:
+                return {'code': 500, 'msg': '上传失败！'}
+        except:
+            p = PocExt()
+            DB.db.poc.update_one({'_id': objid}, {'$set': {'status': '检测中'}})
+            res = p.verify(url=url, poc=poc)
+            DB.db.poc.update_one({'_id': objid}, {'$set': {'result': res, 'status': '检测完成',
+                                                           'time': datetime.datetime.now().strftime(
+                                                               "%Y-%m-%d %H:%M:%S")}})
+            web = ['Struts2-015远程代码执行', 'Struts2-045远程代码执行', 'Struts2-046远程代码执行']
+            for r in res:
+                if r['status'] == 'success':
+                    DB.db.vuln.insert_one({
+                        'vasset': r['target'].split('/')[0],
+                        'vdate': r['created'],
+                        'vstatus': '未修复',
+                        'vtype': r['poc_name'],
+                        'type': 'WEB' if r['poc_name'] in web else '主机',
+                        'ename': '-',
+                    })

@@ -69,6 +69,18 @@ def html_func_poc():
     return render_template('poc.html')
 
 
+@APP.route('/func/poc/task/<string:objid>')
+@login_required
+def html_func_poc_task_detail(objid):
+    """主机漏洞详情页面"""
+    objid = bson.ObjectId(objid)
+    try:
+        results = DB.db.poc.find_one({'_id': objid})['result']
+        return render_template('poc_task_detail.html', results=results)
+    except:
+        return render_template('poc_task_detail.html', results=None)
+
+
 @APP.route('/func/vulns/<string:vuln_type>')
 @login_required
 def html_func_vulns(vuln_type):

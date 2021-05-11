@@ -14,101 +14,143 @@
 <body>
 <div class="layui-form layuimini-form">
     <div class="layui-form-item">
-        <label class="layui-form-label required">厂商名</label>
+        <label class="layui-form-label required">任务名称</label>
         <div class="layui-input-block">
-            <input type="text" name="company_name" lay-verify="required" lay-reqtext="厂商名不能为空" placeholder="请输入厂商名"
-                   class="layui-input">
-            <tip>添加重复厂商名会失败</tip>
-        </div>
-    </div>
-    <div class="layui-form-item">
-        <label class="layui-form-label required">联系人</label>
-        <div class="layui-input-block">
-            <input type="text" name="company_people" lay-verify="required" lay-reqtext="联系人不能为空" placeholder="请输入联系人"
+            <input type="text" name="poc_task_name" lay-verify="required" lay-reqtext="任务名不能为空" placeholder="请输入任务名"
                    class="layui-input">
         </div>
     </div>
     <div class="layui-form-item">
-        <label class="layui-form-label required">联系方式</label>
+        <label class="layui-form-label required">扫描周期</label>
         <div class="layui-input-block">
-            <input type="text" name="company_contact" lay-verify="required" lay-reqtext="联系方式不能为空" placeholder="请输入联系方式"
-                   class="layui-input">
+            <select name="poc_task_cycle">
+                <option value="">选择周期</option>
+                <option value=1>仅扫描一次</option>
+                <option value=2>一天一次</option>
+                <option value=3>一周一次</option>
+                <option value=4>两周一次</option>
+                <option value=5>一月一次</option>
+            </select>
         </div>
     </div>
     <div class="layui-form-item">
-        <div id="poc-list" class="demo-transfer" align="center"></div>
+        <label class="layui-form-label">输入资产</label>
+        <div class="layui-input-block">
+            <textarea rows="4" class="layui-textarea" name="input_asset"></textarea>
+            <tip>输入格式：</tip>
+            <br/>
+            <tip>xxx.example.com/xxx 某个域名</tip>
+            <br/>
+            <tip>8.8.8.8  某个IP</tip>
+        </div>
     </div>
-    <div class="layui-form-item" >
-        <div class="layui-input-block" align="center">
-            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="user_customer">确认添加</button>
+    <div class="layui-form-item">
+        <label class="layui-form-label">选择现有资产</label>
+        <div id="asset-list" class="asset-transfer"></div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">选择POC</label>
+        <div id="poc-list" class="poc-transfer"></div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block" align="left">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="poc_task">确认添加</button>
         </div>
     </div>
 </div>
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
 <script src="{{ url_for('static', filename='lib/jquery-3.4.1/jquery-3.4.1.min.js') }}" charset="utf-8"></script>
 <script>
-window.onload = function () {
-    $.ajax({
-        url: "{{ url_for('api_func_poc', u='uy') }}",
-        dataType: 'json',
-        type: 'get',
-        success: function (result) {
-            var tdata = result.data;
-            layui.use(['form', 'transfer', 'layer', 'util'], function () {
-                var form = layui.form,
-                    layer = layui.layer,
-                    transfer = layui.transfer,
-                    $ = layui.$;
+    function getPoc() {
+        var poclist;
+        $.ajax({
+            url: "{{ url_for('api_func_poc', u='uy') }}",
+            dataType: 'json',
+            type: 'get',
+            async: false,
+            success: function (res) {
+                poclist = res.data;
+            }
+        });
+        return poclist;
+    }
 
-                //实例调用
-                transfer.render({
-                    elem: '#poc-list',
-                    data: tdata,
-                    id: 'poc-selected', //定义唯一索引
-                    width: 500,
-                    height: 340,
-                    showSearch: true,
-                    title: ['待选POC列表', '已选POC']
-                })
+    function getAsset() {
+        var assetlist;
+        $.ajax({
+            url: "{{ url_for('api_func_asset', u='uy') }}",
+            dataType: 'json',
+            type: 'get',
+            async: false,
+            success: function (res) {
+                assetlist = res.data;
+            }
+        });
+        return assetlist;
+    }
 
-                //监听提交
-                form.on('submit(user_customer)', function (data) {
-                    let pocData = transfer.getData('poc-selected');
-                    data.field['poc'] = pocData
-                    $.ajax({
-                        url: "{{ url_for('api_func_company') }}",
-                        data: JSON.stringify(data.field),
-                        contentType: 'application/json;charset=UTF-8',
-                        dataType: 'json',
-                        type: 'put',
-                        success: function (result) {
-                            if (result.status_code === 200) {
-                                var index = layer.alert('新增厂商成功!', {
-                                    title: '提示',
-                                    icon: 1
-                                }, function () {
-                                    parent.layui.table.reload("currentTable_customer");
-                                    layer.close(index);
-                                    var iframeIndex = parent.layer.getFrameIndex(window.name);
-                                    parent.layer.close(iframeIndex);
-                                })
-                            } else {
-                                layer.alert(result.msg, {
-                                    title: '提示',
-                                    icon: 2
-                                })
-                            }
-                        },
-                        error: function (e) {
-                            layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
-                        }
-                    })
-                    return false;
-                });
-            });
-        }
-    })
-}
+    layui.use(['form', 'transfer', 'layer', 'util'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            transfer = layui.transfer,
+            $ = layui.$;
+
+        transfer.render({
+            elem: '#asset-list',
+            data: getAsset(),
+            id: 'asset-selected', //定义唯一索引
+            width: 500,
+            height: 340,
+            showSearch: true,
+            title: ['待选资产列表', '已选资产']
+        });
+
+        transfer.render({
+            elem: '#poc-list',
+            data: getPoc(),
+            id: 'poc-selected', //定义唯一索引
+            width: 500,
+            height: 340,
+            showSearch: true,
+            title: ['待选POC列表', '已选POC']
+        });
+
+        //监听提交
+        form.on('submit(poc_task)', function (data) {
+            data.field['poc'] = transfer.getData('poc-selected');
+            data.field['asset'] = transfer.getData('asset-selected');
+            $.ajax({
+                url: "{{ url_for('api_func_poc_task') }}",
+                data: JSON.stringify(data.field),
+                contentType: 'application/json;charset=UTF-8',
+                dataType: 'json',
+                type: 'put',
+                success: function (result) {
+                    if (result.status_code === 200) {
+                        var index = layer.alert('新增任务成功!', {
+                            title: '提示',
+                            icon: 1
+                        }, function () {
+                            parent.layui.table.reload("currentTable_customer");
+                            layer.close(index);
+                            var iframeIndex = parent.layer.getFrameIndex(window.name);
+                            parent.layer.close(iframeIndex);
+                        })
+                    } else {
+                        layer.alert(result.msg, {
+                            title: '提示',
+                            icon: 2
+                        })
+                    }
+                },
+                error: function (e) {
+                    layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
+                }
+            })
+            return false;
+        });
+    });
+
 
 </script>
 </body>
