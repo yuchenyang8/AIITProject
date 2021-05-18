@@ -60,7 +60,8 @@ class NmapExt(object):
         hosts = self.hosts
         ports = self.ports
         arguments = '-Pn -T4 -sV --version-all'
-        nm.scan(hosts=hosts, ports=ports, arguments=arguments)
+        # nm.scan(hosts=hosts, ports=ports, arguments=arguments)
+        nm.scan(hosts=hosts, arguments=arguments)
         # {'nmap': {'command_line': 'nmap -oX - -p 1-65535 -Pn -T4 -sV --version-all --min-parallelism 1024 aiit.org.cn', 'scaninfo': {'error': ["Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.\r\nWarning: Your --min-parallelism option is pretty high!  This can hurt reliability.\r\n"], 'warning': ['Warning: Your --min-parallelism option is pretty high!  This can hurt reliability.\r\n'], 'tcp': {'method': 'syn', 'services': '1-65535'}}, 'scanstats': {'timestr': 'Tue Mar 02 17:02:39 2021', 'elapsed': '196.52', 'uphosts': '1', 'downhosts': '0', 'totalhosts': '1'}}, 'scan': {'47.98.147.82': {'hostnames': [{'name': 'aiit.org.cn', 'type': 'user'}], 'addresses': {'ipv4': '47.98.147.82'}, 'vendor': {}, 'status': {'state': 'up', 'reason': 'user-set'}, 'tcp': {22: {'state': 'open', 'reason': 'syn-ack', 'name': 'ssh', 'product': 'OpenSSH', 'version': '6.6.1', 'extrainfo': 'protocol 2.0', 'conf': '10', 'cpe': 'cpe:/a:openbsd:openssh:6.6.1'}, 80: {'state': 'open', 'reason': 'syn-ack', 'name': 'http', 'product': 'nginx', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/a:igor_sysoev:nginx'}, 3389: {'state': 'closed', 'reason': 'reset', 'name': 'ms-wbt-server', 'product': '', 'version': '', 'extrainfo': '', 'conf': '3', 'cpe': ''}}}}}
         #
         # nm.scan(hosts=hosts, ports=ports, arguments='-sF -T4')
@@ -472,7 +473,7 @@ class NessusExt(object):
     def create(self, name, targets, enabled=False, uuid=''):
         """添加一个新的扫描任务"""
         if uuid == '':
-            uuid = self.__get_policies()['Advanced Scan']
+            uuid = self.__get_policies['Advanced Scan']
         scan = {'uuid': uuid,
                 'settings': {
                     'name': name,  # 任务名称
@@ -612,40 +613,57 @@ class PocExt(object):
         return results
 
 
-if __name__ == '__main__':
-    # kill_process('xray.exe')
-    # r = HydraExt().crack('192.168.31.19''ssh')
-    # print(r)
-    # XrayExt().scan_one(url='testphp.vulnweb.com')
-    # n = NessusExt()
-    # n.get_plugin_output(64, 2, 58327)
-    # info = n.get_severitycount(52, 53)
-    # print(info)
-    # scan_id = n.create(name='192.168.31.19', targets='192.168.31.19')
-    # history_id = n.launch(scan_id)
+class MobExt(object):
+    """MobSF插件类"""
 
-    # config = {
-    #     'url': ['127.0.0.1:8080/S2-045/', '127.0.0.1:8080/S2-046/'],
-    #     'poc': ['struts2_045_rce', 'struts2_046_rce']
-    # }
-    # config2 = {
-    #     'url': {'127.0.0.1:8080/S2-046/'},
-    #     'poc': {'struts2_045_rce'}
-    # }
-    # init_pocsuite(config)
-    # start_pocsuite()
-    # result = get_results()
-    # print(result)
-    # for r in result:
-    #     print('----------------------------------------')
-    #     print(r['result'])
-    #     print(r['status'])
-    #     print(r['target'])
-    #     print(r['poc_name'])
-    #     print(r['created'])
-    # url = ['127.0.0.1:8080/S2-046/', '127.0.0.1:8080/S2-045/']
-    # poc = ['struts2_005_rce', 'struts2_008_rce', 'struts2_009_rce', 'struts2_013_rce', 'struts2_015_rce', 'struts2_016_rce', 'struts2_029_rce', 'struts2_032_rce', 'struts2_045_rce', 'struts2_046_rce', 'struts2_048_rce', 'struts2_052_rce', 'struts2_057_rce', 'struts2_devMode_rce', 'tomcat-ajp-ghostcat_all_lfi']
-    # p = PocExt()
-    # res = p.verify(url=url, poc=poc)
-    # print(res)
+    def __init__(self):
+        self.url = 'http://localhost:8000'
+        self.folder = 'D:\\UY\\AIITProject\\upload\\app\\'
+        self.apikey = '28269168b546b23b445a60e754eb2ebf4988c1009b5b34a8a86b71fa649837a1'
+
+    def __build_url(self, resource):
+        """拼接url"""
+
+        return '{0}{1}'.format(self.url, resource)
+
+    def upload(self, file_name):
+        """文件上传"""
+        res = subprocess.check_output(
+            'curl -F "file=@{file}" {url} -H "Authorization:{apikey}"'.format(
+                file=self.folder + file_name,
+                url=self.__build_url('/api/v1/upload'),
+                apikey=self.apikey),
+            shell=True
+        )
+        return json.loads(res)['hash']
+
+    # {'analyzer': 'static_analyzer', 'status': 'success', 'hash': '6d033ac8e28a3e383f348bda59b65c23', 'scan_type': 'apk', 'file_name': 'Cool.apk'}
+
+    def get_result(self, file_hash):
+        """获取扫描的JSON结果"""
+        res = subprocess.check_output(
+            'curl -X POST --url {url} --data "hash={file_hash}" -H "Authorization:{apikey}"'.format(
+                url=self.__build_url('/api/v1/report_json'),
+                file_hash=file_hash,
+                apikey=self.apikey),
+            shell=True
+        )
+        r = json.loads(res)
+        if 'report' in r.keys():
+            return False
+        else:
+            return {
+                'app_name': r['app_name'],
+                'package_name': r['package_name'],
+                'android_version': r['version_name'],
+                'average_cvss': r['average_cvss'],
+            }
+
+
+if __name__ == '__main__':
+    # m = MobExt()
+    # # m.upload("D:\\UY\\AppInfoScanner\\Cool.apk")
+    # r = m.get_result('6d033ac8e28a3e383f348bda59b65c23')
+    # print(r)
+    # print(r.keys())
     pass

@@ -262,10 +262,11 @@
             elem: '#HostTableId',
             url: "{{ url_for('api_func_asset_host', ename=company['ename']) }}",
             skin: 'nob',
+            height: 269,
             cols: [[
-                {field: 'name', title: 'IP', templet: '#asset_tpl'},
-                {field: 'netbios-name', title: 'Name'},
-                {field: 'os', title: 'OS', minWidth: 300}
+                {field: 'name', align: 'center', title: 'IP', templet: '#asset_tpl'},
+                {field: 'netbios-name', align: 'center', title: 'Name'},
+                {field: 'os', align: 'center', title: 'OS', minWidth: 300}
             ]],
             page: {
                 limit: 5,
@@ -277,10 +278,11 @@
             elem: '#WebTableId',
             url: "{{ url_for('api_func_asset_web', ename=company['ename']) }}", //数据接口
             skin: 'nob',
+            height: 269,
             cols: [[
-                {field: 'name', title: 'DOMAIN', templet: '#asset_tpl'},
-                {field: 'ip', title: 'IP'},
-                {field: 'title', title: 'Title'},
+                {field: 'name', align: 'center', title: 'DOMAIN', templet: '#asset_tpl'},
+                {field: 'ip', align: 'center', title: 'IP'},
+                {field: 'title', align: 'center', title: 'Title'},
             ]],
             page: {
                 limit: 5,
@@ -292,8 +294,12 @@
             elem: '#AppTableId',
             url: "{{ url_for('api_func_asset_app', ename=company['ename']) }}", //数据接口
             skin: 'nob',
+            height: 269,
             cols: [[
-                {field: 'name', align: 'center', title: 'Name', minWidth: 793}
+                {field: 'name', align: 'center', title: 'Name'},
+                {field: 'package_name', align: 'center', title: 'Package Name'},
+                {field: 'android_version', align: 'center', title: 'Android Version'},
+                {field: 'average_cvss', align: 'center', title: 'CVSS'},
             ]],
             page: {
                 limit: 5,
@@ -305,6 +311,7 @@
             elem: '#FirmwareTableId',
             url: "{{ url_for('api_func_asset_firm', ename=company['ename']) }}",
             skin: 'nob',
+            height: 269,
             cols: [[
                 {field: 'name', align: 'center', title: 'Name', minWidth: 793}
             ]],

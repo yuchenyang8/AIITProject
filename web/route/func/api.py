@@ -1,13 +1,14 @@
 import datetime
 import os
 import re
+import time
 
 import bson
 from flask import session, json, redirect, url_for, request
 from flask_restful import reqparse, Resource
 from werkzeug.utils import secure_filename
 
-from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappExt, NessusExt, HydraExt, PocExt
+from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappExt, NessusExt, HydraExt, PocExt, MobExt
 from web import DB
 from web.utils.auxiliary import get_title
 
@@ -159,9 +160,11 @@ class FuncTaskAPI(Resource):
         self.parser.add_argument("task_type", type=str, location='json')
         self.parser.add_argument("task_cycle", type=int, location='json')
         self.parser.add_argument("task_message", type=str, location='json')
+        self.parser.add_argument("file_name", type=str, location='json')
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
+        self.path = os.getcwd() + '\\upload\\app\\'
 
     def put(self):
         """添加任务"""
@@ -173,6 +176,7 @@ class FuncTaskAPI(Resource):
         task_type = args.task_type
         task_cycle = args.task_cycle
         task_message = args.task_message
+        file_name = args.file_name
         company_query = DB.db.company.find_one({'ename': task_company})
         if not company_query:
             return {'status_code': 201, 'msg': f'不存在[{task_company}]厂商名，请检查'}
@@ -182,18 +186,23 @@ class FuncTaskAPI(Resource):
 
         if task_type == 'WEB' or task_type == '主机':  # WEB任务/主机任务
             message_list = list(set(task_message.split()))  # 过滤重复内容
-            new_task = {
-                'tname': task_name,
-                'type': task_type,
-                'infocycle': task_cycle,
-                'ename': ename,
-                'tstatus': '未开始',
-                'uname': uname,
-                'tinfo': message_list,
-                'tdate': datetime.datetime.now(),
-            }
+        else:
+            message_list = list(set(file_name.split()))
+        new_task = {
+            'tname': task_name,
+            'type': task_type,
+            'infocycle': task_cycle,
+            'ename': ename,
+            'tstatus': '未开始',
+            'uname': uname,
+            'tinfo': message_list,
+            'tdate': datetime.datetime.now(),
+        }
+        try:
             DB.db.task.insert_one(new_task)
             task_success = True
+        except:
+            pass
         if task_success:
             return {'status_code': 200, 'msg': '添加任务成功'}
         else:
@@ -250,6 +259,20 @@ class FuncTaskAPI(Resource):
             jsondata = {'code': 0, 'msg': '', 'count': 0}
             jsondata.update({'data': []})
             return jsondata
+
+    def post(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        # args = self.parser.parse_args()
+        try:
+            file_data = request.files['file']
+            if file_data:
+                file_data.save(self.path + secure_filename(file_data.filename))
+                return {'code': 200, 'msg': '上传成功！'}
+            else:
+                return {'code': 500, 'msg': '上传失败！'}
+        except:
+            pass
 
     def delete(self):
         if not session.get('status'):
@@ -368,6 +391,10 @@ class FuncAssetAPI(Resource):
                     data1.update({
                         'title': i['title'],
                         'ip': i['ip'],
+                    })
+                elif i['type'] == 'APP':
+                    data1.update({
+                        'hash': i['hash'],
                     })
                 data.append(data1)
                 index += 1
@@ -526,7 +553,10 @@ class FuncAppInfoAPI(Resource):
             for i in paginate:
                 data1 = {
                     'id': index,
-                    'name': i['name'],
+                    'name': i['app_name'],
+                    'package_name': i['package_name'],
+                    'android_version': i['android_version'],
+                    'average_cvss': i['average_cvss'],
                 }
                 data.append(data1)
                 index += 1
@@ -616,11 +646,11 @@ class InfoAPI(Resource):
                     if not DB.db.asset.find_one({'aname': host}):
                         self.create_asset(aname=host, asset_type='主机', ename=task_company, objid=task_objid,
                                           taskid=task_objid)
-                        DB.db.asset.update_one({'aname': host}, {'$set': {'infostatus': '探测中(端口扫描)'}})
-                        portsinfo = NmapExt(hosts=host, ports=ports).port_scan()
-                        DB.db.asset.update_one({'aname': host},
-                                               {'$set': {'ports': portsinfo, 'infostatus': '探测完成',
-                                                         'vulnstatus': '未扫描'}})
+                    DB.db.asset.update_one({'aname': host}, {'$set': {'infostatus': '探测中(端口扫描)'}})
+                    portsinfo = NmapExt(hosts=host, ports=ports).port_scan()
+                    DB.db.asset.update_one({'aname': host},
+                                           {'$set': {'ports': portsinfo, 'infostatus': '探测完成',
+                                                     'vulnstatus': '未扫描'}})
             # 更新任务状态
             DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '已完成'}})
         elif task_type == 'WEB':
@@ -669,9 +699,30 @@ class InfoAPI(Resource):
                                                      'vulnstatus': '未扫描'}})
                 # 更新任务状态
                 DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '已完成'}})
+        elif task_type == 'APP':
+            for app in task_info:
+                if not DB.db.asset.find_one({'aname': app}):
+                    self.create_asset(aname=app, asset_type='APP', ename=task_company, objid=task_objid,
+                                      taskid=task_objid)
+                DB.db.asset.update_one({'aname': app}, {'$set': {'infostatus': '探测中'}})
+                m = MobExt()
+                app_hash = m.upload(app)
+                res = m.get_result(file_hash=app_hash)
+                while True:
+                    if not res:
+                        time.sleep(60)
+                        res = m.get_result(file_hash=app_hash)
+                    else:
+                        break
+                for item in res:
+                    DB.db.asset.update_one({'aname': app}, {'$set': {item: res[item]}})
+                DB.db.asset.update_one({'aname': app},
+                                       {'$set': {'hash': app_hash, 'infostatus': '探测完成', 'vulnstatus': '未扫描'}})
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '已完成'}})
         return {'status_code': 200}
 
-    def create_asset(self, aname, asset_type, ename, objid, taskid):
+    @staticmethod
+    def create_asset(aname, asset_type, ename, objid, taskid):
         new_asset = {
             'aname': aname,
             'type': asset_type,

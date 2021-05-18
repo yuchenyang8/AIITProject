@@ -33,7 +33,7 @@
     <div class="layui-form-item">
         <label class="layui-form-label required">所属类型</label>
         <div class="layui-input-block">
-            <select name="task_type" lay-verify="required" lay-search>
+            <select name="task_type" lay-verify="required" lay-filter="task_type">
                 <option value="">选择类型</option>
                 <option value="WEB">WEB</option>
                 <option value="主机">主机</option>
@@ -45,7 +45,7 @@
     <div class="layui-form-item">
         <label class="layui-form-label required">循环周期</label>
         <div class="layui-input-block">
-            <select name="task_cycle" lay-verify="required" lay-search>
+            <select name="task_cycle" lay-verify="required">
                 <option value="">选择周期</option>
                 <option value=1>仅扫描一次</option>
                 <option value=2>一天一次</option>
@@ -55,19 +55,38 @@
             </select>
         </div>
     </div>
-    <div class="layui-form-item">
+    <div id="task-info" class="layui-form-item" style="display: none">
         <label class="layui-form-label required">任务信息</label>
         <div class="layui-input-block">
-            <textarea rows="8" required lay-verify="required" class="layui-textarea" name="task_message"></textarea>
+            <textarea rows="8" required lay-verify="required" id="task-message" class="layui-textarea" name="task_message"></textarea>
             <tip>输入格式：</tip>
             <br/>
             <tip>xxx.example.com 直接给出子域名</tip>
             <br/>
-            <tip>8.8.8.8  扫描某个IP</tip>
+            <tip>8.8.8.8 扫描某个IP</tip>
             <br/>
             <tip>8.8.8.0/24 扫描C段</tip>
         </div>
     </div>
+    <div id="task-upload" class="layui-form-item" style="display: none">
+        <label class="layui-form-label required">文件列表</label>
+        <div class="layui-input-block">
+            <textarea rows="1" required lay-verify="required" id="file-name" class="layui-textarea" name="file_name" readonly="readonly"></textarea>
+        </div>
+        <div class="layui-input-block">
+            <tip>支持*.xapk, *.apk, *.zip, *.ipa, *.appx文件</tip>
+            <br/>
+            <tip>请确保您选择的文件已上传</tip>
+            <br/>
+            <tip>&nbsp;</tip>
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-primary layui-border-black layui-btn-sm data-add-btn" id="file-select">选择</button>
+                <button class="layui-btn layui-btn-primary layui-border-black layui-btn-sm data-add-btn" id="app-upload">上传</button>
+            </div>
+
+        </div>
+    </div>
+
     <div class="layui-form-item">
         <div class="layui-input-block">
             <button class="layui-btn layui-btn-normal" lay-submit lay-filter="taskadd">确认添加</button>
@@ -76,11 +95,27 @@
 </div>
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
 <script>
-    layui.use(['form'], function () {
+    layui.use(['form', 'upload'], function () {
         var form = layui.form,
             layer = layui.layer,
+            upload = layui.upload,
             $ = layui.$;
+        form.on('select(task_type)', function (data) {
+            if (data.value === 'WEB' || data.value === '主机') {
+                $("#task-upload").attr("style", "display:none;");
+                $("#file-name").removeAttr("lay-verify", "required");
+                $("#task-info").attr("style", "display:block;");
+                $("#task-message").attr("lay-verify", "required");
+                $("#task-message").attr("required");
+            } else {
+                $("#task-upload").attr("style", "display:block;");
+                $("#file-name").attr("lay-verify", "required");
+                $("#file-name").attr("required");
+                $("#task-info").attr("style", "display:none;");
+                $("#task-message").removeAttr("lay-verify", "required");
+            }
 
+        });
         //监听提交
         form.on('submit(taskadd)', function (data) {
             $.ajax({
@@ -112,6 +147,39 @@
                 }
             })
             return false;
+        });
+
+        upload.render({
+            elem: '#file-select', //绑定元素
+            url: "{{ url_for('api_func_task') }}", //上传接口
+            accept: 'file',
+            exts: 'apk|ipa|zip|appx|xapk',
+            multiple: true,
+            number: 0,
+            drag: true,
+            auto: false,
+            bindAction: '#app-upload',
+            choose: function (obj) {
+                var files = obj.pushFile();
+                let fname = "";
+                for (let f in files){
+                    fname += files[f].name + "\n";
+                }
+                fname.trim();
+                $('#file-name').val(fname);
+                console.log(fname);
+            },
+            done: function (res) {
+                //上传完毕回调
+                if (res.code === 200) {
+                    layer.alert(res.msg, {title: '提示', icon: 1})
+                } else {
+                    layer.alert(res.msg, {title: '提示', icon: 2})
+                }
+            },
+            error: function () {
+                //请求异常回调
+            },
         });
     });
 </script>
