@@ -38,7 +38,6 @@ class WebPage:
     or from the class methods. 
 
     """
-
     def __init__(self, url:str, html:str, headers:Mapping[str, Any]):
         """
         Initialize a new WebPage object manually.  
