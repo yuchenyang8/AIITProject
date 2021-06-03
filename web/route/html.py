@@ -2,7 +2,7 @@ import datetime
 import re
 
 import bson
-from flask import render_template, request
+from flask import request, session, redirect, url_for, render_template
 
 from web import APP, DB
 from web.utils.auxiliary import kill_process
@@ -180,3 +180,33 @@ def xray_webhook():
         # except Exception as e:
         #     logging.exception(e)
     return 'ok'
+
+
+@APP.route('/')
+def system_login():
+    """用户登录页面"""
+    if 'status' in session:
+        return redirect(url_for('system_index'), 302)
+    return render_template('login.html')
+
+
+@APP.route('/index')
+@login_required
+def system_index():
+    """框架首页"""
+    return render_template('nav.html')
+
+
+@APP.route('/api/user/logout')
+@login_required
+def api_user_logout():
+    """用户注销"""
+    session.pop('status')
+    session.pop('username')
+    return redirect(url_for('system_login'), 302)
+
+
+@APP.route('/dashboard')
+@login_required
+def fetch_dashboard_page():
+    return render_template('dashboard.html')

@@ -9,12 +9,10 @@ APP.config.from_object(Config)
 DB = PyMongo(APP)
 API = Api(APP)
 
-from web.route.system import html
-from web.route.func import html
-from web.route.system.api import UserLoginAPI, DashBoardAPI
-from web.route.func.api import FuncCompanyAPI, FuncTaskAPI, FuncAssetAPI, InfoAPI, VulnAPI, FuncVulnAPI, FuncInfoAPI, \
+from web.route import html
+from web.route.api import FuncCompanyAPI, FuncTaskAPI, FuncAssetAPI, InfoAPI, VulnAPI, FuncVulnAPI, FuncInfoAPI, \
     ChartAPI, PasswordAPI, FuncAppInfoAPI, FuncFirmInfoAPI, FuncHostInfoAPI, FuncWebInfoAPI, CompanyInfoAPI, \
-    CompanyVulnTrendsAPI, PocTaskAPI, PocAPI
+    CompanyVulnTrendsAPI, PocTaskAPI, PocAPI, UserLoginAPI, DashBoardAPI
 
 API.add_resource(UserLoginAPI, '/api/user/login', endpoint='api_user_login')
 API.add_resource(FuncCompanyAPI, '/api/func/company', endpoint='api_func_company')
