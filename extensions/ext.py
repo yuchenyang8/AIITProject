@@ -8,8 +8,10 @@ import time
 import warnings
 
 import nmap
+import binwalk
 import requests
 import urllib3
+from extensions.ext_config import *
 from pocsuite3.api import get_results
 from pocsuite3.api import init_pocsuite
 from pocsuite3.api import start_pocsuite
@@ -190,8 +192,8 @@ class DirExt(object):
 
     def __init__(self, url):
         self.url = url
-        self.TOOL_DIR = r'D:\UY\dirsearch\dirsearch.py'
-        self.RESULT_DIR = r'D:\UY\dirsearch\result.json'
+        self.TOOL_DIR = DIRSEARCH_DIR
+        self.RESULT_DIR = DIRSEARCH_RESULT_DIR
 
     def dir_scan(self):
         command = 'python {} -e * -x 403,404,405,500,501,502,503 -u {} --json-report {}'.format(self.TOOL_DIR, self.url,
@@ -217,8 +219,8 @@ class WafExt(object):
     """Wafw00f插件类"""
 
     def __init__(self):
-        self.TOOL_DIR = r'D:\UY\AIITProject\extensions\wafw00f\wafw00f\main.py'
-        self.RESULT_DIR = r'D:\UY\AIITProject\extensions\wafw00f\result.json'
+        self.TOOL_DIR = WAFW00F_DIR
+        self.RESULT_DIR = WAFW00F_RESULT_DIR
 
     def detect(self, url):
         flag = False
@@ -249,13 +251,15 @@ class HydraExt(object):
     """Hydra插件类"""
 
     def __init__(self):
-        self.thread = 16
-        self.TOOL_DIR = r'D:\HYDRA'
+        self.thread = HYDRA_THREAD
+        self.TOOL_DIR = HYDRA_DIR
+        self.username = HYDRA_DICT_USERNAME
+        self.password = HYDRA_DICT_PASSWORD
         # self.RESULT_DIR = r'D:\HYDRA\result.txt'
 
     def crack(self, host, service):
-        username = r'D:\HYDRA\username.txt'
-        password = r'D:\HYDRA\password.txt'
+        username = self.username
+        password = self.password
         thread = self.thread
         command = r'{}\hydra -L {} -P {} -t {} -f {} {}'.format(self.TOOL_DIR, username, password, thread,
                                                                 host, service)
@@ -284,9 +288,9 @@ class XrayExt(object):
     """Xray插件类"""
 
     def __init__(self):
-        self.XRAY_DIR = r'D:\Xray'
-        self.RAD_DIR = r'D:\UY\rad'
-        self.CHROME_DIR = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
+        self.XRAY_DIR = XRAY_DIR
+        self.RAD_DIR = RAD_DIR
+        self.CHROME_DIR = CHROME_DIR
         self.start_xray()
 
     def start_xray(self):
@@ -319,7 +323,8 @@ class WappExt(object):
 
     # def __init__(self):
 
-    def detect(self, url):
+    @staticmethod
+    def detect(url):
         url = 'http://' + url
         webpage = WebPage.new_from_url(url)
         wappalyzer = Wappalyzer.latest()
@@ -331,9 +336,9 @@ class NessusExt(object):
     """Nessus插件类"""
 
     def __init__(self):
-        self.url = 'https://localhost:8834'
-        self.accessKey = '2179ddb0a05e92c6b35f394a597290d6ae95645d0918859135ae3b06d4e9b013'
-        self.secretKey = '6bc3a119840685bcf1fc58cfdc693791185227f85dd4cef40f72c0fe86c4afb5'
+        self.url = NESSUS_URL
+        self.accessKey = NESSUS_ACCESSKEY
+        self.secretKey = NESSUS_SECRETKEY
         self.verify = False
 
     def __build_url(self, resource):
@@ -573,7 +578,7 @@ class PocExt(object):
     """POC插件类"""
 
     def __init__(self):
-        self.poc_dir = r'D:\VENV\py3flask\Lib\site-packages\pocsuite3\pocs'
+        self.poc_dir = POC_DIR
         self.config = {}
 
     def get_poc_list(self):
@@ -617,9 +622,9 @@ class MobExt(object):
     """MobSF插件类"""
 
     def __init__(self):
-        self.url = 'http://localhost:8000'
-        self.folder = 'D:\\UY\\AIITProject\\upload\\app\\'
-        self.apikey = '28269168b546b23b445a60e754eb2ebf4988c1009b5b34a8a86b71fa649837a1'
+        self.url = MOBSF_URL
+        self.folder = APP_FOLDER
+        self.apikey = MOBSF_APIKEY
 
     def __build_url(self, resource):
         """拼接url"""
@@ -660,10 +665,36 @@ class MobExt(object):
             }
 
 
+class BinExt(object):
+    """Binwalk插件类"""
+
+    def __init__(self):
+        self.folder = FIRMWARE_FOLDER
+
+    def scan(self, file):
+        res = {}
+        for module in binwalk.scan('--signature', '--disasm', '--verbose', '--quiet', '{}{}'.format(self.folder, file)):
+            temp = []
+            for result in module.results:
+                temp.append([result.file.path, result.offset, result.description])
+            res.update({module.name: temp})
+        return res
+
+
 if __name__ == '__main__':
     # m = MobExt()
     # # m.upload("D:\\UY\\AppInfoScanner\\Cool.apk")
     # r = m.get_result('6d033ac8e28a3e383f348bda59b65c23')
     # print(r)
     # print(r.keys())
+    # firmlist = {}
+    # for module in binwalk.scan('--signature', '--disasm', '--verbose', '--quiet', 'D:\\UY\\tp.bin'):
+    #     print(module.name)
+    #     templist=[]
+    #     for result in module.results:
+    #         templist.append([result.file.path, result.offset, result.description])
+    #         # print("\t%s    0x%.8X    %s" % (result.file.path, result.offset, result.description))
+    #     firmlist.update({module.name: templist})
+    # print(firmlist)
+
     pass

@@ -72,7 +72,7 @@
                 {field: 'asset_company', title: '所属厂商', align: "center", sort: true},
                 {
                     field: 'name', width: 350, title: '资产名称', align: "center", sort: true, templet: function (d) {
-                        if (d.asset_type === 'WEB' || d.asset_type === '主机') {
+                        if (d.asset_type === 'WEB' || d.asset_type === '主机' || d.asset_type === '固件') {
                             return '<a href="/func/asset/' + d.name + '">' + d.name + '</a>'
                         } else {
                             return '<a href="http://127.0.0.1:8000/static_analyzer/?name=' + d.name + '&checksum=' + d.hash + '&type=apk" target="_blank">' + d.name + '</a>'

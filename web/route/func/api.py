@@ -8,7 +8,8 @@ from flask import session, json, redirect, url_for, request
 from flask_restful import reqparse, Resource
 from werkzeug.utils import secure_filename
 
-from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappExt, NessusExt, HydraExt, PocExt, MobExt
+from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappExt, NessusExt, HydraExt, PocExt, MobExt, \
+    BinExt
 from web import DB
 from web.utils.auxiliary import get_title
 
@@ -164,7 +165,7 @@ class FuncTaskAPI(Resource):
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
-        self.path = os.getcwd() + '\\upload\\app\\'
+        self.path = 'D:\\UY\\AIITProject\\upload\\'
 
     def put(self):
         """添加任务"""
@@ -267,8 +268,12 @@ class FuncTaskAPI(Resource):
         try:
             file_data = request.files['file']
             if file_data:
-                file_data.save(self.path + secure_filename(file_data.filename))
-                return {'code': 200, 'msg': '上传成功！'}
+                if file_data.filename.split('.')[-1] in ['bin']:
+                    file_data.save(self.path + 'firmware\\' + secure_filename(file_data.filename))
+                    return {'code': 200, 'msg': '上传成功！'}
+                else:
+                    file_data.save(self.path + 'app\\' + secure_filename(file_data.filename))
+                    return {'code': 200, 'msg': '上传成功！'}
             else:
                 return {'code': 500, 'msg': '上传失败！'}
         except:
@@ -718,6 +723,18 @@ class InfoAPI(Resource):
                     DB.db.asset.update_one({'aname': app}, {'$set': {item: res[item]}})
                 DB.db.asset.update_one({'aname': app},
                                        {'$set': {'hash': app_hash, 'infostatus': '探测完成', 'vulnstatus': '未扫描'}})
+            DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '已完成'}})
+        elif task_type == '固件':
+            for firm in task_info:
+                if not DB.db.asset.find_one({'aname': firm}):
+                    self.create_asset(aname=firm, asset_type='固件', ename=task_company, objid=task_objid,
+                                      taskid=task_objid)
+                DB.db.asset.update_one({'aname': firm}, {'$set': {'infostatus': '探测中'}})
+                b = BinExt()
+                res = b.scan(firm)
+                DB.db.asset.update_one({'aname': firm}, {
+                    '$set': {'disasm': res['Disasm'], 'signature': res['Signature'], 'infostatus': '探测完成',
+                             'vulnstatus': '未扫描'}})
             DB.db.task.update_one({'tname': task_name}, {'$set': {'tstatus': '已完成'}})
         return {'status_code': 200}
 

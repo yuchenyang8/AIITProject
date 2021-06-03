@@ -1,6 +1,7 @@
-from flask import session, redirect, url_for, render_template, jsonify, request
+from flask import session, redirect, url_for, render_template
+
+from web import APP
 from web.utils.auxiliary import login_required
-from web import APP, DB
 
 
 @APP.route('/')

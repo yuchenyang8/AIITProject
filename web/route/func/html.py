@@ -118,6 +118,8 @@ def html_func_assetinfo(asset_name):
         return render_template('web_detail.html', asset=asset)
     elif asset['type'] == '主机':
         return render_template('host_detail.html', asset=asset)
+    elif asset['type'] == '固件':
+        return render_template('firm_detail.html', asset=asset)
 
 
 @APP.route('/func/company/<string:company_name>')

@@ -1,8 +1,7 @@
+from flask import session
 from flask_restful import reqparse, Resource
-from flask import session, request, json, redirect, url_for
-from werkzeug.security import check_password_hash, generate_password_hash
-import datetime
-from web import DB, APP
+
+from web import DB
 
 
 class UserLoginAPI(Resource):
