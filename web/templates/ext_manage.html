@@ -3,8 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <title>Extensions Manage</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.5.5/css/layui.css') }}" media="all">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}" media="all">
 </head>
 <body>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>插件管理</legend>
+</fieldset>
 
+<form class="layui-form" action="">
+<div class="layui-collapse">
+  <div class="layui-colla-item">
+    <h2 class="layui-colla-title">杜甫</h2>
+    <div class="layui-colla-content layui-show">内容区域</div>
+  </div>
+  <div class="layui-colla-item">
+    <h2 class="layui-colla-title">李清照</h2>
+    <div class="layui-colla-content layui-show">内容区域</div>
+  </div>
+  <div class="layui-colla-item">
+    <h2 class="layui-colla-title">鲁迅</h2>
+    <div class="layui-colla-content layui-show">内容区域</div>
+  </div>
+</div>
+</form>
+<script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'layedit', 'laydate', 'element'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            layedit = layui.layedit,
+            laydate = layui.laydate,
+            element = layui.element;
+
+
+
+    });
+</script>
 </body>
 </html>

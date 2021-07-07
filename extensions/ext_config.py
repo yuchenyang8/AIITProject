@@ -1,3 +1,7 @@
+# Nmap
+
+
+# Whatweb
 WHATWEB_DIR = 'D:\\UY\\AIITProject\\extensions\\WhatWeb\\whatweb'
 
 # Dirsearch
@@ -34,3 +38,4 @@ APP_FOLDER = 'D:\\UY\\AIITProject\\upload\\app\\'
 
 # Binwalk
 FIRMWARE_FOLDER = 'D:\\UY\\AIITProject\\upload\\firmware\\'
+

@@ -6,6 +6,7 @@ from functools import wraps
 
 import psutil
 import requests
+import yaml
 from flask import session, redirect, url_for
 
 
@@ -120,3 +121,12 @@ def get_title(url):
     except:
         pass
 
+
+def get_yaml(file_dir):
+    stream = open(file_dir, 'r', encoding='UTF-8')
+    return yaml.safe_load(stream)
+
+
+def modify_yaml(file_dir, data_docs):
+    stream = open(file_dir, 'w', encoding='UTF-8')
+    yaml.safe_dump(data_docs, stream)

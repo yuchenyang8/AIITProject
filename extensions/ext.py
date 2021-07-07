@@ -7,18 +7,18 @@ import subprocess
 import time
 import warnings
 
-import nmap
 import binwalk
+import nmap
 import requests
 import urllib3
-from extensions.ext_config import *
 from pocsuite3.api import get_results
 from pocsuite3.api import init_pocsuite
-from pocsuite3.api import start_pocsuite
 from pocsuite3.api import load_file_to_module
+from pocsuite3.api import start_pocsuite
 
 from extensions.OneForAll.oneforall import OneForAll
 from extensions.Wappalyzer import Wappalyzer, WebPage
+from extensions.ext_config import *
 from web.utils.auxiliary import exist_process, kill_process, url_detect
 
 urllib3.disable_warnings()
@@ -143,7 +143,7 @@ class WhatwebExt(object):
 
     def __init__(self, domain):
         self.domain = domain
-        self.TOOL_DIR = r'D:\UY\AIITProject\extensions\WhatWeb\whatweb'
+        self.TOOL_DIR = WHATWEB_DIR
 
     def web_fingerprint(self):
         whatweb_dir = self.TOOL_DIR

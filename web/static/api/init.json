@@ -93,7 +93,7 @@
             },
             {
               "title": "插件管理",
-              "href": "",
+              "href": "extmanage",
               "icon": "fa fa-tasks",
               "target": "_self"
             },

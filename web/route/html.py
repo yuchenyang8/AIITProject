@@ -210,3 +210,10 @@ def api_user_logout():
 @login_required
 def fetch_dashboard_page():
     return render_template('dashboard.html')
+
+
+@APP.route('/extmanage')
+@login_required
+def html_extensions_manage():
+    """插件管理页面"""
+    return render_template('ext_manage.html')
