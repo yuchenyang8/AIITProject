@@ -107,7 +107,7 @@
         },
         {
           "title": "用户管理",
-          "href": "",
+          "href": "user",
           "icon": "fa fa-tasks",
           "target": "_self"
         }

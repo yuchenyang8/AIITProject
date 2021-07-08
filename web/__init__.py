@@ -10,9 +10,7 @@ DB = PyMongo(APP)
 API = Api(APP)
 
 from web.route import html
-from web.route.api import FuncCompanyAPI, FuncTaskAPI, FuncAssetAPI, InfoAPI, VulnAPI, FuncVulnAPI, FuncInfoAPI, \
-    ChartAPI, PasswordAPI, FuncAppInfoAPI, FuncFirmInfoAPI, FuncHostInfoAPI, FuncWebInfoAPI, CompanyInfoAPI, \
-    CompanyVulnTrendsAPI, PocTaskAPI, PocAPI, UserLoginAPI, DashBoardAPI
+from web.route.api import *
 
 API.add_resource(UserLoginAPI, '/api/user/login', endpoint='api_user_login')
 API.add_resource(FuncCompanyAPI, '/api/func/company', endpoint='api_func_company')
@@ -34,4 +32,6 @@ API.add_resource(VulnAPI, '/api/func/vuln', endpoint='api_func_vuln')
 API.add_resource(PasswordAPI, '/api/func/password', endpoint='api_func_password')
 API.add_resource(ChartAPI, '/api/func/chart', endpoint='api_func_chart')
 API.add_resource(DashBoardAPI, '/api/dashboard', endpoint='api_dashboard')
+API.add_resource(ExtAPI, '/api/ext', endpoint='api_ext')
+API.add_resource(UserAPI, '/api/user', endpoint='api_user')
 

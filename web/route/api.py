@@ -1,17 +1,13 @@
 import datetime
-import os
-import re
-import time
 
 import bson
 from flask import session, json, redirect, url_for, request
 from flask_restful import reqparse, Resource
 from werkzeug.utils import secure_filename
 
-from extensions.ext import NmapExt, XrayExt, WafExt, DirExt, OneForAllExt, WappExt, NessusExt, HydraExt, PocExt, MobExt, \
-    BinExt
+from extensions.ext import *
 from web import DB
-from web.utils.auxiliary import get_title
+from web.utils.auxiliary import get_title, get_yaml, modify_yaml
 
 
 class UserLoginAPI(Resource):
@@ -86,9 +82,9 @@ class FuncCompanyAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument("company_name", type=str, location='json')  # 名称
-        self.parser.add_argument("company_people", type=str, location='json')  # 名称
-        self.parser.add_argument("company_contact", type=str, location='json')  # 联系方式
+        self.parser.add_argument("company_name", type=str, location='json')
+        self.parser.add_argument("company_people", type=str, location='json')
+        self.parser.add_argument("company_contact", type=str, location='json')
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
@@ -232,7 +228,7 @@ class FuncTaskAPI(Resource):
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
-        self.path = '/upload\\'
+        self.path = 'upload\\'
 
     def put(self):
         """添加任务"""
@@ -1461,3 +1457,148 @@ class PocAPI(Resource):
                         'type': 'WEB' if r['poc_name'] in web else '主机',
                         'ename': '-',
                     })
+
+
+class ExtAPI(Resource):
+    """插件管理类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+        self.parser.add_argument("name", type=str, location='json')
+
+        self.config_path = 'extensions\\ext_config.yaml'
+
+    def get(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        docs = get_yaml(self.config_path)
+        ext_list = [ext for ext in docs.keys()]
+        ext_dict = dict(zip(ext_list, [docs[doc]['status'] for doc in docs.keys()]))
+        args = self.parser.parse_args()
+        key_page = args.page
+        key_limit = args.limit
+
+        count = ext_dict.keys().__len__()
+        jsondata = {'code': 0, 'msg': '', 'count': count}
+        if count == 0:  # 若没有数据返回空列表
+            jsondata.update({'data': []})
+            return jsondata
+
+        if not key_page or not key_limit:  # 判断是否有分页查询参数
+            paginate = ext_list[:20]
+        else:
+            paginate = ext_list[(key_page - 1) * key_limit:key_page * key_limit]
+
+        data = []
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                data1 = {
+                    'id': index,
+                    'name': i,
+                    'status': ext_dict[i],
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
+
+    def post(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        extname = args.name
+
+
+class UserAPI(Resource):
+    """用户管理类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("company_name", type=str, location='json')
+        self.parser.add_argument("uname", type=str, location='json')
+        self.parser.add_argument("upassword", type=str, location='json')
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+
+    def put(self):
+        if not session.get('status'):
+            return redirect(url_for('html_system_login'), 302)
+        args = self.parser.parse_args()
+        company_name = args.company_name
+        uname = args.uname
+        upassword = args.upassword
+        user_query = DB.db.user.find_one({'uname': uname})
+        company_query = DB.db.user.find_one({'ename': company_name})
+        if user_query:
+            return {'status_code': 201, 'msg': '用户名已存在'}
+        if not company_query:
+            return {'status_code': 201, 'msg': '厂商不存在'}
+        new_user = {
+            'ename': company_name,
+            'uname': uname,
+            'upassword': upassword,
+        }
+        DB.db.user.insert_one(new_user)
+        return {'status_code': 200, 'msg': '添加用户成功'}
+
+    def get(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        args = self.parser.parse_args()
+        key_page = args.page
+        key_limit = args.limit
+
+        count = DB.db.user.find().count()
+        jsondata = {'code': 0, 'msg': '', 'count': count}
+        if count == 0:
+            jsondata.update({'data': []})
+            return jsondata
+        if not key_page or not key_limit:
+            paginate = DB.db.user.find().limit(20).skip(0)
+        else:
+            paginate = DB.db.user.find().limit(key_limit).skip((key_page - 1) * key_limit)
+
+        data = []
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                data1 = {
+                    'id': index,
+                    'company_name': i['ename'],
+                    'uname': i['uname'],
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
+
+    def delete(self):
+        if not session.get('status'):
+            return redirect(url_for('html_system_login'), 302)
+        args = self.parser.parse_args()
+        uname = args.uname
+        if uname == 'admin':
+            return {'status_code': 500, 'msg': '删除用户失败，无权限'}
+        searchdict = {'uname': uname}
+        user_query = DB.db.user.find_one(searchdict)
+        if not user_query:
+            return {'status_code': 500, 'msg': '删除用户失败，无此用户'}
+        DB.db.user.delete_one(searchdict)
+
+        return {'status_code': 200, 'msg': '删除用户成功'}
+
+    def post(self):
+        if not session.get('status'):
+            return redirect(url_for('html_system_login'), 302)
+        args = self.parser.parse_args()

@@ -217,3 +217,17 @@ def fetch_dashboard_page():
 def html_extensions_manage():
     """插件管理页面"""
     return render_template('ext_manage.html')
+
+
+@APP.route('/user')
+@login_required
+def html_users_manage():
+    """用户页面"""
+    return render_template('user.html')
+
+
+@APP.route('/user/user_add')
+@login_required
+def html_user_add():
+    """用户添加页面"""
+    return render_template('user_add.html')
