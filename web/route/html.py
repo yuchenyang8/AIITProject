@@ -6,32 +6,32 @@ from flask import request, session, redirect, url_for, render_template
 
 from web import APP, DB
 from web.utils.auxiliary import kill_process
-from web.utils.auxiliary import login_required
+from web.utils.auxiliary import login_required, admin_required
 
 
 @APP.route('/func/company')
-@login_required
+@admin_required
 def html_func_company():
     """厂商页面"""
     return render_template('company.html')
 
 
 @APP.route('/func/company_add')
-@login_required
+@admin_required
 def html_func_company_add():
     """厂商添加页面"""
     return render_template('company_add.html')
 
 
 @APP.route('/func/task')
-@login_required
+@admin_required
 def html_func_task():
-    """资产任务页面"""
+    """信息搜集页面"""
     return render_template('task.html')
 
 
 @APP.route('/func/task_add/')
-@login_required
+@admin_required
 def html_func_task_add():
     """任务添加页面"""
     company = []
@@ -48,22 +48,35 @@ def html_func_asset():
     return render_template('asset.html')
 
 
-@APP.route('/func/poc/task')
+@APP.route('/func/asset/<string:asset_name>')
 @login_required
+def html_func_assetinfo(asset_name):
+    """资产详情页面"""
+    asset = DB.db.asset.find_one({'aname': asset_name})
+    if asset['type'] == 'WEB':
+        return render_template('web_detail.html', asset=asset)
+    elif asset['type'] == '主机':
+        return render_template('host_detail.html', asset=asset)
+    elif asset['type'] == '固件':
+        return render_template('firm_detail.html', asset=asset)
+
+
+@APP.route('/func/poc/task')
+@admin_required
 def html_func_poc_task():
     """POC任务页面"""
     return render_template('poc_task.html')
 
 
 @APP.route('/func/poc/task_add')
-@login_required
+@admin_required
 def html_func_poc_task_add():
     """添加POC任务页面"""
     return render_template('poc_task_add.html')
 
 
 @APP.route('/func/poc')
-@login_required
+@admin_required
 def html_func_poc():
     """POC信息页面"""
     return render_template('poc.html')
@@ -72,7 +85,7 @@ def html_func_poc():
 @APP.route('/func/poc/task/<string:objid>')
 @login_required
 def html_func_poc_task_detail(objid):
-    """主机漏洞详情页面"""
+    """POC漏洞详情页面"""
     objid = bson.ObjectId(objid)
     try:
         results = DB.db.poc.find_one({'_id': objid})['result']
@@ -109,21 +122,8 @@ def html_func_web_vulninfo(objid):
     return render_template('web_vuln_detail.html', vuln=vuln)
 
 
-@APP.route('/func/asset/<string:asset_name>')
-@login_required
-def html_func_assetinfo(asset_name):
-    """资产详情页面"""
-    asset = DB.db.asset.find_one({'aname': asset_name})
-    if asset['type'] == 'WEB':
-        return render_template('web_detail.html', asset=asset)
-    elif asset['type'] == '主机':
-        return render_template('host_detail.html', asset=asset)
-    elif asset['type'] == '固件':
-        return render_template('firm_detail.html', asset=asset)
-
-
 @APP.route('/func/company/<string:company_name>')
-@login_required
+@admin_required
 def html_func_company_info(company_name):
     """厂商详情页面"""
     hostcount = DB.db.asset.find({'ename': company_name, 'type': '主机'}).count()
@@ -213,21 +213,28 @@ def fetch_dashboard_page():
 
 
 @APP.route('/extmanage')
-@login_required
+@admin_required
 def html_extensions_manage():
     """插件管理页面"""
     return render_template('ext_manage.html')
 
 
 @APP.route('/user')
-@login_required
+@admin_required
 def html_users_manage():
-    """用户页面"""
+    """用户管理页面"""
     return render_template('user.html')
 
 
 @APP.route('/user/user_add')
-@login_required
+@admin_required
 def html_user_add():
     """用户添加页面"""
     return render_template('user_add.html')
+
+
+@APP.route('/user/user_modify')
+@login_required
+def html_user_modify():
+    """用户修改密码页面"""
+    return render_template('user_modify.html')

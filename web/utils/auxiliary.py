@@ -23,6 +23,20 @@ def login_required(func):
     return inner
 
 
+def admin_required(func):
+    """管理员验证装饰器"""
+
+    @wraps(func)
+    def inner(*args, **kwargs):
+
+        user = session.get('username')
+        if user != 'admin':
+            return redirect(url_for('system_login'), 302)
+        return func(*args, **kwargs)
+
+    return inner
+
+
 def get_user_agent():
     user_agent_list = [
         {'User-Agent': 'Mozilla/4.0 (Mozilla/4.0; MSIE 7.0; Windows NT 5.1; FDM; SV1; .NET CLR 3.0.04506.30)'},

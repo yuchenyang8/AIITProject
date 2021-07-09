@@ -376,6 +376,11 @@
                     contentType: 'application/json;charset=UTF-8',
                     dataType: 'json',
                     type: 'post',
+                    success: function (result) {
+                        if (result.status_code === 500) {
+                            layer.alert(result.msg, {title: '提示', icon: 2})
+                        }
+                    }
                 })
             }
         });

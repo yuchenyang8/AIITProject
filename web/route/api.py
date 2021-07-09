@@ -15,8 +15,10 @@ class UserLoginAPI(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument("username", type=str, required=True, location='json')
-        self.parser.add_argument("password", type=str, required=True, location='json')
+        self.parser.add_argument("username", type=str, location='json')
+        self.parser.add_argument("password", type=str, location='json')
+        self.parser.add_argument("oldpassword", type=str, location='json')
+        self.parser.add_argument("newpassword", type=str, location='json')
 
     def post(self):
         """登录接口"""
@@ -30,9 +32,24 @@ class UserLoginAPI(Resource):
         if user_query['upassword'] == key_password:  # 进行密码核对
             session['status'] = True  # 登录成功设置session
             session['username'] = key_username
+            session['company'] = user_query['ename']
             return {'status_code': 200}
         else:
-            return {'status_code': 201, 'msg': '用户名或密码错误'}
+            return {'status_code': 500, 'msg': '用户名或密码错误'}
+
+    def put(self):
+        """修改密码"""
+        if not session.get('status'):
+            return redirect(url_for('html_system_login'), 302)
+        args = self.parser.parse_args()
+        oldpassword = args.oldpassword
+        newpassword = args.newpassword
+        uname = session['username']
+
+        if oldpassword == DB.db.user.find_one({'uname': uname})['upassword']:
+            DB.db.user.update_one({'uname': uname}, {'$set': {'upassword': newpassword}})
+            return {'status_code': 200, 'msg': '修改密码成功'}
+        return {'status_code': 500, 'msg': '修改密码失败'}
 
 
 class DashBoardAPI(Resource):
@@ -365,6 +382,7 @@ class FuncAssetAPI(Resource):
         self.parser.add_argument("asset_company", type=str, location='json')
         self.parser.add_argument("u", type=str)
         self.parser.add_argument("name", type=str, location='json')
+        self.parser.add_argument("objid", type=str, location='json')
         self.parser.add_argument("type", type=str)
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
@@ -373,23 +391,29 @@ class FuncAssetAPI(Resource):
     def get(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
+
         args = self.parser.parse_args()
         u = args.u
         asset_type = args.type
         key_page = args.page
         key_limit = args.limit
         key_searchparams = args.searchParams
-
-        count = DB.db.asset.find(
-            {'infostatus': '探测完成', 'type': asset_type}).count() if asset_type else DB.db.asset.find(
-            {'infostatus': '探测完成'}).count()
-
+        company = session.get('company')
+        count = (
+            DB.db.asset.find({'infostatus': '探测完成', 'type': asset_type}).count() if asset_type else DB.db.asset.find(
+                {'infostatus': '探测完成'}).count()) if not company else (
+            DB.db.asset.find({'infostatus': '探测完成', 'type': asset_type,
+                              'ename': company}).count() if asset_type else DB.db.asset.find(
+                {'infostatus': '探测完成', 'ename': company}).count())
         jsondata = {'code': 0, 'msg': '', 'count': count}
-        if count == 0:  # 若没有数据返回空列表
+
+        if count == 0:
             jsondata.update({'data': []})
             return jsondata
+
         asset_transfer_list = []
-        if u == 'uy':
+
+        if u == 'uy':  # poc task get assets list, only admin
             assets = DB.db.asset.find()
             c = 1
             for asset in assets:
@@ -397,27 +421,40 @@ class FuncAssetAPI(Resource):
                 c += 1
             jsondata.update({'data': asset_transfer_list})
             return jsondata
+
         if asset_type:
-            if not key_page or not key_limit:  # 判断是否有分页查询参数
-                paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': asset_type}).limit(20).skip(0)
+            if not key_page or not key_limit:
+                paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': asset_type}).limit(20).skip(
+                    0) if not company else DB.db.asset.find(
+                    {'infostatus': '探测完成', 'type': asset_type, 'ename': company}).limit(20).skip(0)
             else:
                 paginate = DB.db.asset.find({'infostatus': '探测完成', 'type': asset_type}).limit(key_limit).skip(
+                    (key_page - 1) * key_limit) if not company else DB.db.asset.find(
+                    {'infostatus': '探测完成', 'type': asset_type, 'ename': company}).limit(key_limit).skip(
                     (key_page - 1) * key_limit)
-        elif not key_searchparams:  # 若没有查询参数
-            if not key_page or not key_limit:  # 判断是否有分页查询参数
-                paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(20).skip(0)
+        elif not key_searchparams:
+            if not key_page or not key_limit:
+                paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(20).skip(
+                    0) if not company else DB.db.asset.find({'infostatus': '探测完成', 'ename': company}).limit(20).skip(0)
             else:
-                paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(key_limit).skip((key_page - 1) * key_limit)
+                paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(key_limit).skip(
+                    (key_page - 1) * key_limit) if not company else DB.db.asset.find(
+                    {'infostatus': '探测完成', 'ename': company}).limit(key_limit).skip((key_page - 1) * key_limit)
         else:
             try:
-                search_dict = json.loads(key_searchparams)  # 解析查询参数
+                search_dict = json.loads(key_searchparams)
             except:
-                paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(20).skip(0)
+                paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(20).skip(
+                    0) if not company else DB.db.asset.find({'infostatus': '探测完成', 'ename': company}).limit(20).skip(0)
             else:
-                if 'asset_name' not in search_dict or 'asset_company' not in search_dict:  # 查询参数有误
-                    paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(20).skip(0)
+                if 'asset_name' not in search_dict or 'asset_company' not in search_dict:
+                    paginate = DB.db.asset.find({'infostatus': '探测完成'}).limit(20).skip(
+                        0) if not company else DB.db.asset.find({'infostatus': '探测完成', 'ename': company}).limit(
+                        20).skip(0)
                 elif 'asset_company' not in search_dict:
-                    paginate1 = DB.db.asset.find({'infostatus': '探测完成', 'aname': re.compile(search_dict['asset_name'])})
+                    paginate1 = DB.db.asset.find({'infostatus': '探测完成', 'aname': re.compile(
+                        search_dict['asset_name'])}) if not company else DB.db.asset.find(
+                        {'infostatus': '探测完成', 'aname': re.compile(search_dict['asset_name']), 'ename': company})
                     paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
                 elif 'asset_name' not in search_dict:
@@ -432,7 +469,9 @@ class FuncAssetAPI(Resource):
                     })
                     paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
+
         data = []
+
         if paginate:
             index = (key_page - 1) * key_limit + 1
             for i in paginate:
@@ -440,14 +479,17 @@ class FuncAssetAPI(Resource):
                     vtime = i['vulndate'].strftime("%Y-%m-%d %H:%M:%S")
                 else:
                     vtime = 'None'
+
                 data1 = {
                     'id': index,
                     'name': i['aname'],
                     'asset_type': i['type'],
                     'asset_company': i['ename'],
                     'vuln_status': i['vulnstatus'],
-                    'vuln_time': vtime
+                    'vuln_time': vtime,
+                    'objid': str(i['_id']),
                 }
+
                 if i['type'] == '主机':
                     host_os = i['detail']['operating-system'] if 'operating-system' in i['detail'].keys() else '-'
                     netbios_name = i['detail']['netbios-name'] if 'netbios-name' in i['detail'].keys() else '-'
@@ -464,6 +506,7 @@ class FuncAssetAPI(Resource):
                     data1.update({
                         'hash': i['hash'],
                     })
+
                 data.append(data1)
                 index += 1
             jsondata.update({'data': data})
@@ -476,15 +519,20 @@ class FuncAssetAPI(Resource):
     def delete(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
+
         args = self.parser.parse_args()
-        asset_name = args.name
-        searchdict = {'aname': asset_name}
-        asset_query = DB.db.asset.find_one(searchdict)
-        if not asset_query:  # 删除的资产不存在
-            return {'status_code': 500, 'msg': '删除资产失败，此资产不存在'}
-        DB.db.asset.delete_one(searchdict)
-        DB.db.vuln.delete_many({'vasset': asset_name})
-        return {'status_code': 200, 'msg': '删除资产成功'}
+        objid = bson.ObjectId(args.objid)
+        a = DB.db.asset.find_one({'_id': objid})
+        company = session.get('company')
+
+        if not a:
+            return {'status_code': 500, 'msg': '删除失败'}
+        if company == a['ename'] or company == '':
+            DB.db.asset.delete_one({'_id': objid})
+            DB.db.vuln.delete_many({'vasset': a['aname']})
+            return {'status_code': 200, 'msg': '删除成功'}
+        else:
+            return {'status_code': 500, 'msg': '删除失败'}
 
 
 class FuncHostInfoAPI(Resource):
@@ -945,14 +993,18 @@ class VulnAPI(Resource):
     def post(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
+
         args = self.parser.parse_args()
         asset_type = args.asset_type
         asset_name = args.name
         company_name = args.asset_company
         port_protocol = args.port_protocol
+        company = session.get('company')
         ip = args.ip
         support_protocol = ['ssh', 'ftp', 'mysql']
-        # 弱口令检测
+
+        if company != '': return {'status_code': 500, 'msg': '无权限'}
+
         if ip and port_protocol in support_protocol:
             h = HydraExt()
             r = h.crack(host=ip, service=port_protocol)
@@ -965,6 +1017,7 @@ class VulnAPI(Resource):
                 }
                 weakpass.update(r)
                 DB.db.weak.insert_one(weakpass)
+
         if asset_type == 'WEB':
             XrayExt().scan_one(url=asset_name)
         elif asset_type == '主机':
@@ -1012,6 +1065,7 @@ class FuncVulnAPI(Resource):
         self.parser.add_argument("vuln_company", type=str, location='json')
         self.parser.add_argument("vuln_asset", type=str, location='json')
         self.parser.add_argument("vuln_type", type=str, location='json')
+        self.parser.add_argument("objid", type=str, location='json')
         self.parser.add_argument("type", type=str)
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
@@ -1025,24 +1079,40 @@ class FuncVulnAPI(Resource):
         key_page = args.page
         key_limit = args.limit
         key_searchparams = args.searchParams
+        company = session.get('company')
         vuln_type = DB.db.asset.find_one({'aname': asset_name})['type'] if asset_name else args.type
 
-        count = DB.db.vuln.find({'type': vuln_type, 'vasset': asset_name}).count() if asset_name else DB.db.vuln.find(
-            {'type': vuln_type}).count()
+        # 统计数据个数
+        if company:  # 判断是否为厂商账号
+            count = DB.db.vuln.find(
+                {'type': vuln_type, 'vasset': asset_name, 'ename': company}).count() if asset_name else DB.db.vuln.find(
+                {'type': vuln_type, 'ename': company}).count()
+        else:
+            count = DB.db.vuln.find(
+                {'type': vuln_type, 'vasset': asset_name}).count() if asset_name else DB.db.vuln.find(
+                {'type': vuln_type}).count()
+
         jsondata = {'code': 0, 'msg': '', 'count': count}
         if count == 0:  # 若没有数据返回空列表
             jsondata.update({'data': []})
             return jsondata
         if asset_name:  # 若有get参数
             if not key_page or not key_limit:
-                paginate = DB.db.vuln.find({'vasset': asset_name}).limit(20).skip(0)
+                paginate = DB.db.vuln.find({'vasset': asset_name}).limit(20).skip(
+                    0) if not company else DB.db.vuln.find(
+                    {'vasset': asset_name, 'ename': company}).limit(20).skip(0)
             else:
-                paginate = DB.db.vuln.find({'vasset': asset_name}).limit(key_limit).skip((key_page - 1) * key_limit)
+                paginate = DB.db.vuln.find({'vasset': asset_name}).limit(key_limit).skip(
+                    (key_page - 1) * key_limit) if not company else DB.db.vuln.find(
+                    {'vasset': asset_name, 'ename': company}).limit(key_limit).skip((key_page - 1) * key_limit)
         elif not key_searchparams:  # 若没有查询参数
             if not key_page or not key_limit:  # 判断是否有分页查询参数
-                paginate = DB.db.vuln.find({'type': vuln_type}).limit(20).skip(0)
+                paginate = DB.db.vuln.find({'type': vuln_type}).limit(20).skip(0) if not company else DB.db.vuln.find(
+                    {'type': vuln_type, 'ename': company}).limit(20).skip(0)
             else:
-                paginate = DB.db.vuln.find({'type': vuln_type}).limit(key_limit).skip((key_page - 1) * key_limit)
+                paginate = DB.db.vuln.find({'type': vuln_type}).limit(key_limit).skip(
+                    (key_page - 1) * key_limit) if not company else DB.db.vuln.find(
+                    {'type': vuln_type, 'ename': company}).limit(key_limit).skip((key_page - 1) * key_limit)
         else:
             try:
                 search_dict = json.loads(key_searchparams)  # 解析查询参数
@@ -1050,9 +1120,11 @@ class FuncVulnAPI(Resource):
                 paginate = DB.db.vuln.find({'type': vuln_type}).limit(20).skip(0)
             else:
                 if 'vuln_asset' not in search_dict or 'vuln_company' not in search_dict:  # 查询参数有误
-                    paginate = DB.db.vuln.find({'type': vuln_type}).limit(20).skip(0)
+                    paginate = DB.db.vuln.find({'type': vuln_type}).limit(20).skip(0) \
+                        if not company else DB.db.vuln.find({'type': vuln_type, 'ename': company}).limit(20).skip(0)
                 elif 'vuln_company' not in search_dict:
-                    paginate1 = DB.db.vuln.find({'type': vuln_type, 'vasset': re.compile(search_dict['vuln_asset'])})
+                    paginate1 = DB.db.vuln.find(
+                        {'type': vuln_type, 'vasset': re.compile(search_dict['vuln_asset']), 'ename': company})
                     paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
                 elif 'vuln_asset' not in search_dict:
@@ -1100,12 +1172,17 @@ class FuncVulnAPI(Resource):
         args = self.parser.parse_args()
         vuln_asset = args.vuln_asset
         vuln_type = args.vuln_type
-        searchdict = {'vasset': vuln_asset, 'vtype': vuln_type}
-        asset_query = DB.db.vuln.find_one(searchdict)
-        if not asset_query:  # 删除的资产不存在
-            return {'status_code': 500, 'msg': '删除漏洞失败，此漏洞不存在'}
-        DB.db.vuln.delete_one(searchdict)
-        return {'status_code': 200, 'msg': '删除漏洞成功'}
+        objid = bson.ObjectId(args.objid)
+        company = session.get('company')
+        v = DB.db.vuln.find_one({'_id': objid})
+
+        if not v:  # 漏洞不存在
+            return {'status_code': 500, 'msg': '删除漏洞失败'}
+        if company == v['ename'] or company == '':
+            DB.db.vuln.delete_one({'_id': objid})
+            return {'status_code': 200, 'msg': '删除漏洞成功'}
+        else:  # 无权限
+            return {'status_code': 500, 'msg': '删除漏洞失败'}
 
 
 class ChartAPI(Resource):
@@ -1146,14 +1223,17 @@ class PasswordAPI(Resource):
     def get(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
+
         args = self.parser.parse_args()
         host = args.asset_name
         key_page = args.page
         key_limit = args.limit
         key_searchparams = args.searchParams
-
-        count = DB.db.weak.find({'host': host}).count() if host else DB.db.weak.find().count()
+        company = session.get('company')
+        count = (DB.db.weak.find({'host': host}).count() if host else DB.db.weak.find({'company': company}).count())\
+                if company else (DB.db.weak.find({'host': host}).count() if host else DB.db.weak.find().count())
         jsondata = {'code': 0, 'msg': '', 'count': count}
+
         if count == 0:  # 若没有数据返回空列表
             jsondata.update({'data': []})
             return jsondata
@@ -1165,14 +1245,18 @@ class PasswordAPI(Resource):
                 paginate = DB.db.weak.find({'host': host}).limit(key_limit).skip((key_page - 1) * key_limit)
         elif not key_searchparams:  # 若没有查询参数
             if not key_page or not key_limit:  # 判断是否有分页查询参数
-                paginate = DB.db.weak.find().limit(20).skip(0)
+                paginate = DB.db.weak.find().limit(20).skip(0) if not company else DB.db.weak.find(
+                    {'company': company}).limit(20).skip(0)
             else:
-                paginate = DB.db.weak.find().limit(key_limit).skip((key_page - 1) * key_limit)
+                paginate = DB.db.weak.find().limit(key_limit).skip(
+                    (key_page - 1) * key_limit) if not company else DB.db.weak.find({'company': company}).limit(
+                    key_limit).skip((key_page - 1) * key_limit)
         else:
             try:
                 search_dict = json.loads(key_searchparams)  # 解析查询参数
             except:
-                paginate = DB.db.weak.find().limit(20).skip(0)
+                paginate = DB.db.weak.find().limit(20).skip(0) if not company else DB.db.weak.find(
+                    {'company': company}).limit(20).skip(0)
             else:
                 if 'company_name' not in search_dict:  # 查询参数有误
                     paginate = DB.db.weak.find().limit(20).skip(0)
@@ -1180,7 +1264,9 @@ class PasswordAPI(Resource):
                     paginate1 = DB.db.weak.find({'company': re.compile(search_dict['company_name'])})
                     paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
                     jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
+
         data = []
+
         if paginate:
             index = (key_page - 1) * key_limit + 1
             for i in paginate:
@@ -1206,14 +1292,19 @@ class PasswordAPI(Resource):
     def delete(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
+
         args = self.parser.parse_args()
         objid = bson.ObjectId(args.objid)
-        searchdict = {'_id': objid}
-        weak_query = DB.db.weak.find_one(searchdict)
-        if not weak_query:
-            return {'status_code': 500, 'msg': '删除失败，不存在'}
-        DB.db.weak.delete_one(searchdict)
-        return {'status_code': 200, 'msg': '删除成功'}
+        company = session.get('company')
+
+        w = DB.db.weak.find_one({'_id': objid})
+        if not w:
+            return {'status_code': 500, 'msg': '删除失败'}
+        if company == w['company'] or company == '':
+            DB.db.weak.delete_one({'_id': objid})
+            return {'status_code': 200, 'msg': '删除成功'}
+        else:
+            return {'status_code': 500, 'msg': '删除失败'}
 
 
 class PocTaskAPI(Resource):
@@ -1416,9 +1507,16 @@ class PocAPI(Resource):
             return jsondata
 
     def delete(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
         args = self.parser.parse_args()
+
         if args.filename.split('.')[0] not in self.p.get_poc_list():
-            return {'status_code': 500, 'msg': '删除POC失败，此POC不存在'}
+            return {'status_code': 500, 'msg': '删除POC失败'}
+
         filename = self.poc_file_path + '\\' + args.filename
         cmd = r'del {}'.format(filename)
         os.system(cmd)
@@ -1427,10 +1525,14 @@ class PocAPI(Resource):
     def post(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
         args = self.parser.parse_args()
         objid = bson.ObjectId(args.objid)
         poc = args.poc
         url = args.asset
+
         try:
             file_data = request.files['file']
             path = self.poc_file_path
@@ -1446,7 +1548,9 @@ class PocAPI(Resource):
             DB.db.poc.update_one({'_id': objid}, {'$set': {'result': res, 'status': '检测完成',
                                                            'time': datetime.datetime.now().strftime(
                                                                "%Y-%m-%d %H:%M:%S")}})
+            # TODO: POC分类
             web = ['Struts2-015远程代码执行', 'Struts2-045远程代码执行', 'Struts2-046远程代码执行']
+
             for r in res:
                 if r['status'] == 'success':
                     DB.db.vuln.insert_one({
@@ -1473,25 +1577,29 @@ class ExtAPI(Resource):
     def get(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
         docs = get_yaml(self.config_path)
         ext_list = [ext for ext in docs.keys()]
         ext_dict = dict(zip(ext_list, [docs[doc]['status'] for doc in docs.keys()]))
         args = self.parser.parse_args()
         key_page = args.page
         key_limit = args.limit
-
         count = ext_dict.keys().__len__()
         jsondata = {'code': 0, 'msg': '', 'count': count}
-        if count == 0:  # 若没有数据返回空列表
+
+        if count == 0:
             jsondata.update({'data': []})
             return jsondata
 
-        if not key_page or not key_limit:  # 判断是否有分页查询参数
+        if not key_page or not key_limit:
             paginate = ext_list[:20]
         else:
             paginate = ext_list[(key_page - 1) * key_limit:key_page * key_limit]
 
         data = []
+
         if paginate:
             index = (key_page - 1) * key_limit + 1
             for i in paginate:
@@ -1512,6 +1620,9 @@ class ExtAPI(Resource):
     def post(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
         args = self.parser.parse_args()
         extname = args.name
 
@@ -1530,16 +1641,22 @@ class UserAPI(Resource):
     def put(self):
         if not session.get('status'):
             return redirect(url_for('html_system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
         args = self.parser.parse_args()
         company_name = args.company_name
         uname = args.uname
         upassword = args.upassword
         user_query = DB.db.user.find_one({'uname': uname})
-        company_query = DB.db.user.find_one({'ename': company_name})
+        company_query = DB.db.company.find_one({'ename': company_name})
+
         if user_query:
             return {'status_code': 201, 'msg': '用户名已存在'}
+
         if not company_query:
             return {'status_code': 201, 'msg': '厂商不存在'}
+
         new_user = {
             'ename': company_name,
             'uname': uname,
@@ -1551,21 +1668,26 @@ class UserAPI(Resource):
     def get(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
         args = self.parser.parse_args()
         key_page = args.page
         key_limit = args.limit
-
         count = DB.db.user.find().count()
         jsondata = {'code': 0, 'msg': '', 'count': count}
+
         if count == 0:
             jsondata.update({'data': []})
             return jsondata
+
         if not key_page or not key_limit:
             paginate = DB.db.user.find().limit(20).skip(0)
         else:
             paginate = DB.db.user.find().limit(key_limit).skip((key_page - 1) * key_limit)
 
         data = []
+
         if paginate:
             index = (key_page - 1) * key_limit + 1
             for i in paginate:
@@ -1586,19 +1708,150 @@ class UserAPI(Resource):
     def delete(self):
         if not session.get('status'):
             return redirect(url_for('html_system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
         args = self.parser.parse_args()
         uname = args.uname
+
         if uname == 'admin':
             return {'status_code': 500, 'msg': '删除用户失败，无权限'}
+
         searchdict = {'uname': uname}
         user_query = DB.db.user.find_one(searchdict)
+
         if not user_query:
             return {'status_code': 500, 'msg': '删除用户失败，无此用户'}
-        DB.db.user.delete_one(searchdict)
 
+        DB.db.user.delete_one(searchdict)
         return {'status_code': 200, 'msg': '删除用户成功'}
 
     def post(self):
         if not session.get('status'):
             return redirect(url_for('html_system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
         args = self.parser.parse_args()
+        uname = args.uname
+
+        if uname == 'admin':
+            return {'status_code': 500, 'msg': '重置失败，无权限'}
+
+        DB.db.user.update_one({'uname': uname}, {'$set': {'upassword': '123456'}})
+        return {'status_code': 200, 'msg': '重置密码成功'}
+
+# TODO: all
+class CaseAPI(Resource):
+    """检测用例类"""
+
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("company_name", type=str, location='json')
+        self.parser.add_argument("uname", type=str, location='json')
+        self.parser.add_argument("upassword", type=str, location='json')
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+
+    def put(self):
+        if not session.get('status'):
+            return redirect(url_for('html_system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
+        args = self.parser.parse_args()
+        company_name = args.company_name
+        uname = args.uname
+        upassword = args.upassword
+        user_query = DB.db.user.find_one({'uname': uname})
+        company_query = DB.db.company.find_one({'ename': company_name})
+
+        if user_query:
+            return {'status_code': 201, 'msg': '用户名已存在'}
+
+        if not company_query:
+            return {'status_code': 201, 'msg': '厂商不存在'}
+
+        new_user = {
+            'ename': company_name,
+            'uname': uname,
+            'upassword': upassword,
+        }
+        DB.db.user.insert_one(new_user)
+        return {'status_code': 200, 'msg': '添加用户成功'}
+
+    def get(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
+        args = self.parser.parse_args()
+        key_page = args.page
+        key_limit = args.limit
+        count = DB.db.user.find().count()
+        jsondata = {'code': 0, 'msg': '', 'count': count}
+
+        if count == 0:
+            jsondata.update({'data': []})
+            return jsondata
+
+        if not key_page or not key_limit:
+            paginate = DB.db.user.find().limit(20).skip(0)
+        else:
+            paginate = DB.db.user.find().limit(key_limit).skip((key_page - 1) * key_limit)
+
+        data = []
+
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                data1 = {
+                    'id': index,
+                    'company_name': i['ename'],
+                    'uname': i['uname'],
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
+
+    def delete(self):
+        if not session.get('status'):
+            return redirect(url_for('html_system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
+        args = self.parser.parse_args()
+        uname = args.uname
+
+        if uname == 'admin':
+            return {'status_code': 500, 'msg': '删除用户失败，无权限'}
+
+        searchdict = {'uname': uname}
+        user_query = DB.db.user.find_one(searchdict)
+
+        if not user_query:
+            return {'status_code': 500, 'msg': '删除用户失败，无此用户'}
+
+        DB.db.user.delete_one(searchdict)
+        return {'status_code': 200, 'msg': '删除用户成功'}
+
+    def post(self):
+        if not session.get('status'):
+            return redirect(url_for('html_system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
+        args = self.parser.parse_args()
+        uname = args.uname
+
+        if uname == 'admin':
+            return {'status_code': 500, 'msg': '重置失败，无权限'}
+
+        DB.db.user.update_one({'uname': uname}, {'$set': {'upassword': '123456'}})
+        return {'status_code': 200, 'msg': '重置密码成功'}

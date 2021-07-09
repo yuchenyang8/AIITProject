@@ -1,0 +1,59 @@
+{
+  "homeInfo": {
+    "title": "欢迎",
+    "href": "dashboard"
+  },
+  "logoInfo": {
+    "title": "安全评估平台",
+    "image": "static/images/logo.png",
+    "href": ""
+  },
+  "menuInfo": [
+    {
+      "title": "常规管理",
+      "icon": "fa fa-address-book",
+      "href": "",
+      "target": "_self",
+      "child": [
+        {
+          "title": "信息展示",
+          "href": "dashboard",
+          "icon": "fa fa-home",
+          "target": "_self"
+        },
+        {
+          "title": "信息管理",
+          "href": "",
+          "icon": "fa fa-tasks",
+          "target": "_self",
+          "child": [
+            {
+              "title": "资产管理",
+              "href": "func/asset",
+              "icon": "fa fa-money",
+              "target": "_self"
+            },
+            {
+              "title": "主机漏洞",
+              "href": "func/vulns/host",
+              "icon": "fa fa-industry",
+              "target": "_self"
+            },
+            {
+              "title": "WEB漏洞",
+              "href": "func/vulns/web",
+              "icon": "fa fa-tasks",
+              "target": "_self"
+            },
+            {
+              "title": "弱口令",
+              "href": "func/password",
+              "icon": "fa fa-tasks",
+              "target": "_self"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -11,7 +11,6 @@
 <div class="container-fluid">
     <div class="layuimini-container col-sm-9 col-md-10 main">
         <div class="layuimini-main">
-
             <script type="text/html" id="toolbarDemo">
                 <div class="layui-btn-container">
                     <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加用户
@@ -22,15 +21,12 @@
             <table class="layui-hide" id="currentTable_customer" lay-filter="currentTableFilter"></table>
 
             <script type="text/html" id="currentTableBar">
+                <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="reset">重置密码</a>
                 <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
             </script>
-
         </div>
     </div>
-
 </div>
-</div>
-
 
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
 <script>
@@ -104,14 +100,31 @@
                     })
                 });
             }
+            if (obj.event === 'reset') {
+                layer.confirm('确定重置该用户密码吗？', function (index) {
+                    $.ajax({
+                        url: "{{ url_for('api_user') }}",
+                        data: JSON.stringify(data),
+                        contentType: 'application/json;charset=UTF-8',
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (result) {
+                            if (result.status_code === 200) {
+                                layer.alert('重置密码成功!', {title: '提示', icon: 1})
+                                obj.del();
+                                layer.close(index);
+                            } else {
+                                layer.alert(result.msg, {title: '提示', icon: 2})
+                            }
+                        },
+                        error: function (e) {
+                            layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
+                        }
+                    })
+                });
+            }
         });
-
     });
-</script>
-<script type="text/html" id="company_tpl">
-    {% raw %}
-    <a href="/func/company/{{ d.company_name }}">{{ d.company_name }}</a>
-    {% endraw %}
 </script>
 </body>
 </html>

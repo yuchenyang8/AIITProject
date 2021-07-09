@@ -36,12 +36,6 @@
             </div>
         </fieldset>
 
-        <script type="text/html" id="toolbarDemo">
-{#            <div class="layui-btn-container">#}
-{#                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加漏洞</button>#}
-{#            </div>#}
-        </script>
-
         <table class="layui-hide" id="currentTable_task" lay-filter="currentTableFilter"></table>
 
         <script type="text/html" id="currentTableBar">
@@ -102,25 +96,6 @@
             return false;
         });
 
-        /**
-         * toolbar监听事件
-         */
-        table.on('toolbar(currentTableFilter)', function (obj) {
-            if (obj.event === 'add') {  // 监听添加操作
-                var index = layer.open({
-                    title: '添加漏洞',
-                    type: 2,
-                    shade: 0.2,
-                    maxmin: true,
-                    shadeClose: true,
-                    area: ['100%', '100%'],
-                    content: "{{ url_for('html_func_task_add') }}",
-                });
-                $(window).on("resize", function () {
-                    layer.full(index);
-                });
-            }
-        });
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
             if (obj.event === 'delete') {
