@@ -34,15 +34,15 @@
                         <div class="panel-body">
                             <div class="panel-title">
                                 <span class="label pull-right layui-bg-green">实时</span>
-                                <h1>厂商总数</h1>
+                                <h1>厂商概要</h1>
                             </div>
                             <div class="panel-content">
                                 <form class=“layui-form” action="">
                                     <div class="layui-form-item">
                                         <div class="select-label">
-                                                厂商列表：
+                                                厂商：
                                                 <select name="company" id="company_list" lay-verify="required">
-                                                    <option value="">请选择厂商</option>
+                                                    <option value="">全部厂商</option>
                                                 </select>
                                         </div>
                                     </div>
@@ -178,7 +178,6 @@
 <!-- 加载form模块，要不然下拉框调不出来 -->
 <script type="text/javascript">
     $(document).ready(function () {
-        console.log('###')
         $.ajax({
         type: "GET",
         url: "{{ url_for('api_dashboard') }}",
@@ -198,7 +197,6 @@
                 console.log('$$$')
                 $("#web_fingerprint").append("<h3 class=\"no-margins \">"+result['finger_types_sorted'][i-1]+"</h3>");
             }
-            console.log(result)
         },
         error: function (result) {
                 console.log("error")

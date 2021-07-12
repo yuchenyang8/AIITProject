@@ -15,7 +15,7 @@
         <script type="text/html" id="currentTableBar">
             {% raw %}
             <a class="layui-btn layui-btn-xs layui-btn-normal data-count-start" lay-event="info"
-               href="/func/poc/task/{{ d.objid }}">修改配置</a>
+               href="/extmanage/{{ d.name }}">修改配置</a>
             {% endraw %}
         </script>
 
@@ -73,44 +73,6 @@
         function payl(boj) {
             return $(boj).parent().parent().parent("tr").children('td').eq(1).children('div').children('span').children('strong').html();
         }
-
-        table.on('tool(currentTableFilter)', function (obj) {
-            var data = obj.data;
-            if (obj.event === 'start') {
-                layer.confirm('确定启用该插件吗?', function (index) {
-                    $.ajax({
-                        url: "{{ url_for('api_ext') }}",
-                        data: JSON.stringify(data),
-                        contentType: 'application/json;charset=UTF-8',
-                        dataType: 'json',
-                        type: 'post',
-                    })
-                });
-            }
-            if (obj.event === 'stop') {
-                layer.confirm('确定删除该资产吗?', function (index) {
-                    $.ajax({
-                        url: "{{ url_for('api_func_asset') }}",
-                        data: JSON.stringify(data),
-                        contentType: 'application/json;charset=UTF-8',
-                        dataType: 'json',
-                        type: 'post',
-                        success: function (result) {
-                            if (result.status_code === 200) {
-                                layer.alert('删除资产成功!', {title: '提示', icon: 1})
-                                obj.del();
-                                layer.close(index);
-                            } else {
-                                layer.alert(result.msg, {title: '提示', icon: 2})
-                            }
-                        },
-                        error: function (e) {
-                            layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
-                        }
-                    })
-                });
-            }
-        });
     });
 </script>
 <script type="text/html" id="ext_name_tpl">

@@ -1230,8 +1230,8 @@ class PasswordAPI(Resource):
         key_limit = args.limit
         key_searchparams = args.searchParams
         company = session.get('company')
-        count = (DB.db.weak.find({'host': host}).count() if host else DB.db.weak.find({'company': company}).count())\
-                if company else (DB.db.weak.find({'host': host}).count() if host else DB.db.weak.find().count())
+        count = (DB.db.weak.find({'host': host}).count() if host else DB.db.weak.find({'company': company}).count()) \
+            if company else (DB.db.weak.find({'host': host}).count() if host else DB.db.weak.find().count())
         jsondata = {'code': 0, 'msg': '', 'count': count}
 
         if count == 0:  # 若没有数据返回空列表
@@ -1571,8 +1571,12 @@ class ExtAPI(Resource):
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("name", type=str, location='json')
+        self.parser.add_argument("command", type=str, location='json')
+        self.parser.add_argument("dir", type=str, location='json')
+        self.parser.add_argument("result_dir", type=str, location='json')
 
         self.config_path = 'extensions\\ext_config.yaml'
+        self.docs = get_yaml(self.config_path)
 
     def get(self):
         if not session.get('status'):
@@ -1580,7 +1584,7 @@ class ExtAPI(Resource):
         if session.get('username') != 'admin':
             return {'status_code': 500, 'msg': '无权限'}
 
-        docs = get_yaml(self.config_path)
+        docs = self.docs
         ext_list = [ext for ext in docs.keys()]
         ext_dict = dict(zip(ext_list, [docs[doc]['status'] for doc in docs.keys()]))
         args = self.parser.parse_args()
@@ -1625,9 +1629,29 @@ class ExtAPI(Resource):
 
         args = self.parser.parse_args()
         extname = args.name
-        docs = get_yaml(self.config_path)
+        docs = self.docs
         docs[extname]['status'] = True if docs[extname]['status'] == False else False
         modify_yaml(self.config_path, docs)
+
+    def post(self):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
+        docs = self.docs
+        args = self.parser.parse_args()
+        extname = args.name
+        command = args.command
+        dir = args.dir
+        result_dir = args.result_dir
+
+        if command: docs[extname]['command'] = command
+        if dir: docs[extname]['dir'] = dir
+        if result_dir: docs[extname]['result_dir'] = result_dir
+
+        modify_yaml(self.config_path, docs)
+        return {'status_code': 200}
 
 
 class UserAPI(Resource):
@@ -1743,6 +1767,7 @@ class UserAPI(Resource):
 
         DB.db.user.update_one({'uname': uname}, {'$set': {'upassword': '123456'}})
         return {'status_code': 200, 'msg': '重置密码成功'}
+
 
 # TODO: all
 class CaseAPI(Resource):

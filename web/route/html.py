@@ -5,7 +5,7 @@ import bson
 from flask import request, session, redirect, url_for, render_template
 
 from web import APP, DB
-from web.utils.auxiliary import kill_process
+from web.utils.auxiliary import kill_process, get_yaml
 from web.utils.auxiliary import login_required, admin_required
 
 
@@ -217,6 +217,14 @@ def fetch_dashboard_page():
 def html_extensions_manage():
     """插件管理页面"""
     return render_template('ext_manage.html')
+
+
+@APP.route('/extmanage/<string:name>')
+@admin_required
+def html_extensions_modify(name):
+    """插件配置页面"""
+    ext = get_yaml('extensions\\ext_config.yaml')[name]
+    return render_template('ext_modify.html', ext=ext, name=name)
 
 
 @APP.route('/user')

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>MODIFY EXTENSION</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.5.5/css/layui.css') }}" media="all">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<script>
+    function back() {
+        window.history.back()
+    }
+</script>
+<body>
+<div class="layui-form layuimini-form">
+    <div class="layui-form-item">
+        <label class="layui-form-label">name</label>
+        <div class="layui-input-block">
+            <input type="text" name="name" class="layui-input" value="{{ name }}" disabled="true">
+        </div>
+    </div>
+    {% for item in ext %}
+        {% if item == 'status' %}
+        {% else %}
+            <div class="layui-form-item">
+                <label class="layui-form-label">{{ item }}</label>
+                <div class="layui-input-block">
+                    <input type="text" name="{{ item }}" class="layui-input" value="{{ ext[item] }}">
+                    {% if item == 'command' %}
+                        <tip>请输入需要执行的命令</tip>
+                    {% elif item == 'dir' %}
+                        <tip>请输入插件所在的路径</tip>
+                    {% elif item == 'result_dir' %}
+                        <tip>请输入插件执行结果所在的路径</tip>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="ext">确认修改</button>
+            <button class="layui-btn layui-btn-normal data-add-btn" lay-event="back" onclick="back()">
+                返回
+            </button>
+        </div>
+
+    </div>
+</div>
+<script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
+<script>
+    layui.use(['form'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+
+        //监听提交
+        form.on('submit(ext)', function (data) {
+            console.log(data.field)
+            $.ajax({
+                url: "{{ url_for('api_ext') }}",
+                data: JSON.stringify(data.field),
+                contentType: 'application/json;charset=UTF-8',
+                dataType: 'json',
+                type: 'post',
+                success: function (result) {
+                    if (result.status_code === 200) {
+                        let index = layer.alert('修改成功!', {
+                            title: '提示',
+                            icon: 1
+                        }, function () {
+                            window.location.reload();
+                        })
+                    } else {
+                        layer.alert(result.msg, {
+                            title: '提示',
+                            icon: 2
+                        })
+                    }
+                },
+                error: function (e) {
+                    layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
+                }
+            })
+            return false;
+        });
+    });
+</script>
+</body>
+</html>
