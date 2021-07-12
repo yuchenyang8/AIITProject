@@ -1,0 +1,11 @@
+dirsearch:
+  dir: D:\UY\\dirsearch\dirsearch.py
+  result_dir: D:\UY\dirsearch\result.json
+  status: false
+wafw00f:
+  dir: D:\UY\AIITProject\extensions\wafw00f\wafw00f\main.py
+  result_dir: D:\UY\AIITProject\extensions\wafw00f\result.json
+  status: true
+whatweb:
+  dir: D:\UY\AIITProject\extensions\WhatWeb\whatweb
+  status: true

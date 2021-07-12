@@ -1617,7 +1617,7 @@ class ExtAPI(Resource):
             jsondata.update({'data': []})
             return jsondata
 
-    def post(self):
+    def put(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
         if session.get('username') != 'admin':
@@ -1625,6 +1625,9 @@ class ExtAPI(Resource):
 
         args = self.parser.parse_args()
         extname = args.name
+        docs = get_yaml(self.config_path)
+        docs[extname]['status'] = True if docs[extname]['status'] == False else False
+        modify_yaml(self.config_path, docs)
 
 
 class UserAPI(Resource):

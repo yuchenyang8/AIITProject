@@ -15,10 +15,8 @@
         <script type="text/html" id="currentTableBar">
             {% raw %}
             <a class="layui-btn layui-btn-xs layui-btn-normal data-count-start" lay-event="info"
-               href="/func/poc/task/{{ d.objid }}">配置</a>
+               href="/func/poc/task/{{ d.objid }}">修改配置</a>
             {% endraw %}
-            <a class="layui-btn layui-btn-xs layui-btn-sm data-count-start" lay-event="start">启用</a>
-            <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="stop">停用</a>
         </script>
 
     </div>
@@ -43,11 +41,11 @@
                 {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
                 {field: 'name', title: '插件名称', align: "left", templet: '#ext_name_tpl', sort: true},
                 {
-                    field: 'status', title: '插件状态', align: "center", templet: function (d) {
+                    field: 'status', title: '插件状态', align: "right", templet: function (d) {
                         if (d.status) {
-                            return '<span style="color: #15b664;">已启用</span>'
+                            return '<input type="checkbox" id="uswitch" name="switch" value="' + d.status + '"lay-skin="switch" lay-text="启用|停用" checked lay-filter="extswitch">'
                         } else {
-                            return '<span style="color: #ff3333;">未启用</span>'
+                            return '<input type="checkbox" id="uswitch" name="switch" value="' + d.status + '"lay-skin="switch" lay-text="启用|停用" lay-filter="extswitch">'
                         }
                     }
                 },
@@ -59,6 +57,22 @@
             skin: 'line'
         });
 
+        form.on('switch(extswitch)', function (obj) {
+            {#let onoff = this.checked ? '0' : '1';#}
+            {#console.log(onoff, this.value);#}
+            let extname = payl(this);
+            $.ajax({
+                url: "{{ url_for('api_ext') }}",
+                data: JSON.stringify({'name': extname}),
+                contentType: 'application/json;charset=UTF-8',
+                dataType: 'json',
+                type: 'put',
+            })
+        });
+
+        function payl(boj) {
+            return $(boj).parent().parent().parent("tr").children('td').eq(1).children('div').children('span').children('strong').html();
+        }
 
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
