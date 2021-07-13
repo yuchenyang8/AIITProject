@@ -14,12 +14,11 @@
 
             <script type="text/html" id="toolbarDemo">
                 <div class="layui-btn-container">
-                    <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加手工检测结果
-                    </button>
+                    <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加手工检测结果</button>
                 </div>
             </script>
 
-            <table class="layui-hide" id="currentTable_customer" lay-filter="currentTableFilter"></table>
+            <table class="layui-hide" id="currentTable_casetask" lay-filter="currentTableFilter"></table>
 
             <script type="text/html" id="currentTableBar">
                 {% raw %}
@@ -31,7 +30,6 @@
 
         </div>
     </div>
-
 </div>
 
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
@@ -42,7 +40,7 @@
             table = layui.table;
 
         table.render({
-            elem: '#currentTable_customer',
+            elem: '#currentTable_casetask',
             url: "{{ url_for('api_case_task') }}",
             toolbar: '#toolbarDemo',
             size: 'lg',

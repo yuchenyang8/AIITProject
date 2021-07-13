@@ -23,7 +23,7 @@
     <div class="layui-form-item">
         <label class="layui-form-label">输入资产</label>
         <div class="layui-input-block">
-            <textarea rows="4" class="layui-textarea" name="asset"></textarea>
+            <textarea rows="4" class="layui-textarea" name="input_asset"></textarea>
             <tip>输入格式：</tip>
             <br/>
             <tip>xxx.example.com/xxx 某个域名</tip>
@@ -51,7 +51,7 @@
     function getCase() {
         let caselist;
         $.ajax({
-            url: "{{ url_for('api_func_poc', list=true) }}",
+            url: "{{ url_for('api_case', list=true) }}",
             dataType: 'json',
             type: 'get',
             async: false,
@@ -93,21 +93,20 @@
         });
 
         transfer.render({
-            elem: '#poc-list',
-            data: getPoc(),
-            id: 'poc-selected', //定义唯一索引
+            elem: '#case-list',
+            data: getCase(),
+            id: 'case-selected', //定义唯一索引
             width: 500,
             height: 340,
             showSearch: true,
-            title: ['待选POC列表', '已选POC']
+            title: ['待选用例列表', '已选用例编号']
         });
 
-        //监听提交
         form.on('submit(poc_task)', function (data) {
-            data.field['poc'] = transfer.getData('poc-selected');
+            data.field['cids'] = transfer.getData('case-selected');
             data.field['asset'] = transfer.getData('asset-selected');
             $.ajax({
-                url: "{{ url_for('api_func_poc_task') }}",
+                url: "{{ url_for('api_case_task') }}",
                 data: JSON.stringify(data.field),
                 contentType: 'application/json;charset=UTF-8',
                 dataType: 'json',
@@ -118,7 +117,7 @@
                             title: '提示',
                             icon: 1
                         }, function () {
-                            parent.layui.table.reload("currentTable_customer");
+                            parent.layui.table.reload("currentTable_casetask");
                             layer.close(index);
                             var iframeIndex = parent.layer.getFrameIndex(window.name);
                             parent.layer.close(iframeIndex);
@@ -137,8 +136,6 @@
             return false;
         });
     });
-
-
 </script>
 </body>
 </html>

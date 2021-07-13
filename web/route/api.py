@@ -1767,6 +1767,7 @@ class CaseAPI(Resource):
         self.parser.add_argument("cid", type=str, location='json')
         self.parser.add_argument("ctype", type=str, location='json')
         self.parser.add_argument("cdescription", type=str, location='json')
+        self.parser.add_argument("list", type=bool)
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
 
@@ -1797,11 +1798,23 @@ class CaseAPI(Resource):
         args = self.parser.parse_args()
         key_page = args.page
         key_limit = args.limit
+        u = args.list
         count = DB.db.case.find().count()
         jsondata = {'code': 0, 'msg': '', 'count': count}
 
         if count == 0:
             jsondata.update({'data': []})
+            return jsondata
+
+        case_transfer_list = []
+
+        if u:
+            cases = DB.db.case.find()
+            c = 1
+            for case in cases:
+                case_transfer_list.append({'value': c, 'title': case['cid']})
+                c += 1
+            jsondata.update({'data': case_transfer_list})
             return jsondata
 
         if not key_page or not key_limit:
@@ -1851,6 +1864,10 @@ class CaseTaskAPI(Resource):
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("objid", type=str, location='json')
+        self.parser.add_argument("input_asset", type=str, location='json')
+        self.parser.add_argument("asset", type=str, location='json')
+        self.parser.add_argument("cids", type=str, location='json')
+        self.parser.add_argument("name", type=str, location='json')
 
     @api_required
     def get(self):
@@ -1907,7 +1924,8 @@ class CaseTaskAPI(Resource):
     def put(self):
         args = self.parser.parse_args()
         input_asset = args.input_asset
-        name = args.poc_task_name
+        name = args.name
+        cids = args.cids
         asset = [a['title'] for a in eval(args.asset)]
 
         if input_asset:
@@ -1915,14 +1933,12 @@ class CaseTaskAPI(Resource):
             for a in alist:
                 asset.append(a)
 
-        poc = [p['title'] for p in eval(args.poc)]
-        new_poc_task = {
-            'task_name': task_name,
-            'cycle': cycle if cycle else '-',
+        case = [c['title'] for c in eval(args.cids)]
+        new_case_task = {
+            'name': name,
             'asset': asset,
-            'poc': poc,
-            'time': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'status': '未开始',
+            'cids': case,
+            'time': datetime.datetime.now(),
         }
-        DB.db.poc.insert_one(new_poc_task)
-        return {'status_code': 200, 'msg': '创建POC任务成功'}
+        DB.db.casetask.insert_one(new_case_task)
+        return {'status_code': 200, 'msg': '创建成功'}
