@@ -34,4 +34,6 @@ API.add_resource(ChartAPI, '/api/func/chart', endpoint='api_func_chart')
 API.add_resource(DashBoardAPI, '/api/dashboard', endpoint='api_dashboard')
 API.add_resource(ExtAPI, '/api/ext', endpoint='api_ext')
 API.add_resource(UserAPI, '/api/user', endpoint='api_user')
+API.add_resource(CaseAPI, '/api/case', endpoint='api_case')
+API.add_resource(CaseTaskAPI, '/api/case/task', endpoint='api_case_task')
 

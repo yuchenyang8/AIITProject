@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>CASE TASK</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.5.5/css/layui.css') }}" media="all">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}" media="all">
+
+</head>
+<body>
+<div class="container-fluid">
+    <div class="layuimini-container col-sm-9 col-md-10 main">
+        <div class="layuimini-main">
+
+            <script type="text/html" id="toolbarDemo">
+                <div class="layui-btn-container">
+                    <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加手工检测结果
+                    </button>
+                </div>
+            </script>
+
+            <table class="layui-hide" id="currentTable_customer" lay-filter="currentTableFilter"></table>
+
+            <script type="text/html" id="currentTableBar">
+                {% raw %}
+                <a class="layui-btn layui-btn-xs layui-btn-normal data-count-start" lay-event="info"
+                   href="/func/poc/task/{{ d.objid }}">查看报告</a>
+                {% endraw %}
+                <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+            </script>
+
+        </div>
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+
+        table.render({
+            elem: '#currentTable_customer',
+            url: "{{ url_for('api_case_task') }}",
+            toolbar: '#toolbarDemo',
+            size: 'lg',
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [[
+                {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
+                {field: 'name', title: '任务名', align: "center"},
+                {
+                    field: 'asset', title: '资产列表', unresize: true, templet: function (d) {
+                        let res = "";
+                        $.each(d.asset, function (index, item) {
+                            res += '<option value="">' + item + '</option>';
+                        });
+                        return '<select name="asset" lay-filter="testSelect" lay-verify="required" data-value="">\n' + res + '</select>';
+                    }, align: "center"
+                },
+                {
+                    field: 'cids', title: '用例列表', unresize: true, templet: function (d) {
+                        let res = "";
+                        $.each(d.cids, function (index, item) {
+                            res += '<option value="">' + item + '</option>';
+                        });
+                        return '<select name="poc" lay-filter="testSelect" lay-verify="required" data-value="" >\n' + res + '</select>';
+                    }, align: "center"
+                },
+                {field: 'time', title: '创建时间', align: "center"},
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 20,
+            page: true,
+            skin: 'line',
+            done: function (res, curr, count) {
+                $(".layui-table-body, .layui-table-box, .layui-table-cell").css('overflow', 'visible');
+                form.render();
+            }
+        });
+
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {
+                var index = layer.open({
+                    title: '新建手工检测结果',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: "{{ url_for('html_func_case_add') }}",
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            }
+        });
+
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'delete') {
+                layer.confirm('确定删除该任务吗?', function (index) {
+                    $.ajax({
+                        url: "{{ url_for('api_case_task') }}",
+                        data: JSON.stringify(data),
+                        contentType: 'application/json;charset=UTF-8',
+                        dataType: 'json',
+                        type: 'delete',
+                        success: function (result) {
+                            if (result.status_code === 200) {
+                                layer.alert('删除任务成功!', {title: '提示', icon: 1})
+                                obj.del();
+                                layer.close(index);
+                            } else {
+                                layer.alert(result.msg, {title: '提示', icon: 2})
+                            }
+                        },
+                        error: function (e) {
+                            layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
+                        }
+                    })
+                });
+            }
+        });
+
+    });
+</script>
+</body>
+</html>

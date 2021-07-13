@@ -28,10 +28,21 @@ def admin_required(func):
 
     @wraps(func)
     def inner(*args, **kwargs):
-
         user = session.get('username')
         if user != 'admin':
             return redirect(url_for('system_login'), 302)
+        return func(*args, **kwargs)
+
+    return inner
+
+
+def api_required(func):
+    @wraps(func)
+    def inner(*args, **kwargs):
+        if not session.get('status'):
+            return redirect(url_for('system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
         return func(*args, **kwargs)
 
     return inner

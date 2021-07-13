@@ -68,12 +68,18 @@
             {
               "title": "WEB漏洞",
               "href": "func/vulns/web",
-              "icon": "fa fa-tasks",
+              "icon": "fa fa-industry",
               "target": "_self"
             },
             {
               "title": "弱口令",
               "href": "func/password",
+              "icon": "fa fa-tasks",
+              "target": "_self"
+            },
+            {
+              "title": "手工检测",
+              "href": "func/case",
               "icon": "fa fa-tasks",
               "target": "_self"
             }
@@ -99,7 +105,7 @@
             },
             {
               "title": "检测用例管理",
-              "href": "",
+              "href": "case",
               "icon": "fa fa-tasks",
               "target": "_self"
             }

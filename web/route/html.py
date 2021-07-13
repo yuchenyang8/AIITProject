@@ -246,3 +246,31 @@ def html_user_add():
 def html_user_modify():
     """用户修改密码页面"""
     return render_template('user_modify.html')
+
+
+@APP.route('/case')
+@admin_required
+def html_case_manage():
+    """检测用例管理页面"""
+    return render_template('case.html')
+
+
+@APP.route('/case/add')
+@admin_required
+def html_case_add():
+    """检测用例添加页面"""
+    return render_template('case_add.html')
+
+
+@APP.route('/func/case')
+@admin_required
+def html_func_case_manage():
+    """检测用例结果管理页面"""
+    return render_template('case_result.html')
+
+
+@APP.route('/func/case/add')
+@admin_required
+def html_func_case_add():
+    """检测用例结果添加页面"""
+    return render_template('case_result_add.html')

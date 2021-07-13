@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>ADD POC TASK</title>
+    <title>ADD CASE TASK</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.5.5/css/layui.css') }}" media="all">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}" media="all">
     <style>
@@ -16,27 +16,14 @@
     <div class="layui-form-item">
         <label class="layui-form-label required">任务名称</label>
         <div class="layui-input-block">
-            <input type="text" name="poc_task_name" lay-verify="required" lay-reqtext="任务名不能为空" placeholder="请输入任务名"
+            <input type="text" name="name" lay-verify="required" lay-reqtext="任务名不能为空" placeholder="请输入任务名"
                    class="layui-input">
-        </div>
-    </div>
-    <div class="layui-form-item">
-        <label class="layui-form-label required">扫描周期</label>
-        <div class="layui-input-block">
-            <select name="poc_task_cycle">
-                <option value="">选择周期</option>
-                <option value=1>仅扫描一次</option>
-                <option value=2>一天一次</option>
-                <option value=3>一周一次</option>
-                <option value=4>两周一次</option>
-                <option value=5>一月一次</option>
-            </select>
         </div>
     </div>
     <div class="layui-form-item">
         <label class="layui-form-label">输入资产</label>
         <div class="layui-input-block">
-            <textarea rows="4" class="layui-textarea" name="input_asset"></textarea>
+            <textarea rows="4" class="layui-textarea" name="asset"></textarea>
             <tip>输入格式：</tip>
             <br/>
             <tip>xxx.example.com/xxx 某个域名</tip>
@@ -49,8 +36,8 @@
         <div id="asset-list" class="asset-transfer"></div>
     </div>
     <div class="layui-form-item">
-        <label class="layui-form-label required">选择POC</label>
-        <div id="poc-list" class="poc-transfer"></div>
+        <label class="layui-form-label required">选择检测用例</label>
+        <div id="case-list" class="case-transfer"></div>
     </div>
     <div class="layui-form-item">
         <div class="layui-input-block" align="left">
@@ -61,22 +48,22 @@
 <script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
 <script src="{{ url_for('static', filename='lib/jquery-3.4.1/jquery-3.4.1.min.js') }}" charset="utf-8"></script>
 <script>
-    function getPoc() {
-        var poclist;
+    function getCase() {
+        let caselist;
         $.ajax({
             url: "{{ url_for('api_func_poc', list=true) }}",
             dataType: 'json',
             type: 'get',
             async: false,
             success: function (res) {
-                poclist = res.data;
+                caselist = res.data;
             }
         });
-        return poclist;
+        return caselist;
     }
 
     function getAsset() {
-        var assetlist;
+        let assetlist;
         $.ajax({
             url: "{{ url_for('api_func_asset', list=true) }}",
             dataType: 'json',

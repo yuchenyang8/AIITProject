@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 
 from extensions.ext import *
 from web import DB
-from web.utils.auxiliary import get_title, get_yaml, modify_yaml
+from web.utils.auxiliary import get_title, get_yaml, modify_yaml, api_required
 
 
 class UserLoginAPI(Resource):
@@ -380,7 +380,7 @@ class FuncAssetAPI(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("asset_company", type=str, location='json')
-        self.parser.add_argument("u", type=str)
+        self.parser.add_argument("list", type=bool)
         self.parser.add_argument("name", type=str, location='json')
         self.parser.add_argument("objid", type=str, location='json')
         self.parser.add_argument("type", type=str)
@@ -393,7 +393,7 @@ class FuncAssetAPI(Resource):
             return redirect(url_for('system_login'), 302)
 
         args = self.parser.parse_args()
-        u = args.u
+        u = args.list
         asset_type = args.type
         key_page = args.page
         key_limit = args.limit
@@ -413,7 +413,7 @@ class FuncAssetAPI(Resource):
 
         asset_transfer_list = []
 
-        if u == 'uy':  # poc task get assets list, only admin
+        if u:
             assets = DB.db.asset.find()
             c = 1
             for asset in assets:
@@ -1322,18 +1322,19 @@ class PocTaskAPI(Resource):
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
 
+    @api_required
     def put(self):
-        if not session.get('status'):
-            return redirect(url_for('html_system_login'), 302)
         args = self.parser.parse_args()
         input_asset = args.input_asset
         task_name = args.poc_task_name
         cycle = args.poc_task_cycle
         asset = [a['title'] for a in eval(args.asset)]
+
         if input_asset:
             alist = list(set(input_asset.split()))
             for a in alist:
                 asset.append(a)
+
         poc = [p['title'] for p in eval(args.poc)]
         new_poc_task = {
             'task_name': task_name,
@@ -1360,36 +1361,25 @@ class PocTaskAPI(Resource):
                 result_info.update({item[0]: item[1]})
             DB.db.poc.insert_one(result_info)
 
+    @api_required
     def get(self):
-        if not session.get('status'):
-            return redirect(url_for('system_login'), 302)
         args = self.parser.parse_args()
         key_page = args.page
         key_limit = args.limit
-        # key_searchparams = args.searchParams
         count = DB.db.poc.find().count()
         jsondata = {'code': 0, 'msg': '', 'count': count}
-        if count == 0:  # 若没有数据返回空列表
+
+        if count == 0:
             jsondata.update({'data': []})
             return jsondata
-        # if not key_searchparams:  # 若没有查询参数
-        if not key_page or not key_limit:  # 判断是否有分页查询参数
+
+        if not key_page or not key_limit:
             paginate = DB.db.poc.find().limit(20).skip(0)
         else:
             paginate = DB.db.poc.find().limit(key_limit).skip((key_page - 1) * key_limit)
-        # else:
-        #     try:
-        #         search_dict = json.loads(key_searchparams)  # 解析查询参数
-        #     except:
-        #         paginate = DB.db.poc.find().limit(20).skip(0)
-        #     else:
-        #         if 'company_name' not in search_dict:  # 查询参数有误
-        #             paginate = DB.db.poc.find().limit(20).skip(0)
-        #         else:
-        #             paginate1 = DB.db.poc.find({'ename': re.compile(search_dict['company_name'])})
-        #             paginate = paginate1.limit(key_limit).skip((key_page - 1) * key_limit)
-        #             jsondata = {'code': 0, 'msg': '', 'count': paginate1.count()}
+
         data = []
+
         if paginate:
             index = (key_page - 1) * key_limit + 1
             for i in paginate:
@@ -1415,12 +1405,17 @@ class PocTaskAPI(Resource):
     def delete(self):
         if not session.get('status'):
             return redirect(url_for('html_system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
         args = self.parser.parse_args()
         objid = bson.ObjectId(args.objid)
         searchdict = {'_id': objid}
         poctask_query = DB.db.poc.find_one(searchdict)
+
         if not poctask_query:
             return {'status_code': 500, 'msg': '删除失败，不存在'}
+
         DB.db.poc.delete_one(searchdict)
         return {'status_code': 200, 'msg': '删除成功'}
 
@@ -1434,7 +1429,7 @@ class PocAPI(Resource):
         self.parser.add_argument("poc", type=list, location='json')
         self.parser.add_argument("asset", type=list, location='json')
         self.parser.add_argument("objid", type=str, location='json')
-        self.parser.add_argument("u", type=str)
+        self.parser.add_argument("list", type=bool)
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("searchParams", type=str)
@@ -1444,47 +1439,56 @@ class PocAPI(Resource):
     def get(self):
         if not session.get('status'):
             return redirect(url_for('system_login'), 302)
+        if session.get('username') != 'admin':
+            return {'status_code': 500, 'msg': '无权限'}
+
         args = self.parser.parse_args()
-        u = args.u
+        u = args.list
         key_page = args.page
         key_limit = args.limit
         key_searchparams = args.searchParams
         poc_list = self.p.get_poc_list()
         count = len(poc_list)
         jsondata = {'code': 0, 'msg': '', 'count': count}
-        if count == 0:  # 若没有数据返回空列表
+
+        if count == 0:
             jsondata.update({'data': []})
             return jsondata
+
         poc_info_list = []
         value = 1
         poc_transfer_list = []
+
         for poc in poc_list:
             poc_info = self.p.get_poc_info(poc_name=poc)
             poc_info_list.append(poc_info)
             poc_transfer_list.append({'value': value, 'title': poc})
             value += 1
 
-        if u == 'uy':
+        if u:
             jsondata.update({'data': poc_transfer_list})
             return jsondata
-        if not key_searchparams:  # 若没有查询参数
-            if not key_page or not key_limit:  # 判断是否有分页查询参数
+
+        if not key_searchparams:
+            if not key_page or not key_limit:
                 paginate = poc_info_list[:20]
             else:
                 paginate = poc_info_list[(key_page - 1) * key_limit:key_page * key_limit]
         else:
             try:
-                search_dict = json.loads(key_searchparams)  # 解析查询参数
+                search_dict = json.loads(key_searchparams)
             except:
                 paginate = poc_info_list[:20]
             else:
-                if 'poc_name' not in search_dict:  # 查询参数有误
+                if 'poc_name' not in search_dict:
                     paginate = poc_info_list[:20]
                 else:
                     paginate1 = [x for i, x in enumerate(poc_info_list) if search_dict['poc_name'] in x['name']]
                     paginate = paginate1[(key_page - 1) * key_limit:key_page * key_limit]
                     jsondata = {'code': 0, 'msg': '', 'count': len(paginate1)}
+
         data = []
+
         if paginate:
             index = (key_page - 1) * key_limit + 1
             for i in paginate:
@@ -1665,11 +1669,8 @@ class UserAPI(Resource):
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
 
+    @api_required
     def put(self):
-        if not session.get('status'):
-            return redirect(url_for('html_system_login'), 302)
-        if session.get('username') != 'admin':
-            return {'status_code': 500, 'msg': '无权限'}
 
         args = self.parser.parse_args()
         company_name = args.company_name
@@ -1692,12 +1693,8 @@ class UserAPI(Resource):
         DB.db.user.insert_one(new_user)
         return {'status_code': 200, 'msg': '添加用户成功'}
 
+    @api_required
     def get(self):
-        if not session.get('status'):
-            return redirect(url_for('system_login'), 302)
-        if session.get('username') != 'admin':
-            return {'status_code': 500, 'msg': '无权限'}
-
         args = self.parser.parse_args()
         key_page = args.page
         key_limit = args.limit
@@ -1732,12 +1729,8 @@ class UserAPI(Resource):
             jsondata.update({'data': []})
             return jsondata
 
+    @api_required
     def delete(self):
-        if not session.get('status'):
-            return redirect(url_for('html_system_login'), 302)
-        if session.get('username') != 'admin':
-            return {'status_code': 500, 'msg': '无权限'}
-
         args = self.parser.parse_args()
         uname = args.uname
 
@@ -1753,12 +1746,8 @@ class UserAPI(Resource):
         DB.db.user.delete_one(searchdict)
         return {'status_code': 200, 'msg': '删除用户成功'}
 
+    @api_required
     def post(self):
-        if not session.get('status'):
-            return redirect(url_for('html_system_login'), 302)
-        if session.get('username') != 'admin':
-            return {'status_code': 500, 'msg': '无权限'}
-
         args = self.parser.parse_args()
         uname = args.uname
 
@@ -1769,55 +1758,46 @@ class UserAPI(Resource):
         return {'status_code': 200, 'msg': '重置密码成功'}
 
 
-# TODO: all
 class CaseAPI(Resource):
     """检测用例类"""
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument("company_name", type=str, location='json')
-        self.parser.add_argument("uname", type=str, location='json')
-        self.parser.add_argument("upassword", type=str, location='json')
+        self.parser.add_argument("cname", type=str, location='json')
+        self.parser.add_argument("cid", type=str, location='json')
+        self.parser.add_argument("ctype", type=str, location='json')
+        self.parser.add_argument("cdescription", type=str, location='json')
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
 
+    @api_required
     def put(self):
-        if not session.get('status'):
-            return redirect(url_for('html_system_login'), 302)
-        if session.get('username') != 'admin':
-            return {'status_code': 500, 'msg': '无权限'}
-
         args = self.parser.parse_args()
-        company_name = args.company_name
-        uname = args.uname
-        upassword = args.upassword
-        user_query = DB.db.user.find_one({'uname': uname})
-        company_query = DB.db.company.find_one({'ename': company_name})
+        cname = args.cname
+        cid = args.cid
+        ctype = args.ctype
+        cdescription = args.cdescription
+        cname_query = DB.db.case.find_one({'cname': cname})
+        cid_query = DB.db.case.find_one({'cid': cid})
 
-        if user_query:
-            return {'status_code': 201, 'msg': '用户名已存在'}
+        if cname_query or cid_query:
+            return {'status_code': 500, 'msg': '用例已存在'}
 
-        if not company_query:
-            return {'status_code': 201, 'msg': '厂商不存在'}
-
-        new_user = {
-            'ename': company_name,
-            'uname': uname,
-            'upassword': upassword,
+        new_case = {
+            'cname': cname,
+            'cid': cid,
+            'ctype': ctype,
+            'cdescription': cdescription,
         }
-        DB.db.user.insert_one(new_user)
-        return {'status_code': 200, 'msg': '添加用户成功'}
+        DB.db.case.insert_one(new_case)
+        return {'status_code': 200, 'msg': '添加用例成功'}
 
+    @api_required
     def get(self):
-        if not session.get('status'):
-            return redirect(url_for('system_login'), 302)
-        if session.get('username') != 'admin':
-            return {'status_code': 500, 'msg': '无权限'}
-
         args = self.parser.parse_args()
         key_page = args.page
         key_limit = args.limit
-        count = DB.db.user.find().count()
+        count = DB.db.case.find().count()
         jsondata = {'code': 0, 'msg': '', 'count': count}
 
         if count == 0:
@@ -1825,9 +1805,9 @@ class CaseAPI(Resource):
             return jsondata
 
         if not key_page or not key_limit:
-            paginate = DB.db.user.find().limit(20).skip(0)
+            paginate = DB.db.case.find().limit(20).skip(0)
         else:
-            paginate = DB.db.user.find().limit(key_limit).skip((key_page - 1) * key_limit)
+            paginate = DB.db.case.find().limit(key_limit).skip((key_page - 1) * key_limit)
 
         data = []
 
@@ -1836,8 +1816,10 @@ class CaseAPI(Resource):
             for i in paginate:
                 data1 = {
                     'id': index,
-                    'company_name': i['ename'],
-                    'uname': i['uname'],
+                    'cname': i['cname'],
+                    'cid': i['cid'],
+                    'ctype': i['ctype'],
+                    'cdescription': i['cdescription'],
                 }
                 data.append(data1)
                 index += 1
@@ -1848,38 +1830,99 @@ class CaseAPI(Resource):
             jsondata.update({'data': []})
             return jsondata
 
+    @api_required
     def delete(self):
-        if not session.get('status'):
-            return redirect(url_for('html_system_login'), 302)
-        if session.get('username') != 'admin':
-            return {'status_code': 500, 'msg': '无权限'}
-
         args = self.parser.parse_args()
-        uname = args.uname
+        cname = args.cname
+        case_query = DB.db.case.find_one({'cname': cname})
 
-        if uname == 'admin':
-            return {'status_code': 500, 'msg': '删除用户失败，无权限'}
+        if not case_query:
+            return {'status_code': 500, 'msg': '删除失败'}
 
-        searchdict = {'uname': uname}
-        user_query = DB.db.user.find_one(searchdict)
+        DB.db.case.delete_one({'cname': cname})
+        return {'status_code': 200, 'msg': '删除成功'}
 
-        if not user_query:
-            return {'status_code': 500, 'msg': '删除用户失败，无此用户'}
 
-        DB.db.user.delete_one(searchdict)
-        return {'status_code': 200, 'msg': '删除用户成功'}
+class CaseTaskAPI(Resource):
+    """手工检测结果类"""
 
-    def post(self):
-        if not session.get('status'):
-            return redirect(url_for('html_system_login'), 302)
-        if session.get('username') != 'admin':
-            return {'status_code': 500, 'msg': '无权限'}
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument("page", type=int)
+        self.parser.add_argument("limit", type=int)
+        self.parser.add_argument("objid", type=str, location='json')
 
+    @api_required
+    def get(self):
         args = self.parser.parse_args()
-        uname = args.uname
+        key_page = args.page
+        key_limit = args.limit
+        count = DB.db.casetask.find().count()
+        jsondata = {'code': 0, 'msg': '', 'count': count}
 
-        if uname == 'admin':
-            return {'status_code': 500, 'msg': '重置失败，无权限'}
+        if count == 0:
+            jsondata.update({'data': []})
+            return jsondata
 
-        DB.db.user.update_one({'uname': uname}, {'$set': {'upassword': '123456'}})
-        return {'status_code': 200, 'msg': '重置密码成功'}
+        if not key_page or not key_limit:
+            paginate = DB.db.casetask.find().limit(20).skip(0)
+        else:
+            paginate = DB.db.casetask.find().limit(key_limit).skip((key_page - 1) * key_limit)
+
+        data = []
+
+        if paginate:
+            index = (key_page - 1) * key_limit + 1
+            for i in paginate:
+                data1 = {
+                    'id': index,
+                    'objid': str(i['_id']),
+                    'name': i['name'],
+                    'cids': i['cids'],
+                    'asset': i['asset'],
+                    'time': i['time'].strftime("%Y-%m-%d %H:%M:%S"),
+                }
+                data.append(data1)
+                index += 1
+            jsondata.update({'data': data})
+            return jsondata
+        else:
+            jsondata = {'code': 0, 'msg': '', 'count': 0}
+            jsondata.update({'data': []})
+            return jsondata
+
+    @api_required
+    def delete(self):
+        args = self.parser.parse_args()
+        objid = bson.ObjectId(args.objid)
+        casetask_query = DB.db.casetask.find_one({'_id': objid})
+
+        if not casetask_query:
+            return {'status_code': 500, 'msg': '删除失败'}
+
+        DB.db.casetask.delete_one({'_id': objid})
+        return {'status_code': 200, 'msg': '删除成功'}
+
+    @api_required
+    def put(self):
+        args = self.parser.parse_args()
+        input_asset = args.input_asset
+        name = args.poc_task_name
+        asset = [a['title'] for a in eval(args.asset)]
+
+        if input_asset:
+            alist = list(set(input_asset.split()))
+            for a in alist:
+                asset.append(a)
+
+        poc = [p['title'] for p in eval(args.poc)]
+        new_poc_task = {
+            'task_name': task_name,
+            'cycle': cycle if cycle else '-',
+            'asset': asset,
+            'poc': poc,
+            'time': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'status': '未开始',
+        }
+        DB.db.poc.insert_one(new_poc_task)
+        return {'status_code': 200, 'msg': '创建POC任务成功'}
