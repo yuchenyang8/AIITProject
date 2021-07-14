@@ -357,7 +357,7 @@ class FuncTaskAPI(Resource):
             else:
                 return {'code': 500, 'msg': '上传失败！'}
         except:
-            pass
+            return {'code': 500, 'msg': '上传失败！'}
 
     def delete(self):
         if not session.get('status'):
@@ -1767,12 +1767,14 @@ class CaseAPI(Resource):
         self.parser.add_argument("cid", type=str, location='json')
         self.parser.add_argument("ctype", type=str, location='json')
         self.parser.add_argument("cdescription", type=str, location='json')
+        self.parser.add_argument("objid", type=str, location='json')
         self.parser.add_argument("list", type=bool)
         self.parser.add_argument("page", type=int)
         self.parser.add_argument("limit", type=int)
 
     @api_required
     def put(self):
+        """add case"""
         args = self.parser.parse_args()
         cname = args.cname
         cid = args.cid
@@ -1795,6 +1797,7 @@ class CaseAPI(Resource):
 
     @api_required
     def get(self):
+        """get cases"""
         args = self.parser.parse_args()
         key_page = args.page
         key_limit = args.limit
@@ -1829,6 +1832,7 @@ class CaseAPI(Resource):
             for i in paginate:
                 data1 = {
                     'id': index,
+                    'objid': str(i['_id']),
                     'cname': i['cname'],
                     'cid': i['cid'],
                     'ctype': i['ctype'],
@@ -1845,14 +1849,15 @@ class CaseAPI(Resource):
 
     @api_required
     def delete(self):
+        """delete case"""
         args = self.parser.parse_args()
-        cname = args.cname
-        case_query = DB.db.case.find_one({'cname': cname})
+        objid = args.objid
+        case_query = DB.db.case.find_one({'_id': objid})
 
         if not case_query:
             return {'status_code': 500, 'msg': '删除失败'}
 
-        DB.db.case.delete_one({'cname': cname})
+        DB.db.case.delete_one({'_id': objid})
         return {'status_code': 200, 'msg': '删除成功'}
 
 
@@ -1865,12 +1870,14 @@ class CaseTaskAPI(Resource):
         self.parser.add_argument("limit", type=int)
         self.parser.add_argument("objid", type=str, location='json')
         self.parser.add_argument("input_asset", type=str, location='json')
+        self.parser.add_argument("file_name", type=str, location='json')
         self.parser.add_argument("asset", type=str, location='json')
         self.parser.add_argument("cids", type=str, location='json')
         self.parser.add_argument("name", type=str, location='json')
 
     @api_required
     def get(self):
+        """get case tasks"""
         args = self.parser.parse_args()
         key_page = args.page
         key_limit = args.limit
@@ -1897,6 +1904,7 @@ class CaseTaskAPI(Resource):
                     'name': i['name'],
                     'cids': i['cids'],
                     'asset': i['asset'],
+                    'reports': i['reports'],
                     'time': i['time'].strftime("%Y-%m-%d %H:%M:%S"),
                 }
                 data.append(data1)
@@ -1910,6 +1918,7 @@ class CaseTaskAPI(Resource):
 
     @api_required
     def delete(self):
+        """delete case task"""
         args = self.parser.parse_args()
         objid = bson.ObjectId(args.objid)
         casetask_query = DB.db.casetask.find_one({'_id': objid})
@@ -1922,11 +1931,14 @@ class CaseTaskAPI(Resource):
 
     @api_required
     def put(self):
+        """add case task"""
         args = self.parser.parse_args()
         input_asset = args.input_asset
+        file_name = args.file_name
         name = args.name
         cids = args.cids
         asset = [a['title'] for a in eval(args.asset)]
+        reports = file_name.split('\n')[0]
 
         if input_asset:
             alist = list(set(input_asset.split()))
@@ -1938,7 +1950,27 @@ class CaseTaskAPI(Resource):
             'name': name,
             'asset': asset,
             'cids': case,
+            'reports': reports,
             'time': datetime.datetime.now(),
         }
         DB.db.casetask.insert_one(new_case_task)
         return {'status_code': 200, 'msg': '创建成功'}
+
+    @api_required
+    def post(self):
+        """upload case task report"""
+        try:
+            file_data = request.files['file']
+            if file_data:
+                if os.path.exists('upload\\reports\\' + secure_filename(file_data.filename)):
+                    return {'code': 500, 'msg': '上传失败！'}
+
+                if file_data.filename.split('.')[-1] in ['doc', 'docx']:
+                    file_data.save('upload\\reports\\' + secure_filename(file_data.filename))
+                    return {'code': 200, 'msg': '上传成功！'}
+                else:
+                    return {'code': 500, 'msg': '上传失败！'}
+            else:
+                return {'code': 500, 'msg': '上传失败！'}
+        except:
+            return {'code': 500, 'msg': '上传失败！'}

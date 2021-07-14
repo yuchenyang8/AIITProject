@@ -14,7 +14,8 @@
 
             <script type="text/html" id="toolbarDemo">
                 <div class="layui-btn-container">
-                    <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加手工检测结果</button>
+                    <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加手工检测结果
+                    </button>
                 </div>
             </script>
 
@@ -22,8 +23,7 @@
 
             <script type="text/html" id="currentTableBar">
                 {% raw %}
-                <a class="layui-btn layui-btn-xs layui-btn-normal data-count-start" lay-event="info"
-                   href="/func/poc/task/{{ d.objid }}">查看报告</a>
+                    <a class="layui-btn layui-btn-xs layui-btn-normal data-count-start" href="/download/{{ d.reports }}">下载报告</a>
                 {% endraw %}
                 <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
             </script>
@@ -102,6 +102,21 @@
 
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
+            let reports = data['reports'];
+
+            if (obj.event === 'download') {
+                for (let index in reports) {
+                    console.log(reports[index]);
+                    let report = reports[index];
+                    $.ajax({
+                        url: "{{ url_for('api_case') }}",
+                        data: JSON.stringify(data),
+                        contentType: 'application/json;charset=UTF-8',
+                        dataType: 'json',
+                        type: 'post',
+                    })
+                }
+            }
             if (obj.event === 'delete') {
                 layer.confirm('确定删除该任务吗?', function (index) {
                     $.ajax({

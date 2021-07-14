@@ -28,7 +28,7 @@
             <br/>
             <tip>xxx.example.com/xxx 某个域名</tip>
             <br/>
-            <tip>8.8.8.8  某个IP</tip>
+            <tip>8.8.8.8 某个IP</tip>
         </div>
     </div>
     <div class="layui-form-item">
@@ -39,9 +39,31 @@
         <label class="layui-form-label required">选择检测用例</label>
         <div id="case-list" class="case-transfer"></div>
     </div>
+    <div id="task-upload" class="layui-form-item">
+        <label class="layui-form-label required">文件列表</label>
+        <div class="layui-input-block">
+            <textarea rows="1" required lay-verify="required" id="file-name" class="layui-textarea" name="file_name"
+                      readonly="readonly"></textarea>
+        </div>
+        <div class="layui-input-block">
+            <tip>支持*.doc, *.docx文件</tip>
+            <br/>
+            <tip>请确保您选择的文件已上传</tip>
+            <br/>
+            <tip>&nbsp;</tip>
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-primary layui-border-black layui-btn-sm data-add-btn"
+                        id="report-select">选择
+                </button>
+                <button class="layui-btn layui-btn-primary layui-border-black layui-btn-sm data-add-btn"
+                        id="report-upload">上传
+                </button>
+            </div>
+        </div>
+    </div>
     <div class="layui-form-item">
         <div class="layui-input-block" align="left">
-            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="poc_task">确认添加</button>
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="case_task">确认添加</button>
         </div>
     </div>
 </div>
@@ -76,16 +98,17 @@
         return assetlist;
     }
 
-    layui.use(['form', 'transfer', 'layer', 'util'], function () {
+    layui.use(['form', 'transfer', 'layer', 'util', 'upload'], function () {
         var form = layui.form,
             layer = layui.layer,
+            upload = layui.upload,
             transfer = layui.transfer,
             $ = layui.$;
 
         transfer.render({
             elem: '#asset-list',
             data: getAsset(),
-            id: 'asset-selected', //定义唯一索引
+            id: 'asset-selected',
             width: 500,
             height: 340,
             showSearch: true,
@@ -95,14 +118,44 @@
         transfer.render({
             elem: '#case-list',
             data: getCase(),
-            id: 'case-selected', //定义唯一索引
+            id: 'case-selected',
             width: 500,
             height: 340,
             showSearch: true,
             title: ['待选用例列表', '已选用例编号']
         });
 
-        form.on('submit(poc_task)', function (data) {
+        upload.render({
+            elem: '#report-select',
+            url: "{{ url_for('api_case_task') }}",
+            accept: 'file',
+            exts: 'doc|docx',
+            number: 1,
+            drag: true,
+            auto: false,
+            bindAction: '#report-upload',
+            choose: function (obj) {
+                var files = obj.pushFile();
+                let fname = "";
+                for (let f in files) {
+                    fname += files[f].name + "\n";
+                }
+                fname.trim();
+                $('#file-name').val(fname);
+            },
+            done: function (res) {
+                if (res.code === 200) {
+                    layer.alert(res.msg, {title: '提示', icon: 1})
+                } else {
+                    layer.alert(res.msg, {title: '提示', icon: 2})
+                }
+            },
+            error: function () {
+                //请求异常回调
+            },
+        });
+
+        form.on('submit(case_task)', function (data) {
             data.field['cids'] = transfer.getData('case-selected');
             data.field['asset'] = transfer.getData('asset-selected');
             $.ajax({

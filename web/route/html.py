@@ -1,8 +1,9 @@
 import datetime
 import re
+import os
 
 import bson
-from flask import request, session, redirect, url_for, render_template
+from flask import request, session, redirect, url_for, render_template, send_from_directory
 
 from web import APP, DB
 from web.utils.auxiliary import kill_process, get_yaml
@@ -274,3 +275,11 @@ def html_func_case_manage():
 def html_func_case_add():
     """检测用例结果添加页面"""
     return render_template('case_result_add.html')
+
+
+@APP.route("/download/<filename>", methods=["GET"])
+@admin_required
+def download_file(filename):
+    """手工检测报告下载"""
+    dirpath = r'D:\UY\AIITProject\upload\reports'
+    return send_from_directory(directory=dirpath, filename=filename, as_attachment=True)
