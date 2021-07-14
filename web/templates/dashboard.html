@@ -13,144 +13,156 @@
     <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
 </head>
 <style>
-    .layui-top-box {padding:40px 20px 20px 20px;color:#fff}
-    .panel {margin-bottom:17px;background-color:#fff;border:1px solid transparent;border-radius:3px;-webkit-box-shadow:0 1px 1px rgba(0,0,0,.05);box-shadow:0 1px 1px rgba(0,0,0,.05)}
-    .panel-body {padding:15px;height:102px;}
-    .panel-title {margin-top:0;margin-bottom:0;font-size:14px;color:inherit}
-    .label {display:inline;padding:.2em .6em .3em;font-size:75%;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:baseline;border-radius:.25em;margin-top: .3em;}
-    .layui-red {color: #ff0000
+    .layui-top-box {
+        padding: 40px 20px 20px 20px;
+        color: #fff
     }
-    .main_btn > p {height:40px;}
-    .select-label {font-size:17px;}
+
+    .panel {
+        margin-bottom: 17px;
+        background-color: #fff;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+        box-shadow: 0 1px 1px rgba(0, 0, 0, .05)
+    }
+
+    .panel-body {
+        padding: 15px;
+        height: 102px;
+    }
+
+    .panel-title {
+        margin-top: 0;
+        margin-bottom: 0;
+        font-size: 14px;
+        color: inherit
+    }
+
+    .label {
+        display: inline;
+        padding: .2em .6em .3em;
+        font-size: 75%;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: .25em;
+        margin-top: .3em;
+    }
+
+    .layui-red {
+        color: #ff0000
+    }
+
+    .main_btn > p {
+        height: 40px;
+    }
+
+    .select-label {
+        font-size: 17px;
+    }
 </style>
 <body>
 <div class="layuimini-container">
     <div class="layuimini-main layui-top-box">
         <div class="layui-row">
-            <!-- [1,1] -->
-            <div class="layui-col-md3">
-                <div class="col-xs-6 col-md3">
-                    <div class="panel layui-bg-cyan">
-                        <div class="panel-body">
-                            <div class="panel-title">
-                                <span class="label pull-right layui-bg-green">实时</span>
-                                <h1>厂商概要</h1>
+            <div class="layui-col-md3 col-xs-6 panel layui-bg-cyan">
+                <div class="panel-body">
+                    <div class="panel-title">
+                        <span class="label pull-right layui-bg-green">实时</span>
+                        <h1>厂商概要</h1>
+                    </div>
+                    <div class="panel-content">
+                        <form class=“layui-form” action="">
+                            <div class="layui-form-item select-label">
+                                厂商：
+                                {% if not company %}
+                                    <select name="company" id="company_list" lay-verify="required">
+                                        <option value="">全部厂商</option>
+                                        {% for company in company_list %}
+                                            <option value="">{{ company }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    {{ company }}
+                                {% endif %}
                             </div>
-                            <div class="panel-content">
-                                <form class=“layui-form” action="">
-                                    <div class="layui-form-item">
-                                        <div class="select-label">
-                                                厂商：
-                                                <select name="company" id="company_list" lay-verify="required">
-                                                    <option value="">全部厂商</option>
-                                                </select>
-                                        </div>
-                                    </div>
-                                </form>
-                                <h3>任务总数：<span id="num_task"></span></h3>
-                            </div>
+                        </form>
+                        <h3>任务总数：<span id="num_task">{{ task_number }}</span></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md3 layui-col-md-offset1 col-xs-6 panel layui-bg-gray layui-bg-number">
+                <div class="panel-body">
+                    <div class="panel-title">
+                        <span class="label pull-right layui-bg-red">实时</span>
+                        <h1>资产概要</h1>
+                    </div>
+                    <div class="panel-content">
+                        <h3 class="no-margins ">主机扫描数：<span id="num_hostscan">{{ host_number }}</span></h3>
+                        <h3>&nbsp;</h3>
+                        <h3 class="no-margins ">域名扫描数：<span id="num_webscan">{{ web_number }}</span></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md3 layui-col-md-offset1 col-xs-6 panel layui-bg-blue">
+                <div class="panel-body">
+                    <div class="panel-title">
+                        <span class="label pull-right layui-bg-orange">实时</span>
+                        <h1>指纹概要</h1>
+                    </div>
+                    <div class="panel-content">
+                        <div class="panel-content" id="web_fingerprint">
+                            {% for finger in finger_list[:3] %}
+                                <h3 class="no-margins">{{ finger[0] }}：{{ finger[1] }}</h3>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- [1,2] -->
-            <div class="layui-col-md3 layui-col-md-offset1">
-                <div class="col-xs-6 col-md-3">
-                    <div class="panel layui-bg-gray layui-bg-number">
-                        <div class="panel-body">
-                            <div class="panel-title">
-                                <span class="label pull-right layui-bg-red">实时</span>
-                                <h1>资产概要</h1>
-                            </div>
-                            <div class="panel-content">
-                                <h3 class="no-margins ">主机扫描数：<span id="num_hostscan"></span></h3>
-                                <h3>&nbsp;</h3>
-                                <h3 class="no-margins ">域名扫描数：<span id="num_webscan"></span></h3>
-                            </div>
-                        </div>
+            <div class="layui-col-md3 col-xs-6 panel layui-bg-green">
+                <div class="panel-body">
+                    <div class="panel-title">
+                        <span class="label pull-right layui-bg-cyan">实时</span>
+                        <h1>弱口令统计</h1>
+                    </div>
+                    <div class="panel-content">
+                        {% for weak in weak_list[:3] %}
+                            <h3 class="no-margins">{{ weak[0] }}：{{ weak[1] }}</h3>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
-            <!-- [1,3] -->
-            <div class="layui-col-md3 layui-col-md-offset1">
-                <div class="col-xs-6 col-md-3">
-                    <div class="panel layui-bg-blue">
-                        <div class="panel-body" >
-                            <div class="panel-title">
-                                <span class="label pull-right layui-bg-orange">实时</span>
-                                <h1>指纹信息</h1>
-                            </div>
-                            <div class="panel-content">
-                                <div class="panel-content" id="web_fingerprint">
-                                    <!-- js动态添加指纹信息 -->
-                                </div>
-                            </div>
-                        </div>
+            <div class="layui-col-md3 layui-col-md-offset1 col-xs-6 panel layui-bg-red">
+                <div class="panel-body">
+                    <div class="panel-title">
+                        <span class="label pull-right layui-bg-gray">实时</span>
+                        <h1>Web漏洞</h1>
+                    </div>
+                    <div class="panel-content">
+                        {% for vuln in webvuln_list[:3] %}
+                            <h3 class="no-margins">{{ vuln[0] }}：{{ vuln[1] }}</h3>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
-            <!-- [2,1] -->
-            <div class="layui-col-md3">
-                <div class="col-xs-6 col-md-3">
-                    <div class="panel layui-bg-green">
-                        <div class="panel-body">
-                            <div class="panel-title">
-                                <span class="label pull-right layui-bg-cyan">实时</span>
-                                <h1>弱口令统计</h1>
-                            </div>
-                            <div class="panel-content">
-                                <h3 class="no-margins ">SSH：1234</h3>
-                                <h3 class="no-margins ">MySQL：1234</h3>
-                                <h3 class="no-margins ">FTP：1234</h3>
-                            </div>
-                        </div>
+            <div class="layui-col-md3 layui-col-md-offset1 col-xs-6 panel layui-bg-orange">
+                <div class="panel-body">
+                    <div class="panel-title">
+                        <span class="label pull-right layui-bg-blue">实时</span>
+                        <h1>主机漏洞</h1>
                     </div>
-                </div>
-            </div>
-            <!-- [2,2] -->
-            <div class="layui-col-md3 layui-col-md-offset1">
-                <div class="col-xs-6 col-md-3">
-                    <div class="panel layui-bg-red">
-                        <div class="panel-body">
-                            <div class="panel-title">
-                                <span class="label pull-right layui-bg-gray">实时</span>
-                                <h1>Web漏洞</h1>
-                            </div>
-                             <div class="panel-content">
-                                <h3 class="no-margins ">SQL注入：1234</h3>
-                                <h3 class="no-margins ">XSS注入：1234</h3>
-                                <h3 class="no-margins ">XXE注入：1234</h3>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-            </div>
-            <!-- [2,3] -->
-            <div class="layui-col-md3 layui-col-md-offset1">
-                <div class="col-xs-6 col-md-3">
-                    <div class="panel layui-bg-orange">
-                        <div class="panel-body">
-                            <div class="panel-title">
-                                <span class="label pull-right layui-bg-blue">实时</span>
-                                <h1>主机漏洞</h1>
-                            </div>
-                            <div class="panel-content">
-                                <h3 class="no-margins ">SMB：1234</h3>
-                                <h3 class="no-margins ">SMB：1234</h3>
-                                <h3 class="no-margins ">SMB：1234</h3>
-
-                            </div>
-                        </div>
+                    <div class="panel-content">
+                        {% for vuln in hostvuln_list[:3] %}
+                            <h3 class="no-margins">{{ vuln[0] }}：{{ vuln[1] }}</h3>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="layui-box">
-    </div>
-
-    <div class="layui-box">
     </div>
 </div>
 <div class="layuimini-main">
@@ -162,7 +174,7 @@
             <div id="echarts-pies" style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
         </div>
     </div>
-    
+
     <div class="layui-row layui-col-space15">
         <div class="layui-col-xs12 layui-col-md6">
             <div id="echarts-dataset" style="background-color:#ffffff;min-height:300px;padding: 10px"></div>
@@ -175,45 +187,12 @@
 
 <script src="../static/lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
 <script src="../static/js/lay-config.js?v=1.0.4" charset="utf-8"></script>
-<!-- 加载form模块，要不然下拉框调不出来 -->
-<script type="text/javascript">
-    $(document).ready(function () {
-        $.ajax({
-        type: "GET",
-        url: "{{ url_for('api_dashboard') }}",
-        data: { },
-        dataType: "JSON",
-        success: function(result) {
-            $("#num_task").text(result['num_task']);
-            $("#num_hostscan").text(result['num_hostscan']);
-            $("#num_webscan").text(result['num_webscan']);
-
-            for (var i = 1; i < result['company_name'].length+1; i++) {
-                var a="opt"+i;
-                $("#company_list").append("<option id='"+a+"' value='"+ i +"'>"+result['company_name'][i-1]+"</option>");
-            }
-
-            for (var i = 1; i < 4; i++) {
-                console.log('$$$')
-                $("#web_fingerprint").append("<h3 class=\"no-margins \">"+result['finger_types_sorted'][i-1]+"</h3>");
-            }
-        },
-        error: function (result) {
-                console.log("error")
-            }
-      });
-    })
-</script>
-<!-- 加载layer模块，调出Echart图表 -->
 <script>
     layui.use(['layer', 'echarts'], function () {
         var $ = layui.jquery,
             layer = layui.layer,
             echarts = layui.echarts;
 
-        /**
-         * 报表功能
-         */
         var echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
 
         var optionRecords = {
@@ -230,7 +209,7 @@
                 }
             },
             legend: {
-                data: ['邮件营销', '联盟广告', '视频广告', '直接访问', '搜索引擎']
+                data: ['WEB漏洞', '主机漏洞', '弱口令']
             },
             toolbox: {
                 feature: {
@@ -247,7 +226,7 @@
                 {
                     type: 'category',
                     boundaryGap: false,
-                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                    data: ['{{ date[6] }}', '{{ date[5] }}', '{{ date[4] }}', '{{ date[3] }}', '{{ date[2] }}', '{{ date[1] }}', '{{ date[0] }}']
                 }
             ],
             yAxis: [
@@ -257,53 +236,30 @@
             ],
             series: [
                 {
-                    name: '邮件营销',
+                    name: 'WEB漏洞',
                     type: 'line',
                     stack: '总量',
                     areaStyle: {},
-                    data: [120, 132, 101, 134, 90, 230, 210]
+                    data: ['{{ record_data[0][6] }}', '{{ record_data[0][5] }}', '{{ record_data[0][4] }}', '{{ record_data[0][3] }}', '{{ record_data[0][2] }}', '{{ record_data[0][1] }}', '{{ record_data[0][0] }}']
                 },
                 {
-                    name: '联盟广告',
+                    name: '主机漏洞',
                     type: 'line',
                     areaStyle: {},
-                    data: [220, 182, 191, 234, 290, 330, 310]
+                    data: ['{{ record_data[1][6] }}', '{{ record_data[1][5] }}', '{{ record_data[1][4] }}', '{{ record_data[1][3] }}', '{{ record_data[1][2] }}', '{{ record_data[1][1] }}', '{{ record_data[1][0] }}']
                 },
                 {
-                    name: '视频广告',
-                    type: 'line',
-                    stack: '总量',
-                    areaStyle: {},
-                    data: [150, 232, 201, 154, 190, 330, 410]
-                },
-                {
-                    name: '直接访问',
+                    name: '弱口令',
                     type: 'line',
                     stack: '总量',
                     areaStyle: {},
-                    data: [320, 332, 301, 334, 390, 330, 320]
+                    data: ['{{ record_data[2][6] }}', '{{ record_data[2][5] }}', '{{ record_data[2][4] }}', '{{ record_data[2][3] }}', '{{ record_data[2][2] }}', '{{ record_data[2][1] }}', '{{ record_data[2][0] }}']
                 },
-                {
-                    name: '搜索引擎',
-                    type: 'line',
-                    stack: '总量',
-                    label: {
-                        normal: {
-                            show: true,
-                            position: 'top'
-                        }
-                    },
-                    areaStyle: {},
-                    data: [820, 932, 901, 934, 1290, 1330, 1320]
-                }
             ]
         };
         echartsRecords.setOption(optionRecords);
 
 
-        /**
-         * 玫瑰图表
-         */
         var echartsPies = echarts.init(document.getElementById('echarts-pies'), 'walden');
         var optionPies = {
             title: {
@@ -317,21 +273,19 @@
             legend: {
                 orient: 'vertical',
                 left: 'left',
-                data: ['直接访问', '邮件营销', '联盟广告', '视频广告', '搜索引擎']
+                data: ['WEB漏洞', '主机漏洞', '弱口令']
             },
             series: [
                 {
-                    name: '访问来源',
+                    name: '漏洞分类',
                     type: 'pie',
                     radius: '55%',
                     center: ['50%', '60%'],
                     roseType: 'radius',
                     data: [
-                        {value: 335, name: '直接访问'},
-                        {value: 310, name: '邮件营销'},
-                        {value: 234, name: '联盟广告'},
-                        {value: 135, name: '视频广告'},
-                        {value: 368, name: '搜索引擎'}
+                        {value: {{ pie_data['web'] }}, name: 'WEB漏洞'},
+                        {value: {{ pie_data['host'] }}, name: '主机漏洞'},
+                        {value: {{ pie_data['weak'] }}, name: '弱口令'},
                     ],
                     emphasis: {
                         itemStyle: {

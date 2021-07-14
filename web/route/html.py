@@ -202,15 +202,111 @@ def system_index():
 @login_required
 def api_user_logout():
     """用户注销"""
-    session.pop('status')
-    session.pop('username')
+    session.clear()
     return redirect(url_for('system_login'), 302)
 
 
 @APP.route('/dashboard')
 @login_required
 def fetch_dashboard_page():
-    return render_template('dashboard.html')
+    """信息展示看板"""
+    company = session.get('company')
+    c = [item['ename'] for item in DB.db.company.find()]
+    t = DB.db.task.find().count() if not company else DB.db.task.find({'ename': company}).count()
+    h = DB.db.asset.find({'type': '主机'}).count() if not company else DB.db.asset.find(
+        {'type': '主机', 'ename': company}).count()
+    w = DB.db.asset.find({'type': 'WEB'}).count() if not company else DB.db.asset.find(
+        {'type': 'WEB', 'ename': company}).count()
+    f1, f2 = {}, {}
+
+    if company:
+        for i in DB.db.asset.aggregate([{'$match': {'ename': company}}, {'$unwind': '$finger'}]):
+            for k in i['finger'].keys():
+                if k not in f2.keys():
+                    f2.update({k: 1})
+                else:
+                    f2[k] += 1
+        we2 = dict(
+            zip([item['_id'] for item in DB.db.weak.aggregate(
+                [{'$match': {'company': company}}, {'$group': {'_id': '$service', 'count': {'$sum': 1}}}])],
+                [item['count'] for item in DB.db.weak.aggregate(
+                    [{'$match': {'company': company}}, {'$group': {'_id': '$service', 'count': {'$sum': 1}}}])]))
+        vw2 = dict(
+            zip([item['_id'] for item in
+                 DB.db.vuln.aggregate(
+                     [{'$match': {'type': 'WEB', 'ename': company}},
+                      {'$group': {'_id': '$vtype', 'count': {'$sum': 1}}}])],
+                [item['count'] for item in DB.db.vuln.aggregate([{'$match': {'type': 'WEB', 'ename': company}},
+                                                                 {'$group': {'_id': '$vtype',
+                                                                             'count': {'$sum': 1}}}])]))
+        vh2 = dict(
+            zip([item['_id'] for item in
+                 DB.db.vuln.aggregate(
+                     [{'$match': {'type': '主机', 'ename': company}},
+                      {'$group': {'_id': '$vtype', 'count': {'$sum': 1}}}])],
+                [item['count'] for item in
+                 DB.db.vuln.aggregate(
+                     [{'$match': {'type': '主机', 'ename': company}},
+                      {'$group': {'_id': '$vtype', 'count': {'$sum': 1}}}])]))
+
+    for i in DB.db.asset.aggregate([{'$unwind': '$finger'}]):
+        for k in i['finger'].keys():
+            if k not in f1.keys():
+                f1.update({k: 1})
+            else:
+                f1[k] += 1
+
+    f = sorted(f1.items(), key=lambda x: x[1], reverse=True) if not company else sorted(f2.items(), key=lambda x: x[1],
+                                                                                        reverse=True)
+    we1 = dict(
+        zip([item['_id'] for item in DB.db.weak.aggregate([{'$group': {'_id': '$service', 'count': {'$sum': 1}}}])],
+            [item['count'] for item in DB.db.weak.aggregate([{'$group': {'_id': '$service', 'count': {'$sum': 1}}}])]))
+
+    we = sorted(we1.items(), key=lambda x: x[1], reverse=True) if not company else sorted(we2.items(),
+                                                                                          key=lambda x: x[1],
+                                                                                          reverse=True)
+    vw1 = dict(
+        zip([item['_id'] for item in
+             DB.db.vuln.aggregate([{'$match': {'type': 'WEB'}}, {'$group': {'_id': '$vtype', 'count': {'$sum': 1}}}])],
+            [item['count'] for item in
+             DB.db.vuln.aggregate([{'$match': {'type': 'WEB'}}, {'$group': {'_id': '$vtype', 'count': {'$sum': 1}}}])]))
+
+    vw = sorted(vw1.items(), key=lambda x: x[1], reverse=True) if not company else sorted(vw2.items(),
+                                                                                          key=lambda x: x[1],
+                                                                                          reverse=True)
+    vh1 = dict(
+        zip([item['_id'] for item in
+             DB.db.vuln.aggregate([{'$match': {'type': '主机'}}, {'$group': {'_id': '$vtype', 'count': {'$sum': 1}}}])],
+            [item['count'] for item in
+             DB.db.vuln.aggregate([{'$match': {'type': '主机'}}, {'$group': {'_id': '$vtype', 'count': {'$sum': 1}}}])]))
+    vh = sorted(vh1.items(), key=lambda x: x[1], reverse=True) if not company else sorted(vh2.items(),
+                                                                                          key=lambda x: x[1],
+                                                                                          reverse=True)
+    u = {
+        'web': DB.db.vuln.find({'type': 'WEB'}).count(),
+        'host': DB.db.vuln.find({'type': '主机'}).count(),
+        'weak': DB.db.weak.find().count(),
+    } if not company else {
+        'web': DB.db.vuln.find({'type': 'WEB', 'ename': company}).count(),
+        'host': DB.db.vuln.find({'type': '主机', 'ename': company}).count(),
+        'weak': DB.db.weak.find({'company': company}).count(),
+    }
+    yd = []
+
+    for i in range(7):
+        yd.append((datetime.datetime.now() - datetime.timedelta(days=i)).date().strftime("%Y-%m-%d"))
+
+    yw = [DB.db.vuln.find({'type': 'WEB', 'vdate': re.compile(i)}).count() for i in yd] if not company else [
+        DB.db.vuln.find({'ename': company, 'type': 'WEB', 'vdate': re.compile(i)}).count() for i in yd]
+    yh = [DB.db.vuln.find({'type': '主机', 'vdate': re.compile(i)}).count() for i in yd] if not company else [
+        DB.db.vuln.find({'ename': company, 'type': '主机', 'vdate': re.compile(i)}).count() for i in yd]
+    ywe = [DB.db.weak.find({'vdate': re.compile(i)}).count() for i in yd] if not company else [
+        DB.db.weak.find({'company': company, 'vdate': re.compile(i)}).count() for i in yd]
+    y = [yw, yh, ywe]
+
+    return render_template('dashboard.html', company_list=c, task_number=t, host_number=h, web_number=w, finger_list=f,
+                           weak_list=we, webvuln_list=vw, hostvuln_list=vh, company=company, pie_data=u, date=yd,
+                           record_data=y)
 
 
 @APP.route('/extmanage')
