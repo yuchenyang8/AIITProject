@@ -278,7 +278,7 @@
 
         table.render({
             elem: '#currentTable_ports',
-            url: "{{ url_for('api_func_infos', ip=asset['aname']) }}",
+            url: "{{ url_for('api_info_detail', asset_name=asset['aname'], info_type='port') }}",
             cols: [[
                 {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
                 {field: 'port', width: 150, title: '端口号', align: "center", sort: true},
@@ -308,7 +308,7 @@
         });
         table.render({
             elem: '#currentTable_vulns',
-            url: "{{ url_for('api_func_vulns', asset_name=asset['aname'])}}",
+            url: "{{ url_for('api_vuln', asset_name=asset['aname'])}}",
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
@@ -344,7 +344,7 @@
         });
         table.render({
             elem: '#currentTable_password',
-            url: "{{ url_for('api_func_password', asset_name=asset['aname'])}}",
+            url: "{{ url_for('api_password', asset_name=asset['aname'])}}",
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
@@ -366,26 +366,29 @@
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
             if (obj.event === 'weak') {
+                data['ip'] = '{{ asset['aname'] }}';
+                data['asset_type'] = 'port';
+
                 layer.confirm('确定对该端口进行弱口令检测吗?', function (index) {
                     layer.alert('弱口令检测开始!', {title: '提示', icon: 1})
+                    $.ajax({
+                        url: "{{ url_for('api_vuln') }}",
+                        data: JSON.stringify(data),
+                        contentType: 'application/json;charset=UTF-8',
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (result) {
+                            if (result.status_code === 500) {
+                                layer.alert(result.msg, {title: '提示', icon: 2})
+                            }
+                        }
+                    })
                     layer.close(index);
                 });
-                $.ajax({
-                    url: "{{ url_for('api_func_vuln', ip=asset['aname']) }}",
-                    data: JSON.stringify(data),
-                    contentType: 'application/json;charset=UTF-8',
-                    dataType: 'json',
-                    type: 'post',
-                    success: function (result) {
-                        if (result.status_code === 500) {
-                            layer.alert(result.msg, {title: '提示', icon: 2})
-                        }
-                    }
-                })
             }
         });
         var echartsPies = echarts.init(document.getElementById('echarts-pies'), 'walden');
-        $.get("{{ url_for('api_func_chart', ip=asset['aname']) }}").done(function (data) {
+        $.get("{{ url_for('api_info_detail', asset_name=asset['aname'], info_type='severity') }}").done(function (data) {
             echartsPies.setOption({
                 title: {
                     text: '扫描概况',

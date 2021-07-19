@@ -87,7 +87,7 @@
     function getAsset() {
         let assetlist;
         $.ajax({
-            url: "{{ url_for('api_func_asset', list=true) }}",
+            url: "{{ url_for('api_asset', list=true) }}",
             dataType: 'json',
             type: 'get',
             async: false,

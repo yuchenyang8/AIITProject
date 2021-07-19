@@ -63,7 +63,7 @@
 
         table.render({
             elem: '#currentTable_task',
-            url: "{{ url_for('api_func_vulns', type=vuln_type) }}",
+            url: "{{ url_for('api_vuln', type=vuln_type) }}",
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
@@ -125,7 +125,7 @@
             if (obj.event === 'delete') {
                 layer.confirm('确定删除该漏洞吗?', function (index) {
                     $.ajax({
-                        url: "{{ url_for('api_func_vulns') }}",
+                        url: "{{ url_for('api_vuln') }}",
                         data: JSON.stringify(data),
                         contentType: 'application/json;charset=UTF-8',
                         dataType: 'json',

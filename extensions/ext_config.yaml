@@ -1,11 +1,44 @@
+binwalk:
+  folder: D:\UY\AIITProject\upload\firmware\
+  status: true
 dirsearch:
   dir: D:\UY\dirsearch\dirsearch.py
   result_dir: D:\UY\dirsearch\result.json
+  status: true
+hydra:
+  dir: D:\HYDRA
+  password: D:\HYDRA\password.txt
+  status: true
+  thread: 16
+  username: D:\HYDRA\username.txt
+mobsf:
+  apikey: 3df3dda86920c54a60117d02cf6ad557b361064285ac35499b3bafdd4399edea
+  folder: D:\UY\AIITProject\upload\app\
+  status: true
+  url: http:/localhost:8000
+nessus:
+  accesskey: 2179ddb0a05e92c6b35f394a597290d6ae95645d0918859135ae3b06d4e9b013
+  secretkey: 6bc3a119840685bcf1fc58cfdc693791185227f85dd4cef40f72c0fe86c4afb5
+  status: true
+  url: https:/localhost:8834
+nmap:
+  status: true
+oneforall:
+  status: true
+pocsuite:
+  dir: D:\VENV\py3flask\Lib\site-packages\pocsuite3\pocs
   status: true
 wafw00f:
   dir: D:\UY\AIITProject\extensions\wafw00f\wafw00f\main.py
   result_dir: D:\UY\AIITProject\extensions\wafw00f\result.json
   status: true
+wappalyzer:
+  status: true
 whatweb:
   dir: D:\UY\AIITProject\extensions\WhatWeb\whatweb
   status: false
+xray:
+  chrome_dir: C:\Program Files\Google\Chrome\Application\chrome.exe
+  dir: D:\Xray
+  rad_dir: D:\UY\rad
+  status: true

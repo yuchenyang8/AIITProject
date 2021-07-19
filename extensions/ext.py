@@ -31,10 +31,9 @@ SYSTEM = platform.system()
 class NmapExt(object):
     """Nmap插件类"""
 
-    def __init__(self, hosts, ports):
+    def __init__(self, hosts):
         self.hosts = hosts
-        self.ports = ports
-        # self.arguments = arguments
+        self.ports = '1-1000'
 
     def host_discovery(self):
         """主机存活探测"""
@@ -49,6 +48,7 @@ class NmapExt(object):
         arguments = '-sP -PE -PP -PS21,22,23,25,80,113,31339 -PA80,113,443,10042 --source-port 53 -T4'
         result = nm.scan(hosts=hosts, arguments=arguments)
         host_list = []
+
         for r in result['scan']:
             host_list.append(r)
         return host_list
@@ -60,7 +60,7 @@ class NmapExt(object):
         """端口扫描"""
         nm = nmap.PortScanner()
         hosts = self.hosts
-        ports = self.ports
+
         arguments = '-Pn -T4 -sV --version-all'
         # nm.scan(hosts=hosts, ports=ports, arguments=arguments)
         nm.scan(hosts=hosts, arguments=arguments)
@@ -74,13 +74,14 @@ class NmapExt(object):
         #
         port_list = []
         value_list = []
+
         for ip in nm.scan_result['scan']:
             if 'tcp' in nm.scan_result['scan'][ip]:
                 for port in nm.scan_result['scan'][ip]['tcp']:
                     port_list.append(str(port))
                     value_list.append(nm.scan_result['scan'][ip]['tcp'][port])
+
         scan_result = dict(zip(port_list, value_list))
-        # nm.scan_result['scan'][ip]['tcp'] = scan_result
         return scan_result
 
     def c_segment(self):
@@ -131,6 +132,7 @@ class OneForAllExt(object):
         task.takeover = True
         task.run()
         result = []
+
         for d in task.datas:
             result.append(d['subdomain'])
         result = url_detect(list(set(result)))
@@ -168,7 +170,7 @@ class WhatwebExt(object):
         xpoweredby_re = r'X-Powered-By\[(.*?)\]'
 
         result = {}
-        print(items)
+
         for item in items:
             # ip = re.findall(ip_re, item, re.S)
             # domain = re.findall(domain_re, item, re.S)
@@ -224,6 +226,7 @@ class WafExt(object):
 
     def detect(self, url):
         flag = False
+
         try:
             https_url = 'https://' + url
             requests.get(https_url, timeout=3)
@@ -232,6 +235,7 @@ class WafExt(object):
             flag = True
         except:
             pass
+
         if not flag:
             try:
                 http_url = 'http://' + url
@@ -242,6 +246,7 @@ class WafExt(object):
 
         with open(self.RESULT_DIR, 'r+', encoding='utf-8') as f:
             data = json.load(f)
+
         result = data[0]['firewall'] if data else 'None'
         f.close()
         return result

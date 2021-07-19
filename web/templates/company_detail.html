@@ -153,11 +153,6 @@
             <br>
             <fieldset class="layui-elem-field ">
                 <legend style="font-size:18px;font-family:\u5E7C\u5706,sans-serif;">资产分布</legend>
-                <!--主机数、web数、APP数、固件数的列间距为15px，分别占3列
-                        每一项采用card来布局：
-                            header：数据标题
-                            body：数据表格
-                -->
                 <div class="layui-row layui-col-space15 ">
                     <!-- [1,1] 主机数-->
                     <div class="layui-col-md12">
@@ -260,7 +255,7 @@
 
         table.render({
             elem: '#HostTableId',
-            url: "{{ url_for('api_func_asset_host', ename=company['ename']) }}",
+            url: "{{ url_for('api_asset_info', company=company['ename'], asset_type='主机') }}",
             skin: 'nob',
             height: 269,
             cols: [[
@@ -276,7 +271,7 @@
         });
         table.render({
             elem: '#WebTableId',
-            url: "{{ url_for('api_func_asset_web', ename=company['ename']) }}", //数据接口
+            url: "{{ url_for('api_asset_info', company=company['ename'], asset_type='WEB') }}",
             skin: 'nob',
             height: 269,
             cols: [[
@@ -292,7 +287,7 @@
         });
         table.render({
             elem: '#AppTableId',
-            url: "{{ url_for('api_func_asset_app', ename=company['ename']) }}", //数据接口
+            url: "{{ url_for('api_asset_info', company=company['ename'], asset_type='APP') }}",
             skin: 'nob',
             height: 269,
             cols: [[
@@ -309,7 +304,7 @@
         });
         table.render({
             elem: '#FirmwareTableId',
-            url: "{{ url_for('api_func_asset_firm', ename=company['ename']) }}",
+            url: "{{ url_for('api_asset_info', company=company['ename'], asset_type='固件') }}",
             skin: 'nob',
             height: 269,
             cols: [[
@@ -323,7 +318,7 @@
         })
 
         var echartsRecords = echarts.init(document.getElementById('VulEchartsID'), 'walden');
-        $.get("{{ url_for('api_func_company_trends', company=company['ename']) }}").done(function (data) {
+        $.get("{{ url_for('api_company_vuln', info_type='trend', company=company['ename'], asset_type='ALL') }}").done(function (data) {
             let day_list = []
             let host_count = []
             let web_count = []
@@ -394,8 +389,9 @@
         }
 
         var echartsPiesHost = echarts.init(document.getElementById('VulnHostEchartsID'), 'walden');
-        $.get("{{ url_for('api_func_company_info', company=company['ename'], asset_type='主机') }}").done(function (data) {
+        $.get("{{ url_for('api_company_vuln', info_type='distribute', company=company['ename'], asset_type='主机') }}").done(function (data) {
             let hosts = []
+            console.log(data)
             for (let i = 0; i < data.length; i++) {
                 hosts.push(data[i]['name'])
             }
@@ -433,8 +429,8 @@
             })
         })
         var echartsPiesWeb = echarts.init(document.getElementById('VulnWebEchartsID'), 'walden');
-        $.get("{{ url_for('api_func_company_info', company=company['ename'], asset_type='WEB') }}").done(function (data) {
-            let domains = []
+        $.get("{{ url_for('api_company_vuln', info_type='distribute', company=company['ename'], asset_type='WEB') }}").done(function (data) {
+            let domains = [];
             for (let i = 0; i < data.length; i++) {
                 domains.push(data[i]['name'])
             }
@@ -472,7 +468,7 @@
             })
         })
         var echartsPiesApp = echarts.init(document.getElementById('VulnAppEchartsID'), 'walden');
-        $.get("{{ url_for('api_func_company_info', company=company['ename'], asset_type='APP') }}").done(function (data) {
+        $.get("{{ url_for('api_company_vuln', info_type='distribute', company=company['ename'], asset_type='APP') }}").done(function (data) {
             let domains = []
             for (let i = 0; i < data.length; i++) {
                 domains.push(data[i]['name'])
@@ -511,7 +507,7 @@
             })
         })
         var echartsPiesFirm = echarts.init(document.getElementById('VulnFirmwareEchartsID'), 'walden');
-        $.get("{{ url_for('api_func_company_info', company=company['ename'], asset_type='固件') }}").done(function (data) {
+        $.get("{{ url_for('api_company_vuln', info_type='distribute', company=company['ename'], asset_type='固件') }}").done(function (data) {
             let domains = []
             for (let i = 0; i < data.length; i++) {
                 domains.push(data[i]['name'])

@@ -37,8 +37,10 @@ def html_func_task_add():
     """任务添加页面"""
     company = []
     company_search = DB.db.company.find()
+
     for c in company_search:
         company.append(c['ename'])
+
     return render_template('task_add.html', companylist=company)
 
 
@@ -54,6 +56,7 @@ def html_func_asset():
 def html_func_assetinfo(asset_name):
     """资产详情页面"""
     asset = DB.db.asset.find_one({'aname': asset_name})
+
     if asset['type'] == 'WEB':
         return render_template('web_detail.html', asset=asset)
     elif asset['type'] == '主机':
@@ -88,6 +91,7 @@ def html_func_poc():
 def html_func_poc_task_detail(objid):
     """POC漏洞详情页面"""
     objid = bson.ObjectId(objid)
+
     try:
         results = DB.db.poc.find_one({'_id': objid})['result']
         return render_template('poc_task_detail.html', results=results)
@@ -135,6 +139,7 @@ def html_func_company_info(company_name):
         '$set': {'count.host': hostcount, 'count.web': webcount, 'count.app': appcount,
                  'count.firmware': firmwarecount}})
     company = DB.db.company.find_one({'ename': company_name})
+
     return render_template('company_detail.html', company=company)
 
 
@@ -149,9 +154,10 @@ def html_func_password():
 def xray_webhook():
     data = request.json
     data_type = data.get("type")
-    if data_type == 'web_statistic':
-        if data['data']['num_found_urls'] - data['data']['num_scanned_urls'] == 0:
+
+    if data_type == 'web_statistic' and data['data']['num_found_urls'] - data['data']['num_scanned_urls'] == 0:
             kill_process('xray.exe')
+
     if 'create_time' in data['data']:
         url = re.findall(r'//(.+?)/', data['data']["target"]["url"])[0]
         ename = DB.db.asset.find_one({'aname': url})['ename']

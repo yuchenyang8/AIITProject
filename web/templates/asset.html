@@ -60,7 +60,7 @@
 
         table.render({
             elem: '#currentTable_task',
-            url: "{{ url_for('api_func_asset') }}",
+            url: "{{ url_for('api_asset') }}",
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
@@ -130,7 +130,7 @@
                     layer.close(index);
                 });
                 $.ajax({
-                    url: "{{ url_for('api_func_vuln') }}",
+                    url: "{{ url_for('api_vuln') }}",
                     data: JSON.stringify(data),
                     contentType: 'application/json;charset=UTF-8',
                     dataType: 'json',
@@ -145,7 +145,7 @@
             if (obj.event === 'delete') {
                 layer.confirm('确定删除该资产吗?', function (index) {
                     $.ajax({
-                        url: "{{ url_for('api_func_asset') }}",
+                        url: "{{ url_for('api_asset') }}",
                         data: JSON.stringify(data),
                         contentType: 'application/json;charset=UTF-8',
                         dataType: 'json',

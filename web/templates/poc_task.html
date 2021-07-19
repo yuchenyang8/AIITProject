@@ -45,7 +45,7 @@
 
         table.render({
             elem: '#currentTable_customer',
-            url: "{{ url_for('api_func_poc_task') }}",
+            url: "{{ url_for('api_poc_task') }}",
             toolbar: '#toolbarDemo',
             size: 'lg',
             defaultToolbar: ['filter', 'exports', 'print', {
@@ -131,7 +131,7 @@
                     layer.close(index);
                 });
                 $.ajax({
-                    url: "{{ url_for('api_func_poc') }}",
+                    url: "{{ url_for('api_poc') }}",
                     data: JSON.stringify(data),
                     contentType: 'application/json;charset=UTF-8',
                     dataType: 'json',
@@ -141,7 +141,7 @@
             if (obj.event === 'delete') {
                 layer.confirm('确定删除该任务吗?', function (index) {
                     $.ajax({
-                        url: "{{ url_for('api_func_poc_task') }}",
+                        url: "{{ url_for('api_poc_task') }}",
                         data: JSON.stringify(data),
                         contentType: 'application/json;charset=UTF-8',
                         dataType: 'json',

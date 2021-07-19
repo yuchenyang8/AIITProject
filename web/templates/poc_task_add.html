@@ -64,7 +64,7 @@
     function getPoc() {
         var poclist;
         $.ajax({
-            url: "{{ url_for('api_func_poc', list=true) }}",
+            url: "{{ url_for('api_poc', list=true) }}",
             dataType: 'json',
             type: 'get',
             async: false,
@@ -78,7 +78,7 @@
     function getAsset() {
         var assetlist;
         $.ajax({
-            url: "{{ url_for('api_func_asset', list=true) }}",
+            url: "{{ url_for('api_asset', list=true) }}",
             dataType: 'json',
             type: 'get',
             async: false,
@@ -120,7 +120,7 @@
             data.field['poc'] = transfer.getData('poc-selected');
             data.field['asset'] = transfer.getData('asset-selected');
             $.ajax({
-                url: "{{ url_for('api_func_poc_task') }}",
+                url: "{{ url_for('api_poc_task') }}",
                 data: JSON.stringify(data.field),
                 contentType: 'application/json;charset=UTF-8',
                 dataType: 'json',

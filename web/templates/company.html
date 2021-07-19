@@ -61,7 +61,7 @@
 
         table.render({
             elem: '#currentTable_customer',
-            url: "{{ url_for('api_func_company') }}",
+            url: "{{ url_for('api_company') }}",
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
@@ -124,7 +124,7 @@
             if (obj.event === 'delete') {
                 layer.confirm('确定删除该厂商吗?一旦删除则会删除全部相关联资产数据', function (index) {
                     $.ajax({
-                        url: "{{ url_for('api_func_company') }}",
+                        url: "{{ url_for('api_company') }}",
                         data: JSON.stringify(data),
                         contentType: 'application/json;charset=UTF-8',
                         dataType: 'json',

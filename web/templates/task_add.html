@@ -139,7 +139,7 @@
         //监听提交
         form.on('submit(taskadd)', function (data) {
             $.ajax({
-                url: "{{ url_for('api_func_task') }}",
+                url: "{{ url_for('api_task') }}",
                 data: JSON.stringify(data.field),
                 contentType: 'application/json;charset=UTF-8',
                 dataType: 'json',
@@ -170,8 +170,8 @@
         });
 
         upload.render({
-            elem: '#app-select', //绑定元素
-            url: "{{ url_for('api_func_task') }}", //上传接口
+            elem: '#app-select',
+            url: "{{ url_for('api_info_task') }}",
             accept: 'file',
             exts: 'apk|ipa|zip|appx|xapk',
             multiple: true,
@@ -201,8 +201,8 @@
             },
         });
         upload.render({
-            elem: '#firm-select', //绑定元素
-            url: "{{ url_for('api_func_task') }}", //上传接口
+            elem: '#firm-select',
+            url: "{{ url_for('api_info_task') }}",
             accept: 'file',
             exts: 'bin',
             multiple: true,

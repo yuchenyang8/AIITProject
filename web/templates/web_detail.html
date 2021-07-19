@@ -290,7 +290,7 @@
         var $ = layui.jquery;
         table.render({
             elem: '#currentTable_dirs',
-            url: "{{ url_for('api_func_infos', asset_dir=asset['aname']) }}",
+            url: "{{ url_for('api_info_detail', asset_name=asset['aname'], info_type='dir') }}",
             cols: [[
                 {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
                 {field: 'dir', title: '目录', align: "center", sort: true},
@@ -302,7 +302,7 @@
         });
         table.render({
             elem: '#currentTable_subs',
-            url: "{{ url_for('api_func_infos', asset_sub=asset['aname']) }}",
+            url: "{{ url_for('api_info_detail', asset_name=asset['aname'], info_type='sub') }}",
             cols: [[
                 {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
                 {field: 'subdomain', title: '子域名', align: "center", sort: true},
@@ -314,7 +314,7 @@
         });
         table.render({
             elem: '#currentTable_ports',
-            url: "{{ url_for('api_func_infos', ip=asset['ip']) }}",
+            url: "{{ url_for('api_info_detail', asset_name=asset['ip'], info_type='port') }}",
             cols: [[
                 {field: 'id', width: 80, align: "center", title: 'ID', sort: true},
                 {field: 'port', title: '端口号', align: "center", sort: true},
@@ -342,7 +342,7 @@
         });
         table.render({
             elem: '#currentTable_vulns',
-            url: "{{ url_for('api_func_vulns', asset_name=asset['aname'])}}",
+            url: "{{ url_for('api_vuln', asset_name=asset['aname'])}}",
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
