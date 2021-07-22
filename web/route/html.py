@@ -1,6 +1,5 @@
 import datetime
 import re
-import os
 
 import bson
 from flask import request, session, redirect, url_for, render_template, send_from_directory
@@ -28,7 +27,7 @@ def html_func_company_add():
 @admin_required
 def html_func_task():
     """信息搜集页面"""
-    return render_template('task.html')
+    return render_template('info_task.html')
 
 
 @APP.route('/func/task_add/')
@@ -41,7 +40,7 @@ def html_func_task_add():
     for c in company_search:
         company.append(c['ename'])
 
-    return render_template('task_add.html', companylist=company)
+    return render_template('info_task_add.html', companylist=company)
 
 
 @APP.route('/func/asset')

@@ -98,7 +98,7 @@
         transfer.render({
             elem: '#asset-list',
             data: getAsset(),
-            id: 'asset-selected', //定义唯一索引
+            id: 'asset-selected',
             width: 500,
             height: 340,
             showSearch: true,
@@ -108,14 +108,13 @@
         transfer.render({
             elem: '#poc-list',
             data: getPoc(),
-            id: 'poc-selected', //定义唯一索引
+            id: 'poc-selected',
             width: 500,
             height: 340,
             showSearch: true,
             title: ['待选POC列表', '已选POC']
         });
 
-        //监听提交
         form.on('submit(poc_task)', function (data) {
             data.field['poc'] = transfer.getData('poc-selected');
             data.field['asset'] = transfer.getData('asset-selected');

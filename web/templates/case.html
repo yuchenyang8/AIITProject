@@ -57,11 +57,8 @@
             skin: 'line'
         });
 
-        /**
-         * toolbar监听事件
-         */
         table.on('toolbar(currentTableFilter)', function (obj) {
-            if (obj.event === 'add') {  // 监听添加操作
+            if (obj.event === 'add') {
                 var index = layer.open({
                     title: '添加用例',
                     type: 2,
@@ -76,6 +73,7 @@
                 });
             }
         });
+
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
             if (obj.event === 'delete') {

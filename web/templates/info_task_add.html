@@ -139,7 +139,7 @@
         //监听提交
         form.on('submit(taskadd)', function (data) {
             $.ajax({
-                url: "{{ url_for('api_task') }}",
+                url: "{{ url_for('api_info_task') }}",
                 data: JSON.stringify(data.field),
                 contentType: 'application/json;charset=UTF-8',
                 dataType: 'json',

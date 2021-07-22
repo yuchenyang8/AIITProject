@@ -214,7 +214,7 @@ class InfoTaskAPI(Resource):
 
     @api_required
     def put(self):
-        """add task"""
+        """add a new task"""
         args = self.parser.parse_args()
         task_name = args.task_name
         task_company = args.task_company

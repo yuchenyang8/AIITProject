@@ -27,8 +27,5 @@ API.add_resource(UserAPI, '/api/user', endpoint='api_user')
 API.add_resource(CaseAPI, '/api/case', endpoint='api_case')
 API.add_resource(CaseTaskAPI, '/api/task/case', endpoint='api_case_task')
 API.add_resource(VulnAPI, '/api/vuln', endpoint='api_vuln')
-API.add_resource(CompanyVulnAPI, '/api/vuln/<string:info_type>/<string:company>/<string:asset_type>', endpoint='api_company_vuln')
-
-
-
-
+API.add_resource(CompanyVulnAPI, '/api/vuln/<string:info_type>/<string:company>/<string:asset_type>',
+                 endpoint='api_company_vuln')
