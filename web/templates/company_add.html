@@ -55,7 +55,7 @@
                 data: JSON.stringify(data.field),
                 contentType: 'application/json;charset=UTF-8',
                 dataType: 'json',
-                type: 'put',
+                type: 'post',
                 success: function (result) {
                     if (result.status_code === 200) {
                         var index = layer.alert('新增厂商成功!', {

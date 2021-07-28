@@ -67,7 +67,7 @@ class CompanyAPI(Resource):
         self.parser.add_argument("searchParams", type=str)
 
     @api_required
-    def put(self):
+    def post(self):
         """add a company"""
         args = self.parser.parse_args()
         company_name = args.company_name

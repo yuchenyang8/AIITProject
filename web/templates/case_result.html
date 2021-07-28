@@ -106,7 +106,6 @@
 
             if (obj.event === 'download') {
                 for (let index in reports) {
-                    console.log(reports[index]);
                     let report = reports[index];
                     $.ajax({
                         url: "{{ url_for('api_case') }}",
