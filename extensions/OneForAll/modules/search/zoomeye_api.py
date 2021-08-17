@@ -1,7 +1,7 @@
 import time
-from config import settings
+from project.config import settings
 from common.search import Search
-from config.log import logger
+from project.config import logger
 
 
 class ZoomEyeAPI(Search):

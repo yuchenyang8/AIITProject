@@ -159,7 +159,7 @@ large_ports = [80, 81, 280, 300, 443, 591, 593, 832, 888, 901, 981, 1010, 1080,
                18092, 20000, 20720, 24465, 28017, 28080, 30821, 43110, 61600]
 ports = {'small': small_ports, 'medium': medium_ports, 'large': large_ports}
 
-common_subnames = {'i', 'w', 'm', 'en', 'us', 'zh', 'w3', 'app', 'bbs',
+common_subnames = {'i', 'w', 'm', 'en', 'us', 'zh', 'w3', 'project', 'bbs',
                    'web', 'www', 'job', 'docs', 'news', 'blog', 'data',
                    'help', 'live', 'mall', 'blogs', 'files', 'forum',
                    'store', 'mobile'}

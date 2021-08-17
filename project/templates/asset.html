@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Asset</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.5.5/css/layui.css') }}" media="all">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}" media="all">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">客户</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="asset_company" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">资产</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="asset_name" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary" lay-submit
+                                    lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <script type="text/html" id="toolbarDemo">
+            {#            <div class="layui-btn-container">#}
+            {#                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加资产</button>#}
+            {#            </div>#}
+        </script>
+
+        <table class="layui-hide" id="currentTable_task" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-xs layui-btn-sm data-count-start" lay-event="start">扫描</a>
+            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+        </script>
+
+    </div>
+</div>
+<script src="{{ url_for('static', filename='lib/layui-v2.5.5/layui.js') }}" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+
+        table.render({
+            elem: '#currentTable_task',
+            url: "{{ url_for('api_asset') }}",
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [[
+                {field: 'id', width: 80, title: 'ID', align: "center", sort: true},
+                {field: 'asset_company', title: '所属客户', align: "center", sort: true},
+                {
+                    field: 'name', width: 350, title: '资产名称', align: "center", sort: true, templet: function (d) {
+                        if (d.asset_type === 'WEB' || d.asset_type === '主机' || d.asset_type === '固件') {
+                            return '<a href="/func/asset/' + d.name + '">' + d.name + '</a>'
+                        } else {
+                            return '<a href="http://127.0.0.1:8000/static_analyzer/?name=' + d.name + '&checksum=' + d.hash + '&type=apk" target="_blank">' + d.name + '</a>'
+                        }
+                    }
+                },
+                {field: 'asset_type', title: '资产类型', align: "center"},
+                {field: 'vuln_status', title: '扫描状态', templet: '#vuln_flag_tpl', align: "center"},
+                {field: 'vuln_time', title: '上次扫描日期', align: "center", sort: true},
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 20,
+            page: true,
+            skin: 'line'
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            var result = JSON.stringify(data.field);
+
+            //执行搜索重载
+            table.reload('currentTable_task', {
+                page: {
+                    curr: 1
+                }
+                , where: {
+                    searchParams: result
+                }
+            }, 'data');
+            return false;
+        });
+
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {  // 监听添加操作
+                var index = layer.open({
+                    title: '添加资产',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: "{{ url_for('html_func_task_add') }}",
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            }
+        });
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'start') {
+                layer.confirm('确定开始扫描该资产吗?', function (index) {
+                    layer.alert('漏洞扫描开始!', {title: '提示', icon: 1})
+                    layer.close(index);
+                });
+                $.ajax({
+                    url: "{{ url_for('api_vuln') }}",
+                    data: JSON.stringify(data),
+                    contentType: 'application/json;charset=UTF-8',
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (result) {
+                        if (result.status_code === 500) {
+                            layer.alert(result.msg, {title: '提示', icon: 2})
+                        }
+                    }
+                })
+            }
+            if (obj.event === 'delete') {
+                layer.confirm('确定删除该资产吗?', function (index) {
+                    $.ajax({
+                        url: "{{ url_for('api_asset') }}",
+                        data: JSON.stringify(data),
+                        contentType: 'application/json;charset=UTF-8',
+                        dataType: 'json',
+                        type: 'delete',
+                        success: function (result) {
+                            if (result.status_code === 200) {
+                                layer.alert('删除资产成功!', {title: '提示', icon: 1})
+                                obj.del();
+                                layer.close(index);
+                            } else {
+                                layer.alert(result.msg, {title: '提示', icon: 2})
+                            }
+                        },
+                        error: function (e) {
+                            layer.alert(JSON.stringify(e), {title: '提示', icon: 2})
+                        }
+                    })
+                });
+            }
+        });
+    });
+</script>
+<script type="text/html" id="vuln_flag_tpl">
+    {% raw %}
+    {{# if(d.vuln_status === '未扫描'){ }}
+    <span style="color: #334CFF;">{{ d.vuln_status }}</span>
+    {{#  } else if(d.vuln_status === '扫描完成'){ }}
+    <span style="color: #15b664;">{{ d.vuln_status }}</span>
+    {{#  } else { }}
+    <span style="color: #ff3333;">{{ d.vuln_status }}</span>
+    {{#  } }}
+    {% endraw %}
+</script>
+<script type="text/html" id="asset_tpl">
+    {% raw %}
+    <a href="/func/asset/{{ d.name }}">{{ d.name }}</a>
+    {% endraw %}
+</script>
+</body>
+</html>

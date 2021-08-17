@@ -19,7 +19,7 @@ from pocsuite3.api import start_pocsuite
 from extensions.OneForAll.oneforall import OneForAll
 from extensions.Wappalyzer import Wappalyzer, WebPage
 from extensions.ext_config import *
-from web.utils.auxiliary import exist_process, kill_process, url_detect
+from utils.auxiliary import exist_process, kill_process, url_detect
 
 urllib3.disable_warnings()
 
@@ -45,12 +45,10 @@ class NmapExt(object):
         #             '--min-hostgroup 1024 --min-parallelism 1024 -oG hosts.txt'
         # -------------------------------------------------------------------------------------------------
         # small ip segment
-        arguments = '-sP -PE -PP -PS21,22,23,25,80,113,31339 -PA80,113,443,10042 --source-port 53 -T4'
+        arguments = '-sP -PE -PP -PS21,22,23,25,80,113,3389 -PA80,113,443,10042 --source-port 53 -T4'
         result = nm.scan(hosts=hosts, arguments=arguments)
-        host_list = []
+        host_list = [host for host in result['scan']]
 
-        for r in result['scan']:
-            host_list.append(r)
         return host_list
         # print(nm.scaninfo())
         # print(nm.scanstats())
@@ -124,7 +122,7 @@ class OneForAllExt(object):
     def __init__(self, domain):
         self.domain = domain
 
-    def subdomain_discovery(self):
+    def discovery(self):
         task = OneForAll(self.domain)
         task.dns = True
         task.brute = True
@@ -197,7 +195,7 @@ class DirExt(object):
         self.TOOL_DIR = DIRSEARCH_DIR
         self.RESULT_DIR = DIRSEARCH_RESULT_DIR
 
-    def dir_scan(self):
+    def scan(self):
         command = 'python {} -e * -x 403,404,405,500,501,502,503 -u {} --json-report {}'.format(self.TOOL_DIR, self.url,
                                                                                                 self.RESULT_DIR)
         os.popen(command).read()
@@ -274,9 +272,10 @@ class HydraExt(object):
         pattern_password = 'password:\s(.+?)$'
         flag = False
         for res in result:
-            print(res)
             if not res.find('[' + service + ']'):
                 continue
+            if res.find('[ERROR]'):
+                break
             if re.findall(pattern_username, res):
                 resultdict['username'] = re.findall(pattern_username, res)[0]
             if re.findall(pattern_password, res):
@@ -299,7 +298,6 @@ class XrayExt(object):
         self.start_xray()
 
     def start_xray(self):
-        print('***xray')
         # result_dir = r'D:\Xray\{}.json'.format(datetime.datetime.now().strftime("%Y_%m%d_%H%M%S"))
         # print(result_dir)
         if exist_process('xray.exe'):
@@ -315,7 +313,6 @@ class XrayExt(object):
     #         self.scan_one(url)
 
     def scan_one(self, url):
-        print('***scan')
         # command = r'{}/crawlergo -c {} -t 10 -f smart --fuzz-path --output-mode json {}'.format(self.CRAWLERGO_DIR,
         #                                                                                         self.CHROME_DIR, url)
         cmd = r'{}\rad -t {} --http-proxy 127.0.0.1:7777'.format(self.RAD_DIR, url)

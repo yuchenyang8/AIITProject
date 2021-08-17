@@ -1,4 +1,4 @@
-from config import settings
+from project.config import settings
 from common.search import Search
 
 

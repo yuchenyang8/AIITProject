@@ -423,7 +423,7 @@ class Wappalyzer:
 
     def _set_detected_app(self, app: Dict[str, Any], app_type:str, pattern: Dict[str, Any], value:str, key='') -> None:
         """
-        Store detected app.
+        Store detected project.
         """
         app['detected'] = True
 
@@ -526,7 +526,7 @@ class Wappalyzer:
 
     def get_versions(self, app_name:str) -> List[str]:
         """
-        Retuns a list of the discovered versions for an app name.
+        Retuns a list of the discovered versions for an project name.
 
         :param app_name: App name
         """
@@ -534,7 +534,7 @@ class Wappalyzer:
 
     def get_confidence(self, app_name:str) -> Optional[int]:
         """
-        Returns the total confidence for an app name.
+        Returns the total confidence for an project name.
 
         :param app_name: App name
         """

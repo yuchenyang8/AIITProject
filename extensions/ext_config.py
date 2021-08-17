@@ -1,4 +1,4 @@
-from web.utils.auxiliary import get_yaml
+from utils.auxiliary import get_yaml
 
 CONFIG_PATH = 'extensions\\ext_config.yaml'
 DOCS = get_yaml(CONFIG_PATH)
